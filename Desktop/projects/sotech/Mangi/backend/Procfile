@@ -1,1 +1,1 @@
-web: gunicorn mangi.wsgi:application --log-file -
+web: gunicorn Managi.wsgi:application --log-file -
