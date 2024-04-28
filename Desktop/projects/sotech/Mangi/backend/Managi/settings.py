@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import dj_database_url
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -96,16 +97,29 @@ WSGI_APPLICATION = 'Managi.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASES ={
+    'default':{
+        'ENGINE':'django.db.backends.postgresql',
+        'NAME': 'database name',
+        'USER': 'database user',
+        'PASSWORD': 'database endpoint',
+        'HOST' :'database endpoint',
+        'PORT' : 'database port',
     }
 }
 
-db_from_env =dj_database_url.config(conn_max_age=600)
-DATABASES['default'].update(db_from_env)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR,'db.db.sqlite3'),
+    }
+}
 
+DATABASES['default'] = dj_database_url.config(
+    default='postgres://u4uktpthf8j31r:pf5a9ccd312b801daf5dfc12115be073902ba784c8a9cd401bd16a2b410914d71@c7gljno857ucsl.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d77g10dasak84e',
+    conn_max_age=600,
+    conn_health_checks=True,
+)
 
 
 # Password validation
