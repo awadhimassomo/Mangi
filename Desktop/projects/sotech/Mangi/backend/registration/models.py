@@ -45,7 +45,7 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     PhoneNumber = models.CharField(max_length=15, unique=True)
-    role = models.ForeignKey(Role, on_delete=models.PROTECT, default=1)
+    role = models.ForeignKey(Role, on_delete=models.PROTECT,)
 
     objects = CustomUserManager()
 

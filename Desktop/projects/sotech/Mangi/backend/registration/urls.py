@@ -10,5 +10,8 @@ path('register', views.Register, name ='register'),
 path('login', views.Login, name ='login'),
 path('forget', views.Forget, name ='forget'),
 path('index', views.index, name ='index'),
+path('users/', views.UserListView.as_view(), name='user-list'),
+path('users/create/', views.UserCreateView.as_view(), name='user-create'),
+
 
 ]
