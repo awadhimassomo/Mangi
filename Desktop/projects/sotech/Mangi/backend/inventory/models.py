@@ -65,7 +65,13 @@ class Product(models.Model):
     DateUpdated = models.DateTimeField(auto_now=True)
     Supplier = models.ForeignKey('Supplier', on_delete=models.PROTECT)  # Consider using PROTECT or CASCADE
     Category = models.ForeignKey('Category', on_delete=models.PROTECT)  # Consider using PROTECT or CASCADE
-    Warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT)  # Consider using PROTECT or CASCADE
+    Warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT)# Consider using PROTECT or CASCADE
+    ExpireDate =  models.DateField(blank=True,null=True)
+    Active= models.BooleanField(blank=True),
+    Description=models.TextField(blank=True,null=True)
+    taxable=models.BooleanField(default=True)
+    discountable= models.BooleanField(default=True)
+
 
     def __str__(self):
         return self.ProductName
