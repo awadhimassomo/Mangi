@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
 #category model
 class Category(models.Model):
     category_name = models.CharField(max_length=255)
@@ -70,6 +71,7 @@ class Product(models.Model):
     Active= models.BooleanField(blank=True),
     Description=models.TextField(blank=True,null=True)
     taxable=models.BooleanField(default=True)
+    type = models.CharField(max_length=255, blank=True, null=True)
     discountable= models.BooleanField(default=True)
 
 
