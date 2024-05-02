@@ -12,3 +12,4 @@ admin.site.register(Transaction)
 admin.site.register(Warehouse)
 admin.site.register(Address)
 
+
