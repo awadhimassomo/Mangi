@@ -5,9 +5,16 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 #category model
 class Category(models.Model):
     category_name = models.CharField(max_length=255)
-    def __str__(self):
-        return self.category_name
+    unit_choices = [
+        ('mls', 'mls'),
+        ('kg', 'kg'),
+        ('g', 'g'),
+    ]
+    unit = models.CharField(max_length=3, choices=unit_choices, blank=True, null=True)
+    unity_quantity = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
+    def __str__(self):
+        return f'{self.category_name} - {self.unity_quantity} {self.unit}' if self.unit and self.unity_quantity else self.category_name
 
 #warehouse 
 class Warehouse(models.Model):
