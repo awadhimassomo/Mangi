@@ -51,10 +51,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-
 class Business(models.Model):
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
-    # Add other fields as needed
+    registered = models.BooleanField(default=False)  # Indicates if the business is registered
+    business_type = models.CharField(max_length=100, null=True, blank=True)  # Type of business
+    
+    def __str__(self):
+        return self.name
+
 
 
