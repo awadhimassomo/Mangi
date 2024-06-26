@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from .forms import CreditForm
 from django.shortcuts import render, redirect
 from registration.models import CustomUser, Business 
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from .serializers import NetworkCreditSerializer, OTPCreditSerializer,OTPVerifySerializer,ResendOTPSerializer
 
@@ -250,30 +251,36 @@ class VerifyOTPView(APIView):
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
         if serializer.is_valid():
-            phone_number = serializer.validated_data.get('phone_number')
+            mobile_number = serializer.validated_data.get('mobile_number')
             otp = serializer.validated_data.get('otp')
 
             try:
                 # Retrieve the OTP record
-                otp_record = OTPCredit.objects.get(user__phone_number=phone_number, otp=otp)
-                print(f"OTP record found: {otp_record}")
+                otp_record = OTP.objects.get(mobile_number=mobile_number, otp=otp)
 
                 # Check if the OTP has expired
-                if otp_record.otp_expiry < timezone.now():
-                    print(f"OTP has expired for user: {phone_number}")
+                if (timezone.now() - otp_record.created_at).total_seconds() > 300:  # OTP expires after 5 minutes
                     return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
 
                 # OTP is valid
-                print(f"OTP is valid for user: {phone_number}")
-                return Response({"message": "OTP verified successfully"}, status=status.HTTP_200_OK)
+                user, created = CustomUser.objects.get_or_create(phone_number=mobile_number)
+                businesses = Business.objects.filter(user=user)
+                business_serializer = BusinessListSerializer(businesses, many=True)
+                refresh = RefreshToken.for_user(user)
+                access_token = refresh.access_token
 
-            except OTPCredit.DoesNotExist:
-                print(f"Invalid OTP for user: {phone_number}")
+                return Response({
+                    "message": "OTP verified successfully",
+                    "refresh": str(refresh),
+                    "access": str(access_token),
+                    "businesses": business_serializer.data
+                }, status=status.HTTP_200_OK)
+
+            except OTP.DoesNotExist:
                 return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 #password reset:
 

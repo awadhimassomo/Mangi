@@ -1,12 +1,14 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from django.http import JsonResponse
-from .serializers import ProductSerializer,SupplierSerializer,CategorySerializer,TransactionSerializer,WarehouseSerializer
-from .models import Product,Supplier,Category,Transaction,Warehouse
+from .serializers import ProductSerializer,SupplierSerializer,CategorySerializer
+from .serializers import TransactionSerializer,WarehouseSerializer,PurchaseSerializer
+from .models import Product,Supplier,Category,Transaction,Warehouse,Purchase
 from rest_framework.views import APIView
 from rest_framework import generics
-from rest_framework import status
+from rest_framework import status,viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import filters
 from rest_framework.generics  import ListAPIView
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -419,6 +421,42 @@ def deleteWarehouse(request, pk):
     warehouse = Warehouse.objects.get(id=pk)
     warehouse.delete()
     return Response("Warehouse was deleted")
+
+class PurchaseViewSet(viewsets.ModelViewSet):
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        customer = get_object_or_404(Customer, id=self.request.data.get('customer_id'))
+        transaction = get_object_or_404(Transaction, id=self.request.data.get('transaction_id'))
+        product = get_object_or_404(Product, id=self.request.data.get('product_id'))
+        serializer.save(customer=customer, transaction=transaction, product=product)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_purchases(request):
+    purchases = Purchase.objects.all()
+    serializer = PurchaseSerializer(purchases, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_customer_purchases(request, customer_id):
+    purchases = Purchase.objects.filter(customer__id=customer_id)
+    serializer = PurchaseSerializer(purchases, many=True)
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_purchase(request, pk):
+    purchase = get_object_or_404(Purchase, pk=pk)
+    serializer = PurchaseSerializer(purchase, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 

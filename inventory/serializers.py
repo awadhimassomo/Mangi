@@ -1,7 +1,7 @@
 #serializer the  data
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import Product,Supplier,Category,Transaction,Warehouse
+from .models import Product,Supplier,Category,Transaction,Warehouse,Purchase
 from qcode.models import QRCode
 
 
@@ -17,6 +17,11 @@ class WarehouseSerializer(ModelSerializer):
         fields = '__all__'
         
 
+class PurchaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Purchase
+        fields = '__all__'
+
 class  SupplierSerializer(ModelSerializer):
     class Meta:
         model = Supplier
@@ -29,7 +34,7 @@ class ProductSerializer(ModelSerializer):
     category_name= serializers.CharField(source='Category.category_name',  read_only=True)
     class Meta:
         model = Product
-        fields = ['id','ProductName','Price','Cost','Quantity','DateCreated','DateUpdated','Supplier','Category','Barcode','supplier_name','WarehouseName','category_name']
+        fields = ['id','product_name','price','cost','quantity','date_created','date_updated','supplier','category','barcode','supplier_name','WarehouseName','category_name']
         read_only_fields = ('created_at', 'updated_at')
 
 # Transcation
