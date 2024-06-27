@@ -102,8 +102,12 @@ class Business(models.Model):
         buffer.close()
         super().save(update_fields=['qr_image'])
 
+        # Print the location where the QR code file has been saved
+        qr_code_path = self.qr_image.path
+        print(f"QR code file saved at: {qr_code_path}")
+
     def __str__(self):
-        return f"QR Code for {self.business_name if self.business_name else 'Unnamed Business'}"
+        return f" {self.business_name if self.business_name else 'Unnamed Business'}"
         
 class Customer(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)

@@ -4,7 +4,7 @@ from .models import CustomUser, Business,Customer
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['phone_number', 'username', 'password', 'role','id' ]
+        fields = ['phone_number', 'username', 'role','id' ]
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)

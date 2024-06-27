@@ -40,10 +40,15 @@ class RegisterBusinessView(viewsets.ModelViewSet):
 
         # Proceed to register the business with the retrieved user as the owner
         data['owner'] = user.id  # Assuming owner field expects user id
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        business = serializer.save()
-        return Response({'status': 'success', 'business_id': business.id})
+        try:
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            business = serializer.save()
+            logger.info(f"Business registered successfully: {business}")
+            return Response({'status': 'success', 'business_id': business.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error registering business: {str(e)}", exc_info=True)
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LoginView(generics.GenericAPIView):
