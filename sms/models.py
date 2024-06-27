@@ -25,7 +25,7 @@ class NetworkCredit(models.Model):
 class OTPCredit(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None)
     credit = models.ForeignKey(NetworkCredit, on_delete=models.CASCADE, blank=True, null=True)
-    otp = models.CharField(max_length=6)
+    otp = models.CharField(max_length=5)
     otp_timestamp = models.DateTimeField(auto_now_add=True)
     otp_expiry = models.DateTimeField()
 

@@ -15,7 +15,7 @@ class OTPCreditSerializer(serializers.ModelSerializer):
 
 class OTPVerifySerializer(serializers.Serializer):
     phone_number = serializers.CharField()
-    otp = serializers.CharField(max_length=6)
+    otp = serializers.CharField(max_length=5)
 
 
 class ResendOTPSerializer(serializers.Serializer):

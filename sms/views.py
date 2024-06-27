@@ -11,7 +11,12 @@ from django.shortcuts import render, redirect
 from registration.models import CustomUser, Business 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from registration.serializers import BusinessListSerializer
+import logging
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import NetworkCreditSerializer, OTPCreditSerializer,OTPVerifySerializer,ResendOTPSerializer
+
+logger = logging.getLogger(__name__)
 
 class SendOTPView(APIView):
     permission_classes = [AllowAny]
@@ -249,26 +254,34 @@ class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        logger.info("Received OTP verification request")
+        logger.debug(f"Request data: {request.data}")
+
         serializer = OTPVerifySerializer(data=request.data)
         if serializer.is_valid():
-            mobile_number = serializer.validated_data.get('mobile_number')
+            phone_number = serializer.validated_data.get('phone_number')
             otp = serializer.validated_data.get('otp')
 
+            logger.debug(f"Validated data: phone_number={phone_number}, otp={otp}")
+
             try:
-                # Retrieve the OTP record
-                otp_record = OTP.objects.get(mobile_number=mobile_number, otp=otp)
+                # Retrieve the OTPCredit record
+                otp_record = OTPCredit.objects.get(user__phone_number=phone_number, otp=otp)
+                logger.debug(f"OTP record found: {otp_record}")
 
                 # Check if the OTP has expired
-                if (timezone.now() - otp_record.created_at).total_seconds() > 300:  # OTP expires after 5 minutes
+                if timezone.now() > otp_record.otp_expiry:
+                    logger.error("OTP has expired")
                     return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
 
                 # OTP is valid
-                user, created = CustomUser.objects.get_or_create(phone_number=mobile_number)
-                businesses = Business.objects.filter(user=user)
+                user = otp_record.user
+                businesses = Business.objects.filter(owner=user)
                 business_serializer = BusinessListSerializer(businesses, many=True)
                 refresh = RefreshToken.for_user(user)
                 access_token = refresh.access_token
 
+                logger.info("OTP verified successfully")
                 return Response({
                     "message": "OTP verified successfully",
                     "refresh": str(refresh),
@@ -276,10 +289,15 @@ class VerifyOTPView(APIView):
                     "businesses": business_serializer.data
                 }, status=status.HTTP_200_OK)
 
-            except OTP.DoesNotExist:
+            except OTPCredit.DoesNotExist:
+                logger.error("Invalid OTP")
                 return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+                return Response({"error": "Unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         else:
+            logger.error(f"Validation errors: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #password reset:

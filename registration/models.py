@@ -5,9 +5,12 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.conf import settings
 import qrcode
 import json
+import logging
 from io import BytesIO
 from django.core.files import File
 from django.contrib.auth import get_user_model
+
+logger = logging.getLogger(__name__)
 
 class Role(models.Model):
     ADMIN = 'admin'
@@ -46,7 +49,7 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
     email = models.EmailField(blank=True, null=True, unique=True)
-    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, default=1)
+    role = models.ForeignKey('Role', on_delete=models.PROTECT, null=True, default=1)
     username = models.CharField(max_length=150, unique=True, null=True)
     is_staff = models.BooleanField(default=False)
     id = models.AutoField(primary_key=True)
@@ -83,7 +86,8 @@ END:VCARD
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         
-        temp_name = f"vcard-{self.pk}.png"
+        # Use phone number as the file name
+        temp_name = f"vcard-{self.phone_number}.png"
         buffer = BytesIO()
         img.save(buffer, 'PNG')
         logger.info(f"vCard QR code generated, saving to {temp_name}")

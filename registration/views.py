@@ -5,24 +5,33 @@ from rest_framework.decorators import action
 from .models import CustomUser, Business,Customer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
+import logging
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import  BusinessSerializer,UserRegistrationSerializer,UserLoginSerializer,CustomerSerializer
 
+logger = logging.getLogger(__name__)
+
 class RegisterUserView(viewsets.ModelViewSet):
-     queryset = CustomUser.objects.all()
-     serializer_class = UserRegistrationSerializer
+    queryset = CustomUser.objects.all()
+    serializer_class = UserRegistrationSerializer
 
-     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-
-        user_data = serializer.data
-        user_data['refresh'] = str(refresh)
-        user_data['access'] = str(refresh.access_token)
-
-        return Response(user_data, status=status.HTTP_201_CREATED)
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                logger.info(f"User registered successfully: {user}")
+                return Response({
+                    'status': 'success',
+                    'user_id': user.id,
+                    'user':  UserRegistrationSerializer(user).data
+                }, status=status.HTTP_201_CREATED)
+            else:
+                logger.error(f"Validation errors: {serializer.errors}")
+                return Response({'status': 'error', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error registering user: {str(e)}", exc_info=True)
+            return Response({'status': 'error', 'message': 'Failed to register user.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RegisterBusinessView(viewsets.ModelViewSet):
@@ -63,16 +72,14 @@ class LoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        phone_number = serializer.validated_data['phone_number']
-        password = serializer.validated_data['password']
-        user = authenticate(request, phone_number=phone_number, password=password)
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        user = serializer.validated_data['user']
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=status.HTTP_200_OK)
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
