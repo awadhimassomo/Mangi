@@ -17,11 +17,13 @@ class RegisterUserView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }, status=status.HTTP_201_CREATED)
-# views.py continued...
+
+        user_data = serializer.data
+        user_data['refresh'] = str(refresh)
+        user_data['access'] = str(refresh.access_token)
+
+        return Response(user_data, status=status.HTTP_201_CREATED)
+
 
 class RegisterBusinessView(viewsets.ModelViewSet):
     queryset = Business.objects.all()
