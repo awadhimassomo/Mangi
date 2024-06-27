@@ -34,21 +34,27 @@ class RegisterBusinessView(viewsets.ModelViewSet):
         data = request.data
         # Check if user exists and retrieve it
         try:
-            user = CustomUser.objects.get(phone_number=data['phone_number'])
+            user = CustomUser.objects.get(phone_number=data.get('phone_number'))
         except CustomUser.DoesNotExist:
+            logger.warning(f"User with phone number {data.get('phone_number')} does not exist.")
             return Response({'status': 'error', 'message': 'User does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Proceed to register the business with the retrieved user as the owner
         data['owner'] = user.id  # Assuming owner field expects user id
+
         try:
-            serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            business = serializer.save()
-            logger.info(f"Business registered successfully: {business}")
-            return Response({'status': 'success', 'business_id': business.id}, status=status.HTTP_201_CREATED)
+            with transaction.atomic():
+                serializer = self.get_serializer(data=data)
+                serializer.is_valid(raise_exception=True)
+                business = serializer.save()
+                logger.info(f"Business registered successfully: {business}")
+                return Response({
+                    'status': 'success',
+                    'business_id': business.id,
+                    'business': BusinessSerializer(business).data
+                }, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error registering business: {str(e)}", exc_info=True)
-            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'status': 'error', 'message': 'Failed to register business.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LoginView(generics.GenericAPIView):

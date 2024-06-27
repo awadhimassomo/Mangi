@@ -1,10 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from registration.models import Business,Customer
+from django.apps import apps
 
 
-
-#category model
+# Category model
 class Category(models.Model):
     category_name = models.CharField(max_length=255)
     unit_choices = [
@@ -18,13 +17,10 @@ class Category(models.Model):
     ]
     unit = models.CharField(max_length=3, choices=unit_choices, blank=True, null=True)
     unit_quantity = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f'{self.category_name} - {self.unit_quantity} {self.unit}' if self.unit and self.unit_quantity else self.category_name
-
-
-#warehouse 
 
 
 # Warehouse model
@@ -32,7 +28,7 @@ class Warehouse(models.Model):
     warehouse_name = models.CharField(max_length=255)
     warehouse_location = models.CharField(max_length=255)
     address = models.ForeignKey('Address', on_delete=models.PROTECT, null=True, blank=True)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.warehouse_name
@@ -65,20 +61,19 @@ class Supplier(models.Model):
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=15)
     address = models.ForeignKey('Address', on_delete=models.PROTECT, null=True, blank=True)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.supplier_name
 
 
 # Product model
-# models.py
 class Product(models.Model):
-    product_name = models.CharField(max_length=255,null=True)
+    product_name = models.CharField(max_length=255, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.IntegerField(null=True)
-    barcode = models.CharField(max_length=255,null=True)
+    barcode = models.CharField(max_length=255, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     supplier = models.ForeignKey('Supplier', on_delete=models.PROTECT)
@@ -90,7 +85,7 @@ class Product(models.Model):
     taxable = models.BooleanField(default=True)
     product_type = models.CharField(max_length=255, blank=True, null=True)
     discountable = models.BooleanField(default=True)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE,null=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.product_name
@@ -114,17 +109,19 @@ class Transaction(models.Model):
     transaction_date = models.DateField()
     quantity_change = models.IntegerField()
     transaction_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.transaction_type} - {self.transaction_date}"
 
+
+# Purchase model
 class Purchase(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey('registration.Customer', on_delete=models.CASCADE)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     purchase_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.customer.name} - {self.product.name} - {self.quantity}'
+        return f'{self.customer.name} - {self.product.product_name} - {self.quantity}'
