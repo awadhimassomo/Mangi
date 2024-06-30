@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import CustomUser, Business,Customer
 from django.contrib.auth import get_user_model, authenticate
+from django.utils.translation import gettext_lazy as _
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -40,29 +41,28 @@ class BusinessSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    phone_number = serializers.CharField()
-    password = serializers.CharField(style={'input_type': 'password'}, trim_whitespace=False)
+    phone_number = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
-    def validate(self, data):
-        phone_number = data.get('phone_number')
-        password = data.get('password')
+    def validate(self, attrs):
+        phone_number = attrs.get('phone_number')
+        password = attrs.get('password')
 
         if phone_number and password:
-            user = authenticate(request=self.context.get('request'), phone_number=phone_number, password=password)
-            if not user:
-                msg = 'Unable to log in with provided credentials.'
+            user = authenticate(phone_number=phone_number, password=password)
+            if user:
+                if not user.is_active:
+                    msg = _('User account is disabled.')
+                    raise serializers.ValidationError(msg, code='authorization')
+            else:
+                msg = _('Unable to log in with provided credentials.')
                 raise serializers.ValidationError(msg, code='authorization')
-            
-            if not user.otp_verified:
-                msg = 'Phone number not verified.'
-                raise serializers.ValidationError(msg, code='otp_not_verified')
         else:
-            msg = 'Must include "phone_number" and "password".'
+            msg = _('Must include "phone_number" and "password".')
             raise serializers.ValidationError(msg, code='authorization')
 
-        data['user'] = user
-        return data
-
+        attrs['user'] = user
+        return attrs
 
 
 class CustomerSerializer(serializers.ModelSerializer):
