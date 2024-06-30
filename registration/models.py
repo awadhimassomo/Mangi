@@ -48,7 +48,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
-    email = models.EmailField(blank=True, null=True, unique=True)
+    email = models.EmailField(blank=True, null=True, unique=False)
     role = models.ForeignKey('Role', on_delete=models.PROTECT, null=True, default=1)
     username = models.CharField(max_length=150, unique=True, null=True)
     is_staff = models.BooleanField(default=False)

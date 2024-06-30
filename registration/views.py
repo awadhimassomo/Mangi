@@ -5,7 +5,10 @@ from rest_framework.decorators import action
 from .models import CustomUser, Business,Customer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.decorators import login_required
 import logging
+from django.contrib.auth import get_user_model, authenticate
+
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import  BusinessSerializer,UserRegistrationSerializer,UserLoginSerializer,CustomerSerializer
 
@@ -96,7 +99,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
         business = get_object_or_404(Business, id=self.request.data.get('business_id'))
         serializer.save(business=business)
 
+#this
 
+@login_required
+def get_business_type(request):
+    try:
+        business = Business.objects.get(owner=request.user)
+        return JsonResponse({'business_type': business.business_type}, status=200)
+    except Business.DoesNotExist:
+        return JsonResponse({'error': 'Business not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 
