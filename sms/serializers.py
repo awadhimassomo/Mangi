@@ -18,6 +18,13 @@ class OTPVerifySerializer(serializers.Serializer):
     otp = serializers.CharField(max_length=5)
 
 
+    def validate(self, attrs):
+        phone_number = attrs.get('phone_number')
+        otp = attrs.get('otp')
+
+        return attrs
+
+
 class ResendOTPSerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=15)
 

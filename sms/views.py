@@ -289,6 +289,8 @@ class VerifyOTPView(APIView):
                 access_token = refresh.access_token
 
                 logger.info("OTP verified successfully")
+                print(f"Refresh Token: {refresh}")  # Print refresh token
+                print(f"Access Token: {access_token}")  # Print access token
                 return Response({
                     "message": "OTP verified successfully",
                     "refresh": str(refresh),

@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.decorators import login_required
 import logging
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model, authenticate
 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -69,20 +70,46 @@ class RegisterBusinessView(viewsets.ModelViewSet):
             return Response({'status': 'error', 'message': 'Failed to register business.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class LoginView(generics.GenericAPIView):
-    serializer_class = UserLoginSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        user = serializer.validated_data['user']
+@api_view(['POST'])
+def login_view(request):
+    username = request.data.get('phone_number')
+    password = request.data.get('password')
+    
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
         refresh = RefreshToken.for_user(user)
         
+        # Print user information
+        print(f"User: {user}")
+        
+        # Retrieve and print businesses associated with the user
+        businesses = Business.objects.filter(owner=user)
+        print(f"Businesses for user {user.id}: {businesses}")
+        
+        businesses_data = [
+            {
+                "business_name": b.business_name,
+                "business_address": b.business_address,
+                "business_phone_number": b.business_phone_number,
+                "lipa_number": b.lipa_number,
+                "business_type": b.business_type,
+                "phone_network": b.phone_network,
+            }
+            for b in businesses
+        ]
+        
+        # Print businesses data
+        print(f"Businesses data: {businesses_data}")
+
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-        }, status=status.HTTP_200_OK)
+            'businesses': businesses_data
+        })
+    else:
+        print("Invalid credentials")
+        return Response({"error": "Invalid credentials"}, status=400)
+
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
@@ -101,6 +128,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 #this
 
+def get_business_typ(request):
+    try:
+        business = Business.objects.get(owner=request.user)
+        return JsonResponse({'business_type': business.business_type}, status=200)
+    except Business.DoesNotExist:
+        return JsonResponse({'error': 'Business not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
 @login_required
 def get_business_type(request):
     try:
@@ -110,7 +148,6 @@ def get_business_type(request):
         return JsonResponse({'error': 'Business not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
 
 
 @api_view(['POST'])
@@ -258,6 +295,8 @@ def get_routes(request):
             'body': None,
             'description': 'Delete an existing business'
         }
+
+        
     ]
     return Response(routes)
 

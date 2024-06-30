@@ -1,9 +1,11 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterUserView, RegisterBusinessView,LoginView,switch_business, delete_user, update_user
+from .views import RegisterUserView, RegisterBusinessView,login_view,switch_business
+from .views import delete_user, update_user
 from .views import delete_business, update_business, list_users, get_routes
-from .views import get_business_type
+from .views import get_business_type,get_business_typ
+
 router = DefaultRouter()
 router.register(r'users', RegisterUserView, basename='users')  # Specify basename 'users'
 router.register(r'businesses', RegisterBusinessView, basename='businesses')  # Specify basename 'businesses'
@@ -12,7 +14,7 @@ router.register(r'businesses', RegisterBusinessView, basename='businesses')  # S
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('login/', LoginView.as_view(), name='login'),
+    path('login/', login_view, name='login'),
     path('switch_business/', switch_business, name='switch_business'),
     path('delete_user/<int:pk>/', delete_user, name='delete_user'),
     path('update_user/<int:pk>/', update_user, name='update_user'),
@@ -21,6 +23,7 @@ urlpatterns = [
     path('list_users/', list_users, name='list_users'),
     path('routes/', get_routes, name='get_routes'),
     path('get-business-type/', get_business_type, name='get-business-type'),
+      path('get-business-typ/', get_business_typ, name='get-business-typ'),
 ]
     
 
