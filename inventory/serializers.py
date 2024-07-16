@@ -27,15 +27,19 @@ class  SupplierSerializer(ModelSerializer):
         model = Supplier
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+        
+class ProductSerializer(serializers.ModelSerializer):
+    supplier_name = serializers.CharField(source='supplier.supplier_name', read_only=True)
+    category_name = serializers.CharField(source='category.category_name', read_only=True)
+    warehouse_name = serializers.CharField(source='warehouse.warehouse_name', read_only=True)
 
-class ProductSerializer(ModelSerializer):
-    supplier_name = serializers.CharField(source='Supplier.supplier_name',  read_only=True)
-    WarehouseName = serializers.CharField(source='Warehouse.WarehouseName',  read_only=True)
-    category_name= serializers.CharField(source='Category.category_name',  read_only=True)
     class Meta:
         model = Product
-        fields = ['id','product_name','price','cost','quantity','date_created','date_updated','supplier','category','barcode','supplier_name','WarehouseName','category_name']
-        read_only_fields = ('created_at', 'updated_at')
+        fields = [
+            'id', 'product_name', 'price', 'cost', 'quantity', 'date_created', 'date_updated', 
+            'supplier', 'category', 'barcode', 'supplier_name', 'warehouse_name', 'category_name'
+        ]
+        read_only_fields = ('date_created', 'date_updated')
 
 # Transcation
 class TransactionSerializer(ModelSerializer):

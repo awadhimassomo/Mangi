@@ -217,65 +217,62 @@ class ProductViewSet(generics.ListAPIView):
 
 
 
-
 class CreateProduct(generics.CreateAPIView):
     serializer_class = ProductSerializer
 
     def create(self, request, *args, **kwargs):
         # Extracting fields from request.data
         product_data = {
-            'product_name': request.data.get('ProductName'),
-            'Barcode': request.data.get('Barcode'),
-            'price': request.data.get('Price'),
-            'cost': request.data.get('Cost'),
-            'quantity': request.data.get('Quantity'),
-            'supplier_name': request.data.get('Supplier'),
-            'warehouse_name': request.data.get('Warehouse'),
-            'Category_id': request.data.get('Category')
+            'product_name': request.data.get('product_name'),
+            'barcode': request.data.get('barcode'),
+            'price': request.data.get('price'),
+            'cost': request.data.get('cost'),
+            'quantity': request.data.get('quantity'),
+            'supplier_name': request.data.get('supplier_name'),
+            'warehouse_name': request.data.get('warehouse_name'),
+            'category_name': request.data.get('category_name')
         }
 
         # Mandatory field validations
-        mandatory_fields = ['product_name', 'Barcode', 'price', 'cost', 'quantity']
+        mandatory_fields = ['product_name', 'barcode', 'price', 'cost', 'quantity']
         for field in mandatory_fields:
             if not product_data[field]:
                 return Response({'error': f'{field.replace("_", " ").title()} is required'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        # Finding optional related objects
+        # Finding optional related objects by name
         supplier = None
         if product_data['supplier_name']:
             try:
-                supplier = Supplier.objects.get(pk=product_data['supplier_name'])
+                supplier = Supplier.objects.get(supplier_name=product_data['supplier_name'])
             except Supplier.DoesNotExist:
                 return Response({'error': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
-            except ValueError:
-                return Response({'error': 'Invalid supplier ID'}, status=status.HTTP_400_BAD_REQUEST)
 
         category = None
-        if product_data['Category_id']:
+        if product_data['category_name']:
             try:
-                category = Category.objects.get(pk=product_data['Category_id'])
+                category = Category.objects.get(category_name=product_data['category_name'])
             except Category.DoesNotExist:
                 return Response({'error': 'Category does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         warehouse = None
         if product_data['warehouse_name']:
             try:
-                warehouse = Warehouse.objects.get(pk=product_data['warehouse_name'])
+                warehouse = Warehouse.objects.get(warehouse_name=product_data['warehouse_name'])
             except Warehouse.DoesNotExist:
                 return Response({'error': 'Warehouse does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         # Creating the product
         try:
             new_product = Product.objects.create(
-                ProductName=product_data['product_name'],
-                Price=product_data['price'],
-                Cost=product_data['cost'],
-                Quantity=product_data['quantity'],
-                Supplier=supplier,  # These may be None if not provided
-                Warehouse=warehouse,
-                Category=category,
-                Barcode=product_data['Barcode']
+                product_name=product_data['product_name'],
+                price=product_data['price'],
+                cost=product_data['cost'],
+                quantity=product_data['quantity'],
+                supplier=supplier,  # These may be None if not provided
+                warehouse=warehouse,
+                category=category,
+                barcode=product_data['barcode']
             )
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -283,7 +280,6 @@ class CreateProduct(generics.CreateAPIView):
         # Return the serialized product data
         serializer = self.get_serializer(new_product)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
 
 
 @api_view(['DELETE'])
@@ -434,7 +430,6 @@ class PurchaseViewSet(viewsets.ModelViewSet):
         serializer.save(customer=customer, transaction=transaction, product=product)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def list_purchases(request):
     purchases = Purchase.objects.all()
     serializer = PurchaseSerializer(purchases, many=True)

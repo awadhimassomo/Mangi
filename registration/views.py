@@ -128,18 +128,22 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 #this
 
-def get_business_typ(request):
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
     try:
-        business = Business.objects.get(owner=request.user)
-        return JsonResponse({'business_type': business.business_type}, status=200)
-    except Business.DoesNotExist:
-        return JsonResponse({'error': 'Business not found'}, status=404)
+        refresh_token = request.data.get('refresh')
+        if refresh_token is None:
+            return Response({"detail": "Refresh token is missing"}, status=400)
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        return Response({"detail": "Logout successful"}, status=200)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return Response({"detail": str(e)}, status=400)
 
 
-
-@login_required
 def get_business_type(request):
     try:
         business = Business.objects.get(owner=request.user)

@@ -38,4 +38,8 @@ urlpatterns = [
 #Filterpath
     path('products/filter/',views.ProductViewSet.as_view(),name="filter-products"),
 
+
+    path('purchase/',views.list_purchases,name="purchase"),
+
+
 ]

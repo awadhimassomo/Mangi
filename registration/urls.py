@@ -3,8 +3,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import RegisterUserView, RegisterBusinessView,login_view,switch_business
 from .views import delete_user, update_user
-from .views import delete_business, update_business, list_users, get_routes
-from .views import get_business_type,get_business_typ
+from .views import delete_business, update_business, list_users, get_routes, logout_view
+from .views import get_business_type
 
 router = DefaultRouter()
 router.register(r'users', RegisterUserView, basename='users')  # Specify basename 'users'
@@ -23,7 +23,8 @@ urlpatterns = [
     path('list_users/', list_users, name='list_users'),
     path('routes/', get_routes, name='get_routes'),
     path('get-business-type/', get_business_type, name='get-business-type'),
-      path('get-business-typ/', get_business_typ, name='get-business-typ'),
+    path('logout/', logout_view, name='logout'),
+      
 ]
     
 
