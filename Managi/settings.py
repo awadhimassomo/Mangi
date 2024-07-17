@@ -105,15 +105,14 @@ WSGI_APPLICATION = 'Managi.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-DATABASES ={
-    'default':{
-        'ENGINE':'django.db.backends.postgresql',
-        'NAME': 'database name',
-        'USER': 'database user',
-        'PASSWORD': 'database endpoint',
-        'HOST' :'database endpoint',
-        'PORT' : 'database port',
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mangi',
+        'USER': 'myappuser',
+        'PASSWORD': 'Massomosophia65',
+        'HOST': 'awadhi-3948.postgres.pythonanywhere-services.com',
+        'PORT': '13948',
     }
 }
 
@@ -124,11 +123,6 @@ DATABASES = {
     }
 }
 
-DATABASES['default'] = dj_database_url.config(
-    default='postgres://u4uktpthf8j31r:pf5a9ccd312b801daf5dfc12115be073902ba784c8a9cd401bd16a2b410914d71@c7gljno857ucsl.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d77g10dasak84e',
-    conn_max_age=600,
-    conn_health_checks=True,
-)
 
 
 # Password validation

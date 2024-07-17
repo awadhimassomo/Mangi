@@ -25,13 +25,13 @@ class Category(models.Model):
 
 # Warehouse model
 class Warehouse(models.Model):
-    warehouse_name = models.CharField(max_length=255)
-    warehouse_location = models.CharField(max_length=255)
+    warehouseName = models.CharField(max_length=255)
+    warehouseLocation = models.CharField(max_length=255)
     address = models.ForeignKey('Address', on_delete=models.PROTECT, null=True, blank=True)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.warehouse_name
+        return self.warehouseName
 
 
 # Address model

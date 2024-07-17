@@ -31,13 +31,13 @@ class  SupplierSerializer(ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     supplier_name = serializers.CharField(source='supplier.supplier_name', read_only=True)
     category_name = serializers.CharField(source='category.category_name', read_only=True)
-    warehouse_name = serializers.CharField(source='warehouse.warehouse_name', read_only=True)
+    warehouseName = serializers.CharField(source='warehouse. warehouseName', read_only=True)
 
     class Meta:
         model = Product
         fields = [
             'id', 'product_name', 'price', 'cost', 'quantity', 'date_created', 'date_updated', 
-            'supplier', 'category', 'barcode', 'supplier_name', 'warehouse_name', 'category_name'
+            'supplier', 'category', 'barcode', 'supplier_name', 'warehouseName', 'category_name'
         ]
         read_only_fields = ('date_created', 'date_updated')
 

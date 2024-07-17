@@ -162,14 +162,14 @@ def getRoutes(request):
         {
           'Endpoint' : '/Warehouses/Create',
             'method':'POST',
-            'body':{'WarehouseName':""},
+            'body':{'warehouseName':""},
             'description':'Create a warehouse with data sent via post'
         },
 
          {
           'Endpoint' : '/Warehouses/id/update/',
             'method':'PUT',
-            'body':{'WarehouseName':""},
+            'body':{'warehouseName':""},
             'description':'Create a warehouse with data sent via post'
         },
           {
@@ -256,9 +256,9 @@ class CreateProduct(generics.CreateAPIView):
                 return Response({'error': 'Category does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         warehouse = None
-        if product_data['warehouse_name']:
+        if product_data['warehouseName']:
             try:
-                warehouse = Warehouse.objects.get(warehouse_name=product_data['warehouse_name'])
+                warehouse = Warehouse.objects.get(warehouseName=product_data['warehouseName'])
             except Warehouse.DoesNotExist:
                 return Response({'error': 'Warehouse does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -380,14 +380,14 @@ class CreateWarehouses(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         # Extract form data from request.data
-        WarehouseName = request.data.get('WarehouseName')
-        WarehouseLocation = request.data.get('WarehouseLocation')
+        warehouseName = request.data.get('warehouseName')
+        warehouseLocation = request.data.get('warehouseLocation')
 
 
         # Create a new Warehouse object
         new_warehouse = Warehouse.objects.create(
-            WarehouseName=WarehouseName,
-             WarehouseLocation=WarehouseLocation
+            warehouseName=warehouseName,
+             warehouseLocation=warehouseLocation
         )
 
         # Serialize the new object
