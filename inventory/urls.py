@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CreateProduct
+from .views import CreateProduct, InstallmentListView, NotifySupplierAPIView, PreOrderNotificationAPIView, SyncProductsView, create_sales, product_suggestions
 
 app_name = 'inventory'
 
@@ -10,6 +10,15 @@ urlpatterns = [
     path('products/create/',CreateProduct.as_view(),name="create-product"),
     path('products/<str:pk>/update/',views.updateProduct,name="update-product"),
     path('products/<str:pk>/delete/',views.deleteProduct,name="delete-product"),
+    path('products/sync/', SyncProductsView.as_view(), name='sync_products'),
+
+
+    
+    #search
+    path('products/suggestions/',product_suggestions, name='product_suggestions'),
+    
+
+  
 
 #Supplierpath
     path('suppliers/',views.getSuppliers,name="suppliers"),
@@ -29,17 +38,38 @@ urlpatterns = [
     path('transactions/<str:pk>/update/',views.updateTransaction,name="update-transaction"),
     path('transactions/<str:pk>/delete/',views.deleteTransaction,name="delete-transaction"),
 
+  
 #Warehousepath
     path('warehouses/',views.getWarehouses,name="warehouses"),
-    path('warehouses/create/',views.CreateWarehouses.as_view(),name="create-warehouse"),
+    path('warehouses/create/',views.CreateWarehouses,name="create-warehouse"),
     path('warehouses/<str:pk>/update/',views.updateWarehouse,name="update-warehouse"),
     path('warehouses/<str:pk>/delete/',views.deleteWarehouse,name="delete-warehouse"),
 
 #Filterpath
-    path('products/filter/',views.ProductViewSet.as_view(),name="filter-products"),
+    path('products/create/', CreateProduct.as_view(), name='create-product'),
 
 
     path('purchase/',views.list_purchases,name="purchase"),
+    path('purchase/<int:pk>/delete/', views.delete_purchase, name='delete_purchase'),
+    path('sales/create/', create_sales, name='create_sales'),
+    path('installments/create/', views.create_installment, name='create_installment'),
+    path('installments/', InstallmentListView.as_view(), name='installment-list'),
+    # Other URL patterns...
 
+
+#expense
+
+    path('expenses/', views.list_expenses, name='list_expenses'),
+    path('expenses/create/', views.create_expense, name='create_expense'),
+    path('expenses/<int:pk>/', views.get_expense, name='get_expense'),
+    path('expenses/<int:pk>/update/', views.update_expense, name='update_expense'),
+    path('expenses/<int:pk>/delete/', views.delete_expense, name='delete_expense'),
+
+
+
+
+#Preordering and Ordering
+   path('preorder-notification/', PreOrderNotificationAPIView.as_view(), name='preorder-notification'),
+   path('notify-supplier/', NotifySupplierAPIView.as_view(), name='notify-supplier'),
 
 ]

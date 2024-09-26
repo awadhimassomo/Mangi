@@ -1,0 +1,63 @@
+
+    {% load static %}
+
+    <head>
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/materialdesignicons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
+    <title>{% block title %}My Website{% endblock %}</title>
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg fixed-top navbar-custom sticky-dark" id="navbar-sticky">
+        <div class="container">
+            <!-- LOGO -->
+            <a class="logo text-uppercase" href="/">
+                <img src="{% static 'images/logo-dark.png' %}" alt="Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="mdi mdi-menu"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mx-auto navbar-center">
+                    <li class="nav-item"><a href="#home" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="#features" class="nav-link">Features</a></li>
+                    <li class="nav-item"><a href="#screenshot" class="nav-link">Screenshot</a></li>
+                    <li class="nav-item"><a href="#pricing" class="nav-link">Pricing</a></li>
+                    <li class="nav-item"><a href="#testimonial" class="nav-link">Testimonials</a></li>
+                    <li class="nav-item"><a href="{% url 'developer' %}" class="nav-link">Developers</a></li>
+                    <li class="nav-item"><a href="#contact" class="nav-link">Contact Us</a></li>
+                </ul>
+                <ul class="navbar-nav navbar-center">
+                    <li class="nav-item"><a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a></li>
+                    <li class="nav-item"><a href="#" class="btn btn-sm nav-btn" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <!-- Main Content Block -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+ 
+
+    <!-- Scripts -->
+    <script src="{%static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{%static 'js/swiper-bundle.min.js' %}"></script>
+    <script src="{%static 'js/app.js' %}"></script>
+    <script src="{%static 'js/bootstrap.bundle.min.js' %}"></script>
+    <!-- counter -->
+    <script src=" {%static 'js/counter.init.js' %} "></script>
+    <!-- swiper -->
+    <script src="{%static 'js/swiper-bundle.min.js' %}"></script>
+    <script src=" {%static 'js/swiper.js' %}"></script>
+    <script src=" {%static ' js/app.js' %} "></script>
+</body>
+</html>

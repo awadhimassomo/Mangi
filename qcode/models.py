@@ -10,7 +10,7 @@ from inventory.models import Product
 
 class QRCode(models.Model):
     Product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='qr_code')
-    qr_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qrImage = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Prepare product data
@@ -35,7 +35,7 @@ class QRCode(models.Model):
         temp_name = f"{self.Product.id}-qr.png"
         buffer = BytesIO()
         img.save(buffer, 'PNG')
-        self.qr_image.save(temp_name, File(buffer), save=False)
+        self.qrImage.save(temp_name, File(buffer), save=False)
         buffer.close()
 
         super().save(*args, **kwargs)
@@ -46,7 +46,7 @@ class QRCode(models.Model):
 
 class DynamicQRCode(models.Model):
     data = models.TextField("Data to encode", help_text="This field can contain any text, URL, etc.")
-    qr_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qrImage = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Generate QR code
@@ -63,7 +63,7 @@ class DynamicQRCode(models.Model):
         temp_name = f"qr-{self.pk}.png" if self.pk else "qr-new.png"
         buffer = BytesIO()
         img.save(buffer, 'PNG')
-        self.qr_image.save(temp_name, File(buffer), save=False)
+        self.qrImage.save(temp_name, File(buffer), save=False)
         buffer.close()
 
         super().save(*args, **kwargs)

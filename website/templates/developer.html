@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon - API Launch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #3498db;
+        }
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .countdown div {
+            background-color: #3498db;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            font-size: 24px;
+        }
+        .label {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Launch Countdown</h1>
+        <p>Our API will be available on <strong>5th October</strong>. Stay tuned!</p>
+        <div id="countdown" class="countdown">
+            <div>
+                <span id="days">0</span>
+                <div class="label">Days</div>
+            </div>
+            <div>
+                <span id="hours">0</span>
+                <div class="label">Hours</div>
+            </div>
+            <div>
+                <span id="minutes">0</span>
+                <div class="label">Minutes</div>
+            </div>
+            <div>
+                <span id="seconds">0</span>
+                <div class="label">Seconds</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set the target date
+        const targetDate = new Date('October 5, 2024 00:00:00').getTime();
+
+        const countdownTimer = setInterval(() => {
+            const now = new Date().getTime();
+            const timeDifference = targetDate - now;
+
+            // Time calculations for days, hours, minutes, and seconds
+            const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+            // Display the result in the corresponding elements
+            document.getElementById('days').innerText = days;
+            document.getElementById('hours').innerText = hours;
+            document.getElementById('minutes').innerText = minutes;
+            document.getElementById('seconds').innerText = seconds;
+
+            // If the countdown is over, display a message
+            if (timeDifference < 0) {
+                clearInterval(countdownTimer);
+                document.querySelector('.container').innerHTML = "<h1>API Now Available!</h1><p>Our API is now live and ready for use.</p>";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

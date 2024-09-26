@@ -20,10 +20,11 @@ from django.urls import include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('website.urls')),
     path('Registration/',include('registration.urls')),
     path('inventory/',include('inventory.urls')),
     path('sms/',include('sms.urls')),
-    path('qcode/',include('qcode.urls')),
+   
 
     
     

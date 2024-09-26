@@ -1,4 +1,6 @@
 # registration/models.py
+from venv import logger
+from django.apps import apps
 from django.db import models
 from rest_framework import viewsets, status
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -6,11 +8,16 @@ from django.conf import settings
 import qrcode
 import json
 import logging
+import uuid
 from io import BytesIO
 from django.core.files import File
+from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
-logger = logging.getLogger(__name__)
+from inventory.models import Transaction
+
+
 
 class Role(models.Model):
     ADMIN = 'admin'
@@ -33,42 +40,42 @@ class Role(models.Model):
         return self.get_name_display()
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, phone_number, password=None, **extra_fields):
-        if not phone_number:
+    def create_user(self,phoneNumber, password=None, **extra_fields):
+        if not phoneNumber:
             raise ValueError('The Phone Number field must be set')
-        user = self.model(phone_number=phone_number, **extra_fields)
+        user = self.model(phoneNumber=phoneNumber, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone_number, password=None, **extra_fields):
+    def create_superuser(self,phoneNumber, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(phone_number, password, **extra_fields)
+        return self.create_user(phoneNumber, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    phone_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
-    email = models.EmailField(blank=True, null=True, unique=False)
-    role = models.ForeignKey('Role', on_delete=models.PROTECT, null=True, default=1)
-    username = models.CharField(max_length=150, unique=True, null=True)
+    phoneNumber = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    email = models.EmailField(blank=True, null=True)
+    role = models.ForeignKey('Role', on_delete=models.PROTECT, null=True)
+    username = models.CharField(max_length=150, unique=False, null=True)
     is_staff = models.BooleanField(default=False)
     id = models.AutoField(primary_key=True)
-    vcard_qr_image = models.ImageField(upload_to='vcards/', blank=True, null=True)
+    vcard_qrImage = models.ImageField(upload_to='vcards/', blank=True, null=True)
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'phone_number'
+    USERNAME_FIELD = 'phoneNumber'
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.phone_number
+        return self.phoneNumber or 'Unnamed User'
 
     def generate_vcard(self):
         vcard = f"""
 BEGIN:VCARD
 VERSION:3.0
 FN:{self.username or ''}
-TEL:{self.phone_number or ''}
+TEL:{self.phoneNumber or ''}
 EMAIL:{self.email or ''}
 END:VCARD
 """
@@ -87,50 +94,123 @@ END:VCARD
         img = qr.make_image(fill_color="black", back_color="white")
         
         # Use phone number as the file name
-        temp_name = f"vcard-{self.phone_number}.png"
+        temp_name = f"vcard-{self.phoneNumber}.png"
         buffer = BytesIO()
         img.save(buffer, 'PNG')
         logger.info(f"vCard QR code generated, saving to {temp_name}")
 
-        self.vcard_qr_image.save(temp_name, File(buffer), save=False)
+        self.vcard_qrImage.save(temp_name, File(buffer), save=False)
         buffer.close()
-        logger.info(f"vCard QR code saved to {self.vcard_qr_image.path}")
+        logger.info(f"vCard QR code saved to {self.vcard_qrImage.path}")
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if not self.vcard_qr_image:
+        if not self.vcard_qrImage:
             logger.info("No vCard QR code found, generating new one.")
             self.generate_vcard_qr_code()
         else:
             logger.info("vCard QR code already exists, skipping generation.")
+    
+
+    def list_businesses(self):
+        return self.businesses.all()  
+
+
+class BusinessManager(models.Manager):
+    def import_public_products(self, business_uuid):
+        Business = apps.get_model('registration', 'Business')
+        business = Business.objects.get(uuid=business_uuid)
+
+        PublicProduct = apps.get_model('inventory', 'PublicProduct')
+        Product = apps.get_model('inventory', 'Product')
+        Category = apps.get_model('inventory', 'Category')
+        Supplier = apps.get_model('inventory', 'Supplier')
+        Warehouse = apps.get_model('inventory', 'Warehouse')
+
+        default_category = Category.objects.first()
+        default_supplier = Supplier.objects.first()
+        default_warehouse = Warehouse.objects.first()
+
+        public_products = PublicProduct.objects.filter(businessType=business.businessType)
+
+        with transaction.atomic():
+            for public_product in public_products:
+                category = getattr(public_product, 'category', default_category)
+                supplier = getattr(public_product, 'supplier', default_supplier)
+                warehouse = getattr(public_product, 'warehouse', default_warehouse)
+
+                if category is None or supplier is None or warehouse is None:
+                    logger.warning(f"Skipping product creation for {public_product.product_name} due to missing fields.")
+                    continue
+
+                logger.info(f"Creating product: {public_product.product_name} for business: {business.businessName}")
+
+                Product.objects.create(
+                    business=business,
+                    product_name=public_product.product_name or "Unnamed Product",
+                    barcode=public_product.barcode,
+                    description=public_product.description,
+                    price=0.0,
+                    cost=0.0,
+                    quantity=0,
+                    supplier=supplier,
+                    category=category,
+                    warehouse=warehouse,
+                    expire_date=None,
+                    active=True,
+                    taxable=True,
+                    product_type=None,
+                    discountable=True,
+                    image=None,
+                    min_stock=20,
+                    max_stock=None,
+                    location_type='store',
+                    location_identifier=None,
+                )
+
+        logger.info(f"Finished importing products for business: {business.businessName}")
+        return f"Imported {len(public_products)} products for business: {business.businessName}"
+
+
 
 class Business(models.Model):
-    business_name = models.CharField(max_length=255)
-    business_address = models.CharField(max_length=255)
-    business_phone_number = models.CharField(max_length=20, null=True, blank=True)
-    lipa_number = models.CharField(max_length=15, blank=True, null=True)
-    business_type = models.CharField(max_length=100, blank=True, null=True)
-    phone_network = models.CharField(max_length=10, null=True, blank=True)
-    website = models.URLField(blank=True, null=True)  # Add website field
-    owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     id = models.AutoField(primary_key=True)
-    qr_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    has_benefited_from_offer = models.BooleanField(default=False)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    businessName = models.CharField(max_length=255)
+    businessAddress = models.CharField(max_length=255)
+    businessPhoneNumber = models.CharField(max_length=20, null=True, blank=True)
+    lipaNumber = models.CharField(max_length=15, blank=True, null=True)
+    businessType = models.CharField(max_length=100, blank=True, null=True)
+    phoneNetwork = models.CharField(max_length=10, null=True, blank=True)
+    website = models.URLField(blank=True, null=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    qrImage = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    isSynced = models.BooleanField(default=False)
+    lastSyncTime = models.DateTimeField(default=timezone.now)
+    isDeleted = models.BooleanField(default=False)
+    hasBenefitedFromOffer = models.BooleanField(default=False)
+
+    objects = BusinessManager()
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-        if not self.qr_image:
+        
+        if not self.qrImage:
             self.generate_qr_code()
 
+        if is_new:
+            print(f"New business created: {self.businessName}, triggering predefined data insertion.")
+            Business.objects.import_public_products(self.uuid)   # Trigger predefined data insertion
+
     def generate_qr_code(self):
-        # Create vCard content
         vcard = f"""
 BEGIN:VCARD
 VERSION:3.0
-FN:{self.business_name}
-ORG:{self.business_name}
-TEL:{self.business_phone_number}
-ADR;TYPE=WORK,PREF:;;{self.business_address};;;
+FN:{self.businessName}
+ORG:{self.businessName}
+TEL:{self.businessPhoneNumber}
+ADR;TYPE=WORK,PREF:;;{self.businessAddress};;;
 URL:{self.website}
 END:VCARD
 """
@@ -151,22 +231,59 @@ END:VCARD
         img.save(buffer, 'PNG')
         print(f"QR code generated, saving to {temp_name}")
 
-        self.qr_image.save(temp_name, File(buffer), save=False)
+        self.qrImage.save(temp_name, File(buffer), save=False)
         buffer.close()
-        super().save(update_fields=['qr_image'])
+        super().save(update_fields=['qrImage'])
 
-        qr_code_path = self.qr_image.path
+        qr_code_path = self.qrImage.path
         print(f"QR code file saved at: {qr_code_path}")
 
     def __str__(self):
-        return self.business_name if self.business_name else 'Unnamed Business'
+        return self.businessName if self.businessName else 'Unnamed Business'
+
+
+    
 
 class Customer(models.Model):
     name = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=20)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE)
+    phoneNumber = models.CharField(max_length=20, unique=True)
+    tinNumber = models.CharField(max_length=100, null=True, blank=True)  # Added TIN number field
+    date_added = models.DateTimeField(auto_now_add=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
+    frequency = models.IntegerField(default=1)  # Field to track frequency
 
     def __str__(self):
         return self.name
     
+class Partner(models.Model):
+    # Basic Partner Information
+    name = models.CharField(max_length=255, unique=True)
+    contact_person = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(max_length=15, null=True, blank=True)
 
+    # Address Information
+    address = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+
+    # Ownership Percentage
+    ownership_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Secondary Data Fields for future relationships (e.g., transactions)
+    business_id = models.IntegerField(null=True, blank=True)  # Secondary reference to another system
+
+    # View count (for tracking in the mobile app)
+    views = models.IntegerField(default=0)
+
+    # Boolean flags
+    receive_sms = models.BooleanField(default=False)  # Whether the partner allows receiving SMS notifications
+    receive_email_reports = models.BooleanField(default=False)  # Whether the partner wants reports via email
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name

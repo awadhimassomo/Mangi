@@ -22,10 +22,11 @@ class NetworkCredit(models.Model):
         return f"Credit: {self.credit} - Network Type: {self.get_network_type_display()}"
 
 
+
 class OTPCredit(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None)
-    credit = models.ForeignKey(NetworkCredit, on_delete=models.CASCADE, blank=True, null=True)
-    otp = models.CharField(max_length=5)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
     otp_timestamp = models.DateTimeField(auto_now_add=True)
     otp_expiry = models.DateTimeField()
 
@@ -36,12 +37,11 @@ class OTPCredit(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"User: {self.user.phone_number} - OTP: {self.otp} - Credit: {self.credit.credit if self.credit else 'None'}"
-
+        return f"User: {self.user.phoneNumber} - OTP: {self.otp} - Business: {self.business.businessName if self.business else 'None'}"
 
 class BenefitedPhoneNumber(models.Model):
-    phone_number = models.CharField(max_length=15, unique=True)
+    phoneNumber = models.CharField(max_length=15, unique=True)
     benefited_timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.phone_number
+        return self.phoneNumber

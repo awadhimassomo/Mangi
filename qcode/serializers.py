@@ -9,13 +9,13 @@ class QRCodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QRCode
-        fields = ['id', 'qr_image', 'Product']
+        fields = ['id', 'qrImage', 'Product']
 
 
 class DynamicQRCodeSerializer(serializers.ModelSerializer):
-    qr_image_url = serializers.ImageField(source='qr_image',)  # Provide the URL to the QR image
+    qrImage_url = serializers.ImageField(source='qrImage',)  # Provide the URL to the QR image
 
     class Meta:
         model = QRCode
-        fields = ['qr_image', 'data', 'qr_image_url']
+        fields = ['qrImage', 'data', 'qrImage_url']
         
