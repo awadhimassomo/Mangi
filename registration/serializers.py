@@ -1,6 +1,6 @@
 import logging
 from rest_framework import serializers
-from .models import CustomUser, Business, Customer
+from .models import CustomUser, Business, Customer, Partner
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import gettext_lazy as _
 
@@ -121,3 +121,8 @@ class BusinessListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Business
         fields = '__all__'
+
+class PartnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Partner
+        fields = '__all__'  # You can also specify fields explicitly if needed

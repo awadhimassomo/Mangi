@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BusinessDetailView, BusinessListView, RegisterUserView, RegisterBusinessView,login_view, register_customer,switch_business
+from .views import BusinessDetailView, BusinessListView, RegisterUserView, RegisterBusinessView, create_partner, delete_partner, list_partners,login_view, register_customer, retrieve_partner,switch_business, update_partner
 from .views import delete_user, update_user
 from .views import delete_business, update_business, list_users, get_routes, logout_view
 from .views import get_businessType
@@ -31,7 +31,12 @@ urlpatterns = [
     path('businesse/', RegisterBusinessView.as_view({'post': 'register'}), name='register-business'),
     path('businesses/', BusinessListView.as_view(), name='business-list'),
     path('businesses/<int:id>/', BusinessDetailView.as_view(), name='business-detail'),
-
+    path('partners/', list_partners, name='list_partners'),
+    path('partners/create/', create_partner, name='create_partner'),
+    path('partners/<int:pk>/', retrieve_partner, name='retrieve_partner'),
+    path('partners/update/<int:pk>/', update_partner, name='update_partner'),
+    path('partners/delete/<int:pk>/', delete_partner, name='delete_partner'),
+    path('businesses/', BusinessListView.as_view(), name='business_list'),
       
 ]
     

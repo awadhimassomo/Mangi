@@ -268,7 +268,7 @@ def updateProduct(request, pk):
         data = request.data
 
         # Log request data
-        print("Request Data:", data)
+        print("Request Dataa:", data)
 
         # Validate and update only provided fields
         if 'quantity' in data:
@@ -317,7 +317,6 @@ def updateProduct(request, pk):
 
 # Product viesets
 
-
 class CreateProduct(generics.CreateAPIView):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
@@ -341,7 +340,8 @@ class CreateProduct(generics.CreateAPIView):
             'max_stock': request.data.get('max_stock'),  # New field
             'expire_date': request.data.get('expire_date'),  # New field
             'location_type': request.data.get('location_type'),  # New field
-            'location_identifier': request.data.get('location_identifier'),  # New field
+            'location_identifier': request.data.get('location_identifier'),
+            'contactPhone':request.data.get('contactPhone')  ,# New field
         }
 
         # Log request data
@@ -357,25 +357,53 @@ class CreateProduct(generics.CreateAPIView):
         # Validate related objects by ID
         errors = []
         supplier, category, warehouse = None, None, None
-
-        # Validate supplier
-        if product_data['supplier_id']:
+# Validate supplier by phone number instead of ID
+        contact_phone = product_data.get('contactPhone')
+        if contact_phone:
             try:
-                supplier = Supplier.objects.get(id=product_data['supplier_id'])
+        # Fetch the supplier by phone number
+                supplier = Supplier.objects.get(contactPhone=contact_phone)
+
+        # Compare local and remote supplier IDs
+                if supplier.id != product_data.get('supplier_id'):
+                    logger.error(f"Supplier ID mismatch: Local ID {supplier.id}, Remote ID {product_data.get('supplier_id')}")
+                else:
+                     logger.info(f"Supplier ID match: {supplier.id}")
+
             except Supplier.DoesNotExist:
-                errors.append('Supplier nottt found')
-
-        # Validate category
-        if product_data['category_id']:
-            try:
+                errors.append('Supplier not found')
+        else:
+                 errors.append('Contact phone is missing in the request data.')
+# Validate category and ensure subtype is unique
+        if product_data.get('category_id'):
+             try:
+        # Fetch category by ID
                 category = Category.objects.get(id=product_data['category_id'])
-            except Category.DoesNotExist:
-                errors.append('Category not found')
+                logger.info(f"Category found: {category.id}")  # Log category ID
+
+        # Validate that the subtype is provided
+                if 'subtype' in product_data:
+                     subtype = product_data['subtype']
+
+            # Check if the subtype exists within another category
+                     if Category.objects.filter(subtype=subtype).exclude(id=category.id).exists():
+                          errors.append(f"Subtype '{subtype}' already exists within another category")
+                     else:
+                         logger.info(f"Subtype '{subtype}' is unique.")
+
+             except Category.DoesNotExist:
+                  errors.append('Category not found')
+                  logger.error("Category not found for ID: {}".format(product_data['category_id']))
+
+
+
+
 
         # Validate warehouse
         if product_data['warehouse_id']:
             try:
                 warehouse = Warehouse.objects.get(id=product_data['warehouse_id'])
+                logger.info(f"Warehouse found: {warehouse.id}")  # Log warehouse ID (if exists)
             except Warehouse.DoesNotExist:
                 errors.append('Warehouse not found')
 
@@ -388,6 +416,7 @@ class CreateProduct(generics.CreateAPIView):
         business_id = product_data.get('business_id')
         try:
             business = Business.objects.get(id=business_id, owner=user)
+            logger.info(f"Business found: {business.id}")  # Log business ID
         except Business.DoesNotExist:
             raise PermissionDenied("Business not found or not owned by the user.")
 
@@ -399,7 +428,6 @@ class CreateProduct(generics.CreateAPIView):
                 return Response({'error': 'Invalid expire_date format. Expected YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ensure non-negative values for price, cost, and quantity
-       
 
         # Creating the product with new fields
         try:
@@ -408,7 +436,7 @@ class CreateProduct(generics.CreateAPIView):
                 price=product_data['price'],
                 cost=product_data['cost'],
                 quantity=product_data['quantity'],
-                supplier=supplier,
+                supplier=product_data['supplier_id'],
                 warehouse=warehouse,
                 category=category,
                 business=business,  # Use the validated business instance
@@ -455,8 +483,6 @@ class SyncProductsView(APIView):
             logger.error(f"Business ID {business_id} not found or not owned by the user")
             return Response({"error": f"Business ID {business_id} not found or not owned by the user"}, status=status.HTTP_404_NOT_FOUND)
 
-        new_products = []
-        updated_products = []
         synced_products = []
         
         for product_data in client_products:
@@ -472,7 +498,8 @@ class SyncProductsView(APIView):
                 # Update product directly
                 product_serializer = ProductSerializer(product, data=product_data, partial=True)
                 if product_serializer.is_valid():
-                    updated_products.append(product_serializer)  # Append to update list
+                    product_serializer.save()  # Save the updated product
+                    synced_products.append(product_serializer.data)  # Collect synced data
                 else:
                     logger.error(f"Error updating product: {product_serializer.errors}")
                     return Response(product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -480,28 +507,11 @@ class SyncProductsView(APIView):
                 logger.info(f"Creating new product: {product_data.get('product_name')}")
                 product_serializer = ProductSerializer(data=product_data)
                 if product_serializer.is_valid():
-                    new_products.append(product_serializer)  # Append to create list
+                    product_serializer.save()  # Save the new product
+                    synced_products.append(product_serializer.data)  # Collect synced data
                 else:
                     logger.error(f"Error creating product: {product_serializer.errors}")
                     return Response(product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # Perform bulk create and update operations
-        try:
-            with transaction.atomic():  # Ensure atomicity of operations
-                # Create new products in bulk
-                if new_products:
-                    Product.objects.bulk_create([serializer.save(commit=False) for serializer in new_products])
-                    synced_products.extend([serializer.data for serializer in new_products])
-
-                # Update products in bulk
-                if updated_products:
-                    Product.objects.bulk_update([serializer.instance for serializer in updated_products],
-                                                ['price', 'quantity', 'product_name', 'category'])  # List of fields to update
-                    synced_products.extend([serializer.data for serializer in updated_products])
-
-        except Exception as e:
-            logger.error(f"Error in bulk operations: {str(e)}")
-            return Response({"error": "Failed to sync products"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         logger.info(f"Returning synced products: {synced_products}")
         return Response({
@@ -509,10 +519,25 @@ class SyncProductsView(APIView):
         }, status=status.HTTP_200_OK)
 
 @api_view(['DELETE'])
-def deleteProduct(request,pk):
-    product = Product.objects.get(id=pk)
-    product.delete()
-    return Response("Product was deleted")
+def deleteProduct(request, pk):
+    try:
+        # Print the product details before deleting
+        product = Product.objects.get(id=pk)
+        print(f"Deleting Product: {product}")  # This will print the product object
+        
+        # Optionally, print all products in the database
+        all_products = Product.objects.all()
+        print("All Products in Database:")
+        for p in all_products:
+            print(f"ID: {p.id}, Name: {p.product_name}, Price: {p.price}")  # Adjust fields based on your model
+        
+        # Delete the product
+        product.delete()
+        
+        return Response("Product was deleted", status=status.HTTP_200_OK)
+    
+    except Product.DoesNotExist:
+        return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -630,7 +655,31 @@ def deleteSupplier(request, pk):
     except Exception as e:
         logger.exception("Error during deletion of supplier with ID %s: %s", pk, str(e))
         return Response({"error": "Failed to delete the supplier.", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+class SyncSupplierView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SupplierSerializer
 
+    def post(self, request, *args, **kwargs):
+        suppliers_data = request.data  # Get the supplier data from the request
+        synced_suppliers = []
+        errors = []
+
+        for supplier_data in suppliers_data:
+            serializer = self.get_serializer(data=supplier_data)
+            if serializer.is_valid():
+                supplier = serializer.save()  # Save the supplier to the database
+                supplier.isSynced = True  # Mark as synced
+                supplier.save()
+                synced_suppliers.append(supplier.id)
+                logger.info(f"Successfully synced supplier: {supplier.id}")
+            else:
+                errors.append(f"Failed to sync supplier data: {serializer.errors}")
+
+        return Response({
+            'synced_suppliers': synced_suppliers,
+            'errors': errors
+        }, status=status.HTTP_200_OK)
 
 # Views for the Category model
 

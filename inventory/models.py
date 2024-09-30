@@ -1,5 +1,5 @@
+from django.conf import settings
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.apps import apps
 from django.forms import ValidationError
 from django.utils import timezone
@@ -44,30 +44,13 @@ class Category(models.Model):
 class Warehouse(models.Model):
     warehouseName = models.CharField(max_length=255)
     warehouseLocation = models.CharField(max_length=255)
-    address = models.ForeignKey('Address', on_delete=models.PROTECT, null=True, blank=True)
+    address = models.ForeignKey('registration.Address', on_delete=models.PROTECT, null=True, blank=True)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=False)
 
     def __str__(self):
         return self.warehouseName
 
-# Address model
-class Address(models.Model):
-    street_address = models.CharField(max_length=255, blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=100, blank=True, null=True)
-    postal_code = models.CharField(max_length=20, blank=True, null=True)
-    country = models.CharField(max_length=100, blank=True, null=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, validators=[
-        MinValueValidator(-90),
-        MaxValueValidator(90)
-    ])
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, validators=[
-        MinValueValidator(-180),
-        MaxValueValidator(180)
-    ])
 
-    def __str__(self):
-        return f"{self.street_address}, {self.city}, {self.state}, {self.postal_code}, {self.country}"
 
 # Supplier model
 class Supplier(models.Model):
@@ -469,11 +452,17 @@ class Installment(models.Model):
 
 
 
-# Expense model
 class Expense(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('Cash', 'Cash'),
         ('Loan', 'Loan'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('Travel', 'Travel'),
+        ('Supplies', 'Supplies'),
+        ('Meals', 'Meals'),
+        ('Other', 'Other'),  # Add other categories as needed
     ]
 
     date = models.DateField(default=timezone.now)
@@ -486,6 +475,67 @@ class Expense(models.Model):
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, default='Cash')
     notes = models.TextField(null=True, blank=True)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=True)  
 
     def __str__(self):
-        return f"{self.type} - {self.category} - {self.total}"
+        return f"{self.vendor} - Total: {self.total}"
+
+    def clean(self):
+        # Validate expense against ExpenseTerms
+        self.validate_expense_terms()
+
+    def validate_expense_terms(self):
+        # Get the user's role
+        user_role = self.business.owner.role  # Assuming the Business model has an owner field
+        
+        # Fetch relevant policies based on the user's role and category
+        policies = ExpenseTerms.objects.filter(
+            impacted_roles=user_role,
+            category=self.category  # Filter by category
+        )
+
+        if not policies.exists():
+            raise ValidationError("No applicable expense policy for the selected category.")
+
+        for policy in policies:
+            if self.total > policy.max_amount:
+                raise ValidationError(
+                    f"Total amount exceeds the maximum allowed for this policy: {policy.policy_description}"
+                )
+            if self.date.day != policy.enforcement_day:
+                raise ValidationError(
+                    f"Expense date must be on the enforcement day of this policy: {policy.policy_description}"
+                )
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Call the clean method to enforce validation
+        super().save(*args, **kwargs)
+
+
+class ExpenseTerms(models.Model):
+
+    CATEGORY_CHOICES = [
+    ('Travel', 'Travel'),
+    ('Supplies', 'Supplies'),
+    ('Meals', 'Meals'),
+    ('Other', 'Other'),  # Add more categories as necessary
+]
+    # Define roles as choices
+    ROLE_CHOICES = [
+        ('management', 'Management'),
+        ('sales', 'Sales'),
+        ('general', 'General Team'),
+    ]
+
+    # Policy details
+    policy_description = models.TextField()  # Detailed description of the policy
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=True,default=0)  # Make it nullable temporarily
+
+    max_amount = models.DecimalField(max_digits=10, decimal_places=2)  # Maximum allowed amount
+    enforcement_day = models.IntegerField()  # Day for enforcement (1-31)
+    impacted_roles = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Roles impacted by this policy
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the policy
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the policy was created
+
+    def __str__(self):
+        return f"{self.policy_description} - Max: {self.max_amount} - Role: {self.impacted_roles}"

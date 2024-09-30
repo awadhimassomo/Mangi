@@ -6,7 +6,7 @@
     <title>Add Credit</title>
     <style>
         body {
-            background-color: #ffffff; /* Use the specified background color */
+            background-color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,12 +19,13 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
-            width: 80%;
+            width: 90%; /* Adjust width for responsiveness */
             max-width: 800px;
             overflow: hidden;
+            flex-direction: row;
         }
         .left {
-            background-color:#750000;
+            background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
             color: white;
             padding: 40px;
             flex: 1;
@@ -54,32 +55,113 @@
             font-size: 16px;
         }
         form button {
-            background-color: #750000 ;
+            background-color: #750000;
             border: none;
             color: #ffffff;
             cursor: pointer;
         }
         form button:hover {
-            background-color: #750000;
+            background-color: #950000;
+        }
+        /* Responsive adjustments for small screens */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column; /* Stack the left and right sections vertically */
+                width: 100%; 
+                margin: 10px ;/* Take up full width on smaller screens */
+            }
+            .right {
+                padding: 20px; /* Adjust padding for smaller screens */
+            }
+            form input, form select, form button {
+                font-size: 14px; /* Adjust font size for smaller screens */
+                padding: 8px;
+            padding-bottom: 10px !important;
+            }
+        }
+        /* Very small screen adjustments */
+        @media (max-width: 480px) {
+            .left img {
+                width: 100px; /* Adjust image size for very small screens */
+            }
+            .left p {
+                font-size: 14px;
+            }
+            form input, form select, form button {
+                font-size: 12px; /* Smaller font for inputs */
+            }
+            .right {
+                padding-left: 10px;
+                padding-right: 10px; /* Added padding for small screens */
+            }
+        }
+        /* Style for success popup */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #510A32;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .popup button {
+            background-color: #EE4540;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="left">
-           <!-- <img src="https://example.com/path-to-your-image.png" alt="Bank Loans">-->
+            <!-- <img src="https://example.com/path-to-your-image.png" alt="Bank Loans">-->
             <h2>Mangi</h2>
-            <p>Lets Push our customers to  the next hight of there business</p>
+            <p>Let's push our customers to the next height of their business</p>
         </div>
         <div class="right">
             <h1>Add Credit</h1>
-            <form method="post">
+            <form method="post" onsubmit="return handleSubmit(event)">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit">Add Credit</button>
             </form>
+            <p>Credits added: <span id="credit-count">0</span></p> <!-- Count of credits added -->
         </div>
     </div>
+
+    <!-- Success Popup -->
+    <div id="success-popup" class="popup">
+        <p>Credit successfully added!</p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
+    <script>
+        let creditCount = 0;
+
+        // Handle form submission
+        function handleSubmit(event) {
+            event.preventDefault();
+            creditCount++;
+            document.getElementById("credit-count").textContent = creditCount;
+            showPopup();
+        }
+
+        // Show success popup
+        function showPopup() {
+            document.getElementById("success-popup").style.display = "block";
+        }
+
+        // Close popup
+        function closePopup() {
+            document.getElementById("success-popup").style.display = "none";
+        }
+    </script>
 </body>
 </html>
-

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from sms.models import NetworkCredit
-from .models import CustomUser, Business,Customer
+from .models import CustomUser, Business,Customer, Partner
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.decorators import login_required
@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.contrib.auth import get_user_model, authenticate
-from .serializers import CustomerSerializer
+from .serializers import CustomerSerializer, PartnerSerializer
 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import  BusinessSerializer,UserRegistrationSerializer,UserLoginSerializer,CustomerSerializer
@@ -266,26 +266,52 @@ def list_users(request):
     serializer = UserRegistrationSerializer(users, many=True)
     return Response(serializer.data)
 
+
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_customers(request):
+def list_partners(request):
     business_id = request.query_params.get('business_id')
     if business_id:
-        customers = Customer.objects.filter(business__id=business_id)
+        partners = Partner.objects.filter(business_id=business_id)
     else:
-        customers = Customer.objects.all()
-    serializer = CustomerSerializer(customers, many=True)
+        partners = Partner.objects.all()
+    serializer = PartnerSerializer(partners, many=True)
     return Response(serializer.data)
 
-@api_view(['PUT'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def update_customer(request, pk):
-    customer = get_object_or_404(Customer, pk=pk)
-    serializer = CustomerSerializer(customer, data=request.data, partial=True)
+def create_partner(request):
+    serializer = PartnerSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def retrieve_partner(request, pk):
+    partner = get_object_or_404(Partner, pk=pk)
+    serializer = PartnerSerializer(partner)
+    return Response(serializer.data)
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_partner(request, pk):
+    partner = get_object_or_404(Partner, pk=pk)
+    serializer = PartnerSerializer(partner, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_partner(request, pk):
+    partner = get_object_or_404(Partner, pk=pk)
+    partner.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class BusinessListView(View):
@@ -293,7 +319,7 @@ class BusinessListView(View):
         businesses = Business.objects.all().values('id', 'businessName', 'businessType', 'businessAddress')
         business_list = list(businesses)  # Convert QuerySet to a list
         return JsonResponse(business_list, safe=False)
-    
+
 
 class BusinessDetailView(View):
     def get(self, request, id):

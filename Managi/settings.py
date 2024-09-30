@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'registration',
     'inventory',
     'rest_framework',
     'rest_framework.authtoken',
@@ -53,7 +52,8 @@ INSTALLED_APPS = [
      'qrcode',
      'django_filters',
      'rest_framework_simplejwt.token_blacklist',
-     'website'
+     'website',
+    'registration.apps.RegistrationConfig'
 ]
 
 REST_FRAMEWORK = {

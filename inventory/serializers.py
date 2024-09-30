@@ -66,16 +66,20 @@ class InstallmentSerializer(serializers.ModelSerializer):
         
 
 class ProductSerializer(serializers.ModelSerializer):
+    contact_phone = serializers.CharField(source='supplier.contactPhone', read_only=True)
+
     class Meta:
         model = Product
-        fields = ['id', 'product_name', 'price', 'cost', 'quantity', 'barcode', 'date_created', 
-                  'date_updated', 'supplier_id', 'category_id', 'warehouse_id', 'expire_date', 
-                  'active', 'description', 'taxable', 'product_type', 'discountable', 'business', 
-                  'min_stock', 'max_stock', 'location_type', 'location_identifier', 
-                  'isDeleted', 'isSynced', 'lastSyncTime']
+        fields = [
+            'id', 'product_name', 'price', 'cost', 'quantity', 'barcode', 
+            'date_created', 'date_updated', 'supplier_id', 'category_id', 
+            'warehouse_id', 'expire_date', 'active', 'description', 
+            'taxable', 'product_type', 'discountable', 'business', 
+            'min_stock', 'max_stock', 'location_type', 'location_identifier', 
+            'isDeleted', 'isSynced', 'lastSyncTime', 'contact_phone'
+        ]
     
     def create(self, validated_data):
-        # Remove 'business' from validated_data since it's passed separately
         business = validated_data.pop('business')
         return Product.objects.create(business=business, **validated_data)
     
@@ -84,6 +88,7 @@ class ProductSerializer(serializers.ModelSerializer):
         if business:
             instance.business = business
         return super().update(instance, validated_data)
+
 
 
 
