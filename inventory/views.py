@@ -1,13 +1,27 @@
 from datetime import date, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
+import random
+import string
 from venv import logger
 from django.shortcuts import render
+import requests
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from django.http import JsonResponse
-from .serializers import ExpenseSerializer, InstallmentSerializer, ProductSerializer, ProductSuggestionSerializer, SalesSerializer,SupplierSerializer,CategorySerializer
+from django.utils.crypto import get_random_string
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.crypto import get_random_string
+import logging  # For logging data received
+from datetime import timedelta
+logger = logging.getLogger(__name__)
+
+
+from sms.views import generate_reference
+from .serializers import CreateOrderSerializer, ExpenseSerializer, InstallmentSerializer, OrderItemSerializer, ProductSerializer, ProductSuggestionSerializer, SalesSerializer,SupplierSerializer,CategorySerializer
 from .serializers import TransactionSerializer,WarehouseSerializer,PurchaseSerializer
-from .models import Expense, Installment, Product, Sales,Supplier,Category,Transaction,Warehouse,Purchase
+from .models import BusinessType, Expense, Installment, Order, OrderItem, Product, ProductBusinessTypeAssociation, PublicProduct, Sales, SalesItem,Supplier,Category,Transaction,Warehouse,Purchase
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import status,viewsets
@@ -16,7 +30,7 @@ from rest_framework import filters
 from rest_framework.generics  import ListAPIView
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from registration.models import Business, Customer
+from registration.models import Business, BusinessProfile, Customer
 from django.views.decorators.http import require_GET
 from django.shortcuts import get_object_or_404
 from datetime import datetime
@@ -192,6 +206,7 @@ def getRoutes(request):
 
     return Response(routes)
 
+#order notifcation system and views: 
 
 class NotifySupplierAPIView(APIView):
     def post(self, request):
@@ -225,6 +240,198 @@ class PreOrderNotificationAPIView(APIView):
         # Send the response back to the frontend
         return Response(response_data, status=status.HTTP_200_OK)
 
+
+
+class CreateOrderAPIView(APIView):
+    
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        # Log the received data
+        logger.info(f"Received order data: {request.data}")
+        
+        # Deserialize and validate the request data
+        serializer = CreateOrderSerializer(data=request.data)
+        if not serializer.is_valid():
+            logger.error(f"Invalid data received: {serializer.errors}")
+            return Response({'status': 'error', 'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        data = serializer.validated_data
+        order_number = data.get('order_number')
+        supplier_id = data.get('supplier_id')
+        business_id = data.get('business_id')
+        order_items = data.get('items', [])
+
+        try:
+            # Fetch supplier and business from the database
+            supplier = Supplier.objects.get(id=supplier_id)
+            business = Business.objects.get(id=business_id)
+            
+            # Create the order
+            order = self._create_order(order_number, supplier, business)
+            
+            # Process the order items
+            self._create_order_items(order, order_items)
+            
+            # Generate a unique token and save it to the order
+            self._generate_order_token(order)
+
+            # Send SMS notification to the supplier
+            self._send_order_notification(supplier, order_number, order_items, order.token)
+
+            logger.info(f"Order {order_number} created successfully.")
+            return Response({'status': 'success', 'message': 'Order created and notifications sent.'}, status=status.HTTP_201_CREATED)
+        
+        except Supplier.DoesNotExist:
+            logger.error("Supplier not found.")
+            return Response({'status': 'error', 'message': 'Supplier not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Business.DoesNotExist:
+            logger.error("Business not found.")
+            return Response({'status': 'error', 'message': 'Business not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            # Catch any other exception and log it
+            logger.error(f"Error creating order: {e}")
+            return Response({'status': 'error', 'message': 'An unexpected error occurred while creating the order.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _create_order(self, order_number, supplier, business):
+        """
+        Creates and returns an order instance.
+        """
+        order = Order.objects.create(
+            order_number=order_number,
+            supplier=supplier,
+            business=business
+        )
+        return order
+
+    def _create_order_items(self, order, items):
+        """
+        Creates order items for the given order.
+        """
+        for item_data in items:
+            product_id = item_data.get('product_id')
+            quantity = item_data.get('quantity')
+            unit_price = item_data.get('unit_price')
+
+            # Calculate total price
+            total_price = quantity * unit_price
+            
+            # Create and validate the order item
+            item_serializer = OrderItemSerializer(data={
+                'order': order.id,
+                'product_id': product_id,
+                'quantity': quantity,
+                'unit_price': unit_price,
+                'total_price': total_price
+            })
+            if item_serializer.is_valid():
+                item_serializer.save()
+            else:
+                logger.error(f"Invalid order item data: {item_serializer.errors}")
+                raise ValueError(f"Invalid order item data: {item_serializer.errors}")
+
+    def _generate_order_token(self, order):
+        """
+        Generates a unique token for the order and saves it.
+        """
+        token = get_random_string(length=32)
+        order.token = token
+        order.save()
+
+    def _send_order_notification(self, supplier, order_number, order_items, token):
+        """
+        Sends an SMS notification to the supplier.
+        """
+        order_link = f"https://yourwebsite.com/complete_order/{token}/"
+        send_order_notification_via_sms(
+            supplier.contactPhone,
+            order_number,
+            order_items,
+            order_link
+        )
+
+    
+def fetch_product_name(product_id):
+    try:
+        # Fetch the product from the database using the product_id
+        product = Product.objects.get(id=product_id)
+        return product.product_name
+    except Product.DoesNotExist:
+        return "Unknown Product"
+
+def send_order_notification_via_sms(phone_number, order_number, order_items, order_link):
+    try:
+        from_ = "SOTECH"  # Sender name
+        url = 'https://messaging-service.co.tz/api/sms/v1/text/single'
+        headers = {
+            'Authorization': "Basic YXRoaW06TWFtYXNob2tv", 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        reference = generate_reference()  # Generate a reference for the message
+
+        # Generate the ordered items list as text for the SMS, fetching product names from the database
+        items_text = "\n".join([
+            f"{item['quantity']} x {fetch_product_name(item['product_id'])} @ {item['unit_price']} Tsh" 
+            for item in order_items
+        ])
+
+        # Message content with order link
+        message = f"Your order {order_number} has been created.\nItems:\n{items_text}\nComplete the order here: {order_link}"
+
+        payload = {
+            "from": from_,
+            "to": phone_number,
+            "text": message,
+            "reference": reference,
+        }
+
+        # Logging for tracking the request
+        print(f"Sending order notification to: {phone_number}, Reference: {reference}")
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            print("Order notification message sent successfully!")
+            return True
+        else:
+            print("Failed to send order notification message.")
+            print(response.status_code)
+            print(response.text)
+            return False
+    except Exception as e:
+        print(f'Error sending order notification: {e}')
+        return False    
+
+def process_order(request, token):
+    order = get_object_or_404(Order, token=token)
+    # Update the order status to "Processing"
+    order.status = 'Processing'
+    order.save()
+    return Response({'status': 'success', 'message': 'Order is being processed.', 'order_status': order.status}, status=status.HTTP_200_OK)
+
+def cancel_order(request, token):
+    order = get_object_or_404(Order, token=token)
+    # Update the order status to "Cancelled"
+    order.status = 'Cancelled'
+    order.save()
+    return Response({'status': 'success', 'message': 'Order has been cancelled.', 'order_status': order.status}, status=status.HTTP_200_OK)
+
+def send_order(request, token):
+    order = get_object_or_404(Order, token=token)
+    # Update the order status to "Sent"
+    order.status = 'Sent'
+    order.save()
+    return Response({'status': 'success', 'message': 'Order has been sent.', 'order_status': order.status}, status=status.HTTP_200_OK)
+
+def complete_order_view(request, token):
+    # Find the order with the given token
+    order = get_object_or_404(Order, token=token)
+
+    # Pass the order details to the template
+    return render(request, 'complete_order.html', {'order': order})
+        
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -361,19 +568,22 @@ class CreateProduct(generics.CreateAPIView):
         contact_phone = product_data.get('contactPhone')
         if contact_phone:
             try:
-        # Fetch the supplier by phone number
                 supplier = Supplier.objects.get(contactPhone=contact_phone)
 
-        # Compare local and remote supplier IDs
-                if supplier.id != product_data.get('supplier_id'):
-                    logger.error(f"Supplier ID mismatch: Local ID {supplier.id}, Remote ID {product_data.get('supplier_id')}")
+                # **Updated Section**: Compare local and remote supplier IDs
+                local_id = str(supplier.id).strip()
+                remote_id = str(product_data.get('supplier_id')).strip()
+
+                if local_id != remote_id:
+                    logger.error(f"Supplier ID mismatch: Local ID {repr(local_id)}, Remote ID {repr(remote_id)}")
                 else:
-                     logger.info(f"Supplier ID match: {supplier.id}")
+                    logger.info(f"Supplier ID match: {local_id}")
 
             except Supplier.DoesNotExist:
                 errors.append('Supplier not found')
         else:
-                 errors.append('Contact phone is missing in the request data.')
+            errors.append('Contact phone is missing in the request data.')
+            
 # Validate category and ensure subtype is unique
         if product_data.get('category_id'):
              try:
@@ -436,7 +646,7 @@ class CreateProduct(generics.CreateAPIView):
                 price=product_data['price'],
                 cost=product_data['cost'],
                 quantity=product_data['quantity'],
-                supplier=product_data['supplier_id'],
+                supplier=supplier,
                 warehouse=warehouse,
                 category=category,
                 business=business,  # Use the validated business instance
@@ -447,8 +657,10 @@ class CreateProduct(generics.CreateAPIView):
                 location_type=product_data.get('location_type', 'store'),  # Default to 'store'
                 location_identifier=product_data.get('location_identifier', None),  # None if not provided
             )
+  
+            
         except Exception as e:
-            error_message = f'Error creating product: {str(e)}'
+            error_message = f'Error creating productt: {str(e)}'
             logger.error(error_message)
             return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -456,15 +668,10 @@ class CreateProduct(generics.CreateAPIView):
         serializer = self.get_serializer(new_product)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
 class SyncProductsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        """
-        Handles syncing products from the client to the server.
-        Supports bulk update and creation for better performance.
-        """
         user = request.user
         client_products = request.data.get('products', [])
         business_id = request.data.get('business_id')
@@ -498,8 +705,7 @@ class SyncProductsView(APIView):
                 # Update product directly
                 product_serializer = ProductSerializer(product, data=product_data, partial=True)
                 if product_serializer.is_valid():
-                    product_serializer.save()  # Save the updated product
-                    synced_products.append(product_serializer.data)  # Collect synced data
+                    product = product_serializer.save()  # Save the updated product
                 else:
                     logger.error(f"Error updating product: {product_serializer.errors}")
                     return Response(product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -507,16 +713,48 @@ class SyncProductsView(APIView):
                 logger.info(f"Creating new product: {product_data.get('product_name')}")
                 product_serializer = ProductSerializer(data=product_data)
                 if product_serializer.is_valid():
-                    product_serializer.save()  # Save the new product
-                    synced_products.append(product_serializer.data)  # Collect synced data
+                    product = product_serializer.save()  # Save the new product
                 else:
                     logger.error(f"Error creating product: {product_serializer.errors}")
                     return Response(product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # Sync product to PublicProduct only if creation/update was successful
+            self._sync_to_public_product(product, product_data)
+
+            synced_products.append(product_serializer.data)  # Collect synced data
 
         logger.info(f"Returning synced products: {synced_products}")
         return Response({
             'synced_products': synced_products,
         }, status=status.HTTP_200_OK)
+
+    def _sync_to_public_product(self, product, product_data):
+        try:
+            # Check if the public product already exists
+            public_product, created = PublicProduct.objects.get_or_create(
+                barcode=product.barcode,
+                defaults={
+                    'product_name': product.product_name,
+                    # other fields as needed
+                }
+            )
+            if not created:
+                # Update public product if it already exists
+                public_product.product_name = product.product_name
+                # other fields as needed
+                public_product.save()
+
+            # Create or update association
+            ProductBusinessTypeAssociation.objects.update_or_create(
+                product=product,
+                public_product=public_product,
+                defaults={'business_type': product.business.businessType}
+            )
+            logger.info(f"Successfully synced product {product.product_name} to PublicProduct")
+        except Exception as e:
+            logger.error(f"Error syncing product to PublicProduct: {str(e)}")
+
+
 
 @api_view(['DELETE'])
 def deleteProduct(request, pk):
@@ -588,14 +826,25 @@ def createSupplier(request):
     supplier_data = request.data.copy()
     supplier_data['business'] = business.id
 
-    serializer = SupplierSerializer(data=supplier_data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    else:
-        # Log the errors if the data is not valid
-        logger.error(f"Validation errors: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Wrap the database save operation in an atomic transaction
+    try:
+        with transaction.atomic():
+            serializer = SupplierSerializer(data=supplier_data)
+            if serializer.is_valid():
+                supplier = serializer.save()
+                
+                # Log the successful creation of the supplier
+                logger.info(f"Supplier created successfully: {supplier}")
+                
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                # Log validation errors
+                logger.error(f"Validation errors: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        # Log any unexpected errors
+        logger.error(f"An unexpected error occurred: {str(e)}")
+        return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -655,7 +904,8 @@ def deleteSupplier(request, pk):
     except Exception as e:
         logger.exception("Error during deletion of supplier with ID %s: %s", pk, str(e))
         return Response({"error": "Failed to delete the supplier.", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+
 class SyncSupplierView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = SupplierSerializer
@@ -665,21 +915,68 @@ class SyncSupplierView(generics.GenericAPIView):
         synced_suppliers = []
         errors = []
 
+        # Log the incoming supplier data for debugging
+        logger.info(f"Incoming supplier data: {suppliers_data}")
+
+        # Handle both list and single dictionary
+        if isinstance(suppliers_data, dict):
+            suppliers_data = [suppliers_data]  # Wrap in a list if it's a single supplier
+
+        if not isinstance(suppliers_data, list):
+            logger.error("Expected a list of suppliers or a single supplier object.")
+            return Response({"error": "Expected a list of suppliers or a single supplier object."}, status=status.HTTP_400_BAD_REQUEST)
+
         for supplier_data in suppliers_data:
-            serializer = self.get_serializer(data=supplier_data)
-            if serializer.is_valid():
-                supplier = serializer.save()  # Save the supplier to the database
-                supplier.isSynced = True  # Mark as synced
-                supplier.save()
-                synced_suppliers.append(supplier.id)
-                logger.info(f"Successfully synced supplier: {supplier.id}")
+            if not isinstance(supplier_data, dict):
+                errors.append("Supplier data must be a dictionary.")
+                continue
+
+            supplier_id = supplier_data.get('id', None)  # Get the supplier ID from the data
+
+            if not supplier_id:
+                errors.append("Supplier data must contain an 'id' field.")
+                continue
+
+            # Check if the supplier already exists using the local ID
+            try:
+                supplier = Supplier.objects.get(id=supplier_id)  # Attempt to retrieve the supplier by ID
+            except Supplier.DoesNotExist:
+                supplier = None  # Supplier doesn't exist, will create a new one
+
+            # Normalize supplierType: Check for both possible keys
+            supplier_type = supplier_data.get('supplierType') or supplier_data.get('supplier_type', '').lower()
+            valid_choices = {choice[1].lower(): choice[0] for choice in Supplier.supplierType_CHOICES}
+            normalized_type = valid_choices.get(supplier_type)
+
+            if normalized_type:
+                supplier_data['supplierType'] = normalized_type  # Update to the model's stored value
             else:
-                errors.append(f"Failed to sync supplier data: {serializer.errors}")
+                errors.append(f"Invalid supplierType: {supplier_type}. Must be one of: {list(valid_choices.keys())}")
+                continue
+
+            # Use the serializer to either update an existing supplier or create a new one
+            serializer = self.get_serializer(instance=supplier, data=supplier_data, partial=True)  # Use partial=True to allow for updates
+
+            # Validate the data
+            if not serializer.is_valid():
+                errors.append(f"Validation errors for supplier {supplier_id}: {serializer.errors}")
+                continue
+
+            supplier = serializer.save()  # Save the supplier to the database
+            supplier.isSynced = True  # Mark as synced
+            supplier.save()
+
+            synced_suppliers.append(supplier.id)
+            logger.info(f"Successfully synced supplier: {supplier.id}")
+
+        if errors:
+            return Response({"synced_suppliers": synced_suppliers, "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'synced_suppliers': synced_suppliers,
             'errors': errors
         }, status=status.HTTP_200_OK)
+
 
 # Views for the Category model
 
@@ -804,10 +1101,46 @@ def createTransaction(request):
         data['transaction_type'] = data['transaction_type'].lower()
     else:
         logger.warning("Transaction type is missing in the request data.")
-    
+
+    # Ensure foreign keys exist
+    business_id = data.get('business')
+    customer_id = data.get('customer', None)
+    supplier_id = data.get('supplier', None)  # If applicable
+
+    # Validate business
+    try:
+        business = Business.objects.get(id=business_id)
+    except Business.DoesNotExist:
+        logger.error(f"Business with ID {business_id} does not exist.")
+        return Response(
+            {'error': f"Business with ID {business_id} does not exist."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Validate customer or supplier
+    if customer_id:
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            logger.error(f"Customer with ID {customer_id} does not exist.")
+            return Response(
+                {'error': f"Customer with ID {customer_id} does not exist."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    elif supplier_id:
+        try:
+            supplier = Supplier.objects.get(id=supplier_id)
+        except Supplier.DoesNotExist:
+            logger.error(f"Supplier with ID {supplier_id} does not exist.")
+            return Response(
+                {'error': f"Supplier with ID {supplier_id} does not exist."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     # Log the modified data
     logger.debug(f"Modified transaction data: {data}")
 
+    # Validate and save the transaction
     serializer = TransactionSerializer(data=data)
     if serializer.is_valid():
         try:
@@ -816,12 +1149,37 @@ def createTransaction(request):
 
             # Handle installments automatically if the transaction type is 'loan'
             if transaction.transaction_type == 'loan':
-                # Generate installments based on the transaction details
-                installments_data = generateInstallmentsForTransaction(transaction)
+                num_installments = 3  # For example, split into 3 installments
+                installment_amount = round(transaction.total_amount / num_installments, 2)  # Round to 2 decimal places
+                installment_dates = [
+                    transaction.transaction_date + timedelta(days=30 * i)
+                    for i in range(1, num_installments + 1)
+                ]
+                
+                installments_data = []
+                for due_date in installment_dates:
+                    installment_data = {
+                        'due_date': due_date,
+                        'amount_due': installment_amount,  # Ensure amount is rounded
+                        'amount_paid': 0,
+                        'business': transaction.business.id,
+                        'transaction_id': transaction.id,
+                        'customer': transaction.customer.id if transaction.customer else None,  # Add customer if present
+                        'supplier': None  # You can add supplier if necessary
+                    }
 
-                for installment_data in installments_data:
-                    # Include the transaction ID in each installment's data
-                    installment_data['transaction'] = transaction.id
+                    # Ensure that either customer or supplier is set
+                    if not installment_data.get('customer') and not installment_data.get('supplier'):
+                        logger.error("Either customer or supplier must be set for each installment.")
+                        return Response(
+                            {'error': 'Either customer or supplier must be set for each installment.'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    installments_data.append(installment_data)
+                    logger.debug(f"Generated installment data: {installment_data}")
+
+                    # Serialize and save the installment data
                     installment_serializer = InstallmentSerializer(data=installment_data)
 
                     if installment_serializer.is_valid():
@@ -832,7 +1190,7 @@ def createTransaction(request):
                         return Response(installment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         except Exception as e:
             logger.error(f"Error saving transaction: {e}", exc_info=True)
             return Response(
@@ -840,9 +1198,52 @@ def createTransaction(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     else:
-        logger.error(f"Validation errors: {serializer.errors}")
+        # Log validation errors if the transaction fails to validate
+        logger.error(f"Transaction validation errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+class SyncTransactionView(APIView):
+    def post(self, request, *args, **kwargs):
+        # Log incoming request data
+        logging.info(f"Incoming request data: {request.data}")
+
+        # Check if the request data is empty or missing fields
+        if not request.data:
+            logging.warning("Request data is missing or empty.")
+            return Response({'error': 'Request data is missing or empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Normalize the transaction type to be case insensitive
+        if 'transaction_type' in request.data:
+            request.data['transaction_type'] = request.data['transaction_type'].lower()
+
+        # Convert transaction_date to the correct format if needed
+        if 'transaction_date' in request.data:
+            try:
+                request.data['transaction_date'] = request.data['transaction_date'].strftime('%Y-%m-%d')
+            except AttributeError:
+                logging.warning("transaction_date is not in datetime format.")
+
+        # Deserialize the request data
+        serializer = TransactionSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                # Save the transaction to the database
+                transaction = serializer.save()
+                # Mark transaction as synced
+                transaction.is_synced = True
+                transaction.save()
+                return Response({'message': 'Transaction synced successfully'}, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                logging.error(f"Error saving transaction: {str(e)}")
+                return Response({'error': 'Internal server error while saving transaction'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            # Log the errors to help understand the issue
+            logging.warning(f"Invalid transaction data: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        
 def generateInstallmentsForTransaction(transaction):
     installments_data = []
     num_installments = 3
@@ -855,7 +1256,7 @@ def generateInstallmentsForTransaction(transaction):
 
         installment_data = {
             'amount_due': installment_amount,
-            'due_date': (transaction.transaction_date + timedelta(days=30*(i+1))).isoformat(),
+            'due_date': (transaction.transaction_date + timedelta(days=30*(i+1))).strftime('%Y-%m-%d'),
             'business_id': transaction.business.id,
         }
         installments_data.append(installment_data)
@@ -865,11 +1266,15 @@ def generateInstallmentsForTransaction(transaction):
 
 @api_view(['POST'])
 def create_installment(request):
+    print(f"Received data: {request.data}")  # Log the incoming data for debugging
     serializer = InstallmentSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Log the validation errors to understand what went wrong
+        print(f"Validation errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -1060,23 +1465,202 @@ def add_installment(request):
         return JsonResponse({'message': 'Installment added successfully', 'installment_id': installment.id})
 
 
+def generate_reference():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
 
+
+def send_sms_after_sale(customer, sale, business):
+    try:
+        # Check if the sale has items and gather product details
+        items = sale.items.all()
+        if not items:
+            logger.error(f"No products found in sale ID {sale.id}")
+            return
+
+        # Format product details into a list-like structure
+        product_details = "\n".join([
+            f"- {item.quantity} x {item.product.product_name}" for item in items
+        ])
+        logger.info(f"Products found: {product_details}")
+
+        # Retrieve other sale and business details safely
+        customer_name = f"**{customer.name}**" if customer else "Mteja"
+        business_name = f"**{business.businessName}**" if business else "Biashara isiyojulikana"
+        business_phone = business.businessPhoneNumber if business else "N/A"
+        total_amount = sale.total_amount
+
+        # Compose the message with bold-like formatting
+        message_body = (
+            f"Asante {customer_name} kwa kununua bidhaa zifuatazo kutoka {business_name}:\n"
+            f"{product_details}\n"
+            f"Jumla ya gharama: {total_amount} TSh.\n"
+            f"Karibu tena kwa mahitaji yako, na kwa mawasiliano zaidi piga {business_phone}.\n"
+            f"Tunathamini wateja wetu!"
+        )
+
+        # Send SMS
+        send_sms(customer.phoneNumber, message_body)
+
+    except Product.DoesNotExist:
+        logger.error(f"Product in sale ID {sale.id} does not exist.")
+    except Exception as e:
+        logger.error(f"Error processing sale ID {sale.id}: {str(e)}", exc_info=True)
+
+
+
+def send_sms(phone_number, message_body):
+    """ Function to send SMS using an external SMS service. """
+    url = 'https://messaging-service.co.tz/api/sms/v1/text/single'
+    headers = {
+        'Authorization': "Basic YXRoaW06TWFtYXNob2tv",
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    payload = {
+        "from": "OTP",
+        "to": phone_number,
+        "text": message_body,
+        "reference": generate_reference(),  # Ensure you have a function to generate a reference
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            logger.info("SMS sent successfully to %s", phone_number)
+        else:
+            logger.error(f"Failed to send SMS: {response.status_code} {response.text}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error sending SMS to {phone_number}: {str(e)}", exc_info=True)
+
+        
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_sales(request):
     logger.info(f"Received sales data: {request.data}")  # Log the received data
-    serializer = SalesSerializer(data=request.data)
+
+    # Extract the items from the request data
+    items_data = request.data.get('items', [])
+    if not items_data:
+        return Response({'error': 'No items provided for the sale.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Extract the transaction_id from the request data
+    transaction_id = request.data.get('transaction_id')
+    if not transaction_id:
+        return Response({'error': 'transaction_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Fetch the Transaction object using the transaction_id
+    try:
+        transaction = Transaction.objects.get(id=transaction_id)
+    except Transaction.DoesNotExist:
+        return Response({'error': f"Transaction with ID {transaction_id} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Prepare the data for the serializer
+    sales_data = request.data.copy()
+    sales_data['transaction_id'] = transaction.id  # Use the Transaction instance
+    
+    # Create the sale object using the provided transaction and business_id
+    serializer = SalesSerializer(data=sales_data)
     if serializer.is_valid():
         try:
-            sale = serializer.save()
-            logger.info(f"Sales created successfully with ID: {sale.id}")
-            return Response({'message': 'Sales created successfully', 'sales_id': sale.id}, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            logger.error(f"Error saving sales: {e}", exc_info=True)
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    logger.error(f"Sales validation errors: {serializer.errors}")
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # Save the Sale object
+            sale = serializer.save(transaction_id=transaction)  # Pass the Transaction instance
 
+            # Initialize total amount for the sale
+            total_amount = 0
+
+            # Loop through each item in the items_data
+            for item_data in items_data:
+                product_id = item_data.get('product_id')
+                quantity = item_data.get('quantity')
+                price_per_unit = item_data.get('price_per_unit')
+
+                # Fetch the product
+                try:
+                    product = Product.objects.get(id=product_id)
+                except Product.DoesNotExist:
+                    logger.error(f"Product with ID {product_id} does not exist.")
+                    return Response({'error': f"Product with ID {product_id} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+                # Calculate the total price for the SalesItem
+                total_price = quantity * price_per_unit
+
+                # Create the SalesItem for the sale
+                SalesItem.objects.create(
+                    sale=sale,
+                    product=product,
+                    quantity=quantity,
+                    price_per_unit=price_per_unit,
+                    total_price=total_price
+                )
+
+                # Update the total amount for the Sale
+                total_amount += total_price
+
+            # Update the sale total_amount
+            sale.total_amount = total_amount
+            sale.save()
+
+            logger.info(f"Sales created successfully with ID: {sale.id}")
+
+            # Fetch customer and business details if needed for SMS
+            customer_id = request.data.get('customer_id')
+            business_id = sale.business.id
+
+            try:
+                customer = Customer.objects.get(id=customer_id)
+                business = sale.business
+            except Customer.DoesNotExist:
+                logger.error(f"Customer with ID {customer_id} does not exist.")
+                return Response({'error': f"Customer with ID {customer_id} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+            except Business.DoesNotExist:
+                logger.error(f"Business with ID {business_id} does not exist.")
+                return Response({'error': f"Business with ID {business_id} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Send SMS after sale is created (assume you have this function)
+            send_sms_after_sale(customer, sale, business)
+
+            return Response({'message': 'Sales created successfully', 'sales_id': sale.id}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"Error saving sales: {str(e)}", exc_info=True)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        logger.error(f"Sales validation errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SyncSaleView(APIView):
+    def post(self, request):
+        try:
+            transaction_id = request.data.get('transaction_id')
+
+            # Check if the transaction already exists
+            transaction, created = Transaction.objects.get_or_create(
+                id=transaction_id,
+                defaults={
+                    'transaction_type': request.data.get('transaction_type'),
+                    'transaction_date': request.data.get('transaction_date'),
+                    'business_id': request.data.get('business_id'),
+                    'customer_id': request.data.get('customer'),
+                    'total_amount': request.data.get('total_amount'),
+                    'outstanding_amount': request.data.get('outstanding_amount'),
+                    'is_synced': request.data.get('is_synced', False),
+                    'is_deleted': request.data.get('is_deleted', False),
+                }
+            )
+
+            if not created:
+                # If the transaction exists, you can log it or update fields as needed
+                print(f"Transaction {transaction_id} already exists. Skipping creation.")
+
+            return Response(
+                {'message': 'Transaction synced successfully' if created else 'Transaction already exists'},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

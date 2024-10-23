@@ -2,7 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import NetworkCreditViewSet,ResendOTPView, OTPCreditViewSet, SendOTPView, VerifyOTPView
+from .views import NetworkCreditViewSet,ResendOTPView, OTPCreditViewSet, SendOTPView, VerifyOTPView, daily_report_view
 from .views import SendCreditView, add_credit_view, credit_success_view,PasswordResetRequestView,PasswordResetConfirmView
 
 # Create a router and register our viewsets with it.
@@ -20,6 +20,7 @@ urlpatterns = [
     path('credit-success/', credit_success_view, name='credit_success'),
     path('verify-otp/',VerifyOTPView.as_view(), name='verify-otp'),  # Add the credit-success view
     path('passwordrest/',PasswordResetRequestView.as_view(), name='passwordrest'),
+    path('daily-report/', daily_report_view, name='daily_report'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 ]
 

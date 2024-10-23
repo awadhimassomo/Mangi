@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #eee;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #C72C41;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-width: 120px;
+        }
+        .header .company-info {
+            text-align: right;
+        }
+        .company-info h1 {
+            font-size: 1.8em;
+            margin: 0;
+            color: #510A32;
+        }
+        .company-info p {
+            margin: 5px 0;
+        }
+        .details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .details .box {
+            width: 48%;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .details .box h3 {
+            margin-top: 0;
+            color: #801336;
+        }
+        .details .po-details {
+            text-align: left;
+        }
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .pricing-table th, .pricing-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .pricing-table th {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .total-section {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .total-section p {
+            font-size: 1.1em;
+        }
+        .total-section p span {
+            font-weight: bold;
+            margin-left: 20px;
+        }
+        .terms {
+            font-size: 0.9em;
+            margin-top: 30px;
+        }
+    </style>
+    <title>Purchase Order</title>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div>
+                {% if business_profile.logo %}
+                <img src="{{ business_profile.logo.url }}" alt="Company Logo">
+                {% endif %}
+            </div>
+            <div class="company-info">
+                <h1>{{ business_profile.business.businessName }}</h1>
+                <p>TIN: {{ business_profile.tinNumber|default:"None" }}</p>
+                <p>Address: {{ business_profile.business.address }}</p>
+                <p>Email: {{ business_profile.businessEmail }}</p>
+            </div>
+        </div>
+
+        <!-- PO Details -->
+        <div class="details">
+            <div class="box po-details">
+                <h3>Purchase Order (P.O)</h3>
+                <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                <p><strong>Requested On:</strong> {{ order.requested_date }}</p>
+                <p><strong>Due Date:</strong> {{ order.completion_date }}</p>
+            </div>
+            <div class="box">
+                <h3>Bill To</h3>
+                <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+                <p><strong>Address:</strong> {{ order.customer_address }}</p>
+                <p><strong>Contact:</strong> {{ order.customer_contact }}</p>
+            </div>
+        </div>
+
+        <!-- Pricing Table -->
+        <h3>Pricing</h3>
+        <table class="pricing-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.product_id.product_name }}</td>
+                    <td>${{ item.unit_price }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.total_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals Section -->
+        <div class="total-section">
+            <p>Subtotal: <span>${{ order.subtotal }}</span></p>
+            <p>Taxes (12%): <span>${{ order.taxes }}</span></p>
+            <p>Discount (5%): <span>${{ order.discount }}</span></p>
+            <p>Grand Total: <span>${{ order.grand_total }}</span></p>
+        </div>
+
+        <!-- Terms & Conditions -->
+        <div class="terms">
+            <h4>Terms & Conditions</h4>
+            <p>Please make advance payments before services begin. All payments are to be made to the company account or the provided mobile payment number above.</p>
+        </div>
+
+        <!-- Footer Information -->
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>If you have any questions, please contact us at <strong>{{ business_profile.businessEmail }}</strong>.</p>
+        </div>
+    </div>
+</body>
+</html>

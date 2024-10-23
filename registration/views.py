@@ -6,6 +6,8 @@ from rest_framework import viewsets,generics,status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from inventory.models import BusinessType, PublicProduct
+from inventory.serializers import ProductSerializer
 from sms.models import NetworkCredit
 from .models import CustomUser, Business,Customer, Partner
 from rest_framework.decorators import api_view, permission_classes
@@ -16,6 +18,9 @@ from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.contrib.auth import get_user_model, authenticate
 from .serializers import CustomerSerializer, PartnerSerializer
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import  BusinessSerializer,UserRegistrationSerializer,UserLoginSerializer,CustomerSerializer
@@ -65,7 +70,7 @@ class RegisterBusinessView(viewsets.ModelViewSet):
         # Extract the owner ID from the request data
         owner_id = data.get('owner')
         if owner_id is None:
-            logger.warning(" not provided in the request data.")
+            logger.warning("Owner ID not provided in the request data.")
             return Response({'status': 'error', 'message': 'Owner ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         logger.debug(f"Searching for User with Owner ID: {owner_id}")
@@ -80,6 +85,8 @@ class RegisterBusinessView(viewsets.ModelViewSet):
 
         # Add the user to the owners list
         data['owner'] = user.id
+
+   
 
         try:
             with transaction.atomic():
@@ -118,6 +125,32 @@ class RegisterBusinessView(viewsets.ModelViewSet):
                 'status': 'error',
                 'message': f"Failed to register business. Details: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+    def _sync_public_products_to_business(self, business):
+        # Fetch public products associated with the new business's businessType
+        public_products = PublicProduct.objects.filter(business_type=business.businessType)
+        
+        if not public_products.exists():
+            logger.info(f"No public products found for businessType: {business.businessType}")
+            return
+        
+        # Create new products in this business based on public products
+        for public_product in public_products:
+            product_data = {
+                'barcode': public_product.barcode,
+                'product_name': public_product.product_name,
+                'business': business.id,  # Associate with the new business
+                # Add other fields as needed, using public_product's fields
+            }
+
+            # Create a new Product for this business
+            product_serializer = ProductSerializer(data=product_data)
+            if product_serializer.is_valid():
+                product_serializer.save()
+                logger.info(f"Product {public_product.product_name} added to business {business.name}")
+            else:
+                logger.error(f"Failed to create product for business {business.name}: {product_serializer.errors}")
+
         
         
 @api_view(['POST'])
@@ -128,17 +161,20 @@ def login_view(request):
     user = authenticate(request, username=phoneNumber, password=password)
     
     if user is not None:
-        refresh = RefreshToken.for_user(user)
+        if not user.isVerified:
+            # Custom response for unverified accounts
+            return Response({
+                "error": "Account not verified",
+                "message": "Your account is not verified. Please verify your account to proceed."
+            }, status=498)
         
-        # Debugging output
-        print(f"User: {user.username}")  
-        print(f"Refresh Token: {str(refresh)}")  
-        print(f"Access Token: {str(refresh.access_token)}")  
+        # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
         
         # Retrieve businesses associated with the user
         businesses = Business.objects.filter(owner=user)
-        print(f"Businesses for user {user.id}: {businesses}")
-        
         businesses_data = [
             {
                 "id": b.id,
@@ -146,7 +182,7 @@ def login_view(request):
                 "businessAddress": b.businessAddress,
                 "businessPhoneNumber": b.businessPhoneNumber,
                 "lipaNumber": b.lipaNumber,
-                "businessType": b.businessType,
+                "businessType": b.businessType.name if b.businessType else None,
                 "phoneNetwork": b.phoneNetwork,
             }
             for b in businesses
@@ -158,15 +194,8 @@ def login_view(request):
         is_staff = user.is_staff
         vcard_qrImage = user.vcard_qrImage.url if user.vcard_qrImage else None
 
-        # Print additional user details for debugging
-        print(f"Email: {email}")
-        print(f"Role: {role}")
-        print(f"Is Staff: {is_staff}")
-        print(f"VCard QR Image: {vcard_qrImage}")
-
         # Include the owner ID (user ID) in the response
         owner_id = user.id
-        print(f"Owner ID: {owner_id}")
 
         # Return the response with the access token and additional user details
         return Response({
@@ -176,14 +205,14 @@ def login_view(request):
             'role': role,
             'is_staff': is_staff,
             'vcard_qrImage': vcard_qrImage,
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'owner_id': owner_id,  # Include the owner ID in the response
+            'refresh': refresh_token,
+            'access': access_token,
+            'owner_id': owner_id,
             'businesses': businesses_data
         })
     else:
-        print("Invalid credentials")
-        return Response({"error": "Invalid credentials"}, status=400)
+        # Return an error response for invalid credentials
+        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 #importating data
 
@@ -325,6 +354,13 @@ class BusinessDetailView(View):
     def get(self, request, id):
         try:
             business = Business.objects.get(pk=id)
+            
+            # If businessType is a foreign key, you can access its name or ID like this:
+            business_type_data = business.businessType.name if business.businessType else None
+            
+            # Alternatively, if it's a many-to-many relationship:
+            # business_type_data = [bt.name for bt in business.businessType.all()]
+            
             business_data = {
                 'id': business.id,
                 'uuid': business.uuid,
@@ -332,7 +368,7 @@ class BusinessDetailView(View):
                 'businessAddress': business.businessAddress,
                 'businessPhoneNumber': business.businessPhoneNumber,
                 'lipaNumber': business.lipaNumber,
-                'businessType': business.businessType,
+                'businessType': business_type_data,
                 'phoneNetwork': business.phoneNetwork,
                 'website': business.website,
                 'owner': business.owner.id,  # Include only the owner ID
@@ -344,8 +380,7 @@ class BusinessDetailView(View):
             }
             return JsonResponse(business_data)
         except Business.DoesNotExist:
-            raise Http404("Business not found")
-
+            return JsonResponse({'error': 'Business not found'}, status=404)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -392,6 +427,39 @@ def update_business(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Business.DoesNotExist:
         return Response("Business not found", status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Requires token authentication
+def sync_customers(request):
+    try:
+        # Log the incoming request data
+        logging.info(f"Received data: {request.data}")
+        
+        # Get the data from the request body
+        customers_data = request.data
+        
+        # Process each customer from the request
+        for customer_data in customers_data:
+            Customer.objects.update_or_create(
+                id=customer_data.get('id'),
+                defaults={
+                    'name': customer_data.get('name'),
+                    'phoneNumber': customer_data.get('phoneNumber'),
+                    'tinNumber': customer_data.get('tinNumber'),
+                    'date_added': customer_data.get('date_added'),
+                    'business_id': customer_data.get('business_id'),  # Ensure business_id is saved
+                    'isDeleted': customer_data.get('isDeleted', False),
+                    'isSynced': customer_data.get('isSynced', False),
+                    'frequency': customer_data.get('frequency', 0),
+                }
+            )
+
+        # Return a success response
+        return Response({'status': 'success', 'message': 'Customers synced successfully.'})
+
+    except Exception as e:
+        logging.error(f"Error while syncing customers: {e}")
+        return Response({'status': 'error', 'message': str(e)}, status=400)
     
 
 

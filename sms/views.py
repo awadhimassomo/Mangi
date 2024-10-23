@@ -1,18 +1,21 @@
+import json
 import random
+import string
 import uuid
 from django.forms import ValidationError
+from django.views import View
 import requests
 from django.utils import timezone
 from datetime import datetime, timedelta
 from rest_framework import status,viewsets
-
+from django.views.decorators.csrf import csrf_exempt
 from sms.otp_service import OTPVerificationService
 from .models import NetworkCredit, OTPCredit,BenefitedPhoneNumber
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .forms import CreditForm
 from django.shortcuts import render, redirect
-from registration.models import CustomUser, Business 
+from registration.models import BusinessProfile, CustomUser, Business, Customer, Partner 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from registration.serializers import BusinessListSerializer, BusinessSerializer, User
@@ -25,7 +28,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
-
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import NetworkCreditSerializer, OTPCreditSerializer,OTPVerifySerializer,ResendOTPSerializer,PasswordResetConfirmSerializer
 
@@ -156,12 +158,124 @@ def send_otp_via_sms(phoneNumber, otp):
         return False
 
 
+def generate_reference():
+    """Generate a unique reference for SMS tracking."""
+    return f"REF-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+
+
+
+@csrf_exempt  # Bypass CSRF for this endpoint
+def daily_report_view(request):
+    """Receive the daily report data and trigger SMS to the owner and partners."""
+    if request.method == 'POST':
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+
+            # Extract relevant data
+            date = data.get('date')
+            total_sales = data.get('total_sales', 0.0)
+            total_expenses = data.get('total_expenses', 0.0)
+            net_amount = data.get('net_amount', 0.0)
+            loan_collections = data.get('loan_collections', 0.0)
+            phone_number = data.get('phone_number')  # Ensure phone number is provided
+
+            # Validate the phone number
+            if not phone_number:
+                return JsonResponse({'status': 'error', 'message': 'Phone number is required'}, status=400)
+
+            # Send SMS to the business owner
+            send_sms(phone_number, total_sales, total_expenses, net_amount, loan_collections)
+            
+            # Check for partners and calculate their share
+            partners = Partner.objects.all()
+            if partners.exists():
+                for partner in partners:
+                    percentage = partner.percentage  # Get the partner's profit share percentage
+                    profit_share = (net_amount * percentage) / 100  # Calculate their share
+
+                    # Construct and send the SMS to the partner
+                    partner_message = (
+                        f"Dear {partner.name},\n"
+                        f"Today's report: Net Profit: {net_amount:.2f}.\n"
+                        f"Your share ({percentage}%): {profit_share:.2f}.\n"
+                    )
+                    send_sms(partner.phone_number, partner_message)
+
+            return JsonResponse({'status': 'success', 'message': 'Report received and SMS sent'}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Only POST requests are allowed'}, status=405)
+
+
+def send_sms(phone_number, *args):
+    """Simulate sending an SMS."""
+    if isinstance(args[0], str):
+        message = args[0]  # If sending a custom message
+    else:
+        total_sales, total_expenses, net_amount, loan_collections = args
+        message = (
+            f"Daily Report:\n"
+            f"Total Sales: {total_sales}\n"
+            f"Total Expenses: {total_expenses}\n"
+            f"Net Profit: {net_amount}\n"
+            f"Loan Collections: {loan_collections}"
+        )
+    print(f"Sending SMS to {phone_number}:")
+    print(message)
+    
+    
+def send_sms(phone_number, total_sales, total_expenses, net_amount, loan_collections):
+    """Send SMS with the daily business report."""
+    message_body = f"""
+   REPOTI YA LEO:
+
+    Date: {datetime.now().strftime('%Y-%m-%d')}
+
+    Jumla ya Mauzo: {total_sales:,.2f} Tsh
+    Jumala ya MAtumizi: {total_expenses:,.2f} Tsh
+    Jumla Kuu: {net_amount:,.2f} Tsh
+    Madeni yaliokusanywa: {loan_collections:,.2f} Tsh
+
+    Asante na Usiku Mwema.
+    """
+
+    url = 'https://messaging-service.co.tz/api/sms/v1/text/single'
+    headers = {
+        'Authorization': "Basic YXRoaW06TWFtYXNob2tv",  # Replace with valid credentials
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    payload = {
+        "from": "OTP",
+        "to": phone_number,
+        "text": message_body.strip(),  # Remove leading/trailing spaces
+        "reference": generate_reference(),
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            logger.info(f"SMS sent successfully to {phone_number}")
+        else:
+            logger.error(f"Failed to send SMS: {response.status_code} {response.text}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error sending SMS to {phone_number}: {str(e)}", exc_info=True)
+
+
 
 class SendCreditView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        business_number = request.data.get('businessPhoneNumber')
+        print(f"Request data received: {request.data}")  # Debugging line
+
+        # Retrieve the correct key from the request data
+        business_number = request.data.get('business_phoneNumber')  # Use the correct key
         print(f"Received request to send credit to business number: {business_number}")
 
         # Check if the phone number has already benefited from the offer
@@ -183,6 +297,7 @@ class SendCreditView(APIView):
                 network_type__iexact=network_type,
                 used=False
             )
+
 
             # Print all NetworkCredits to see if any exist regardless of the network type
             all_credits = NetworkCredit.objects.all()
@@ -259,14 +374,19 @@ def send_credit_via_sms(business_number, credit_value, network_type):
     except Exception as e:
         print(f'Error sending credit: {e}')
         return False
-
-
+    
+    
+    
+#Sms:
 def add_credit_view(request):
     if request.method == 'POST':
         form = CreditForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('credit_success')
+            form.save()  # Save the credit to the database
+            return JsonResponse({'success': True, 'message': 'Credit successfully added!'})
+        else:
+            logger.error(f"Form errors: {form.errors}")  # Log form errors
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
         form = CreditForm()
     return render(request, 'add_credit.html', {'form': form})
@@ -305,14 +425,20 @@ class VerifyOTPView(APIView):
             logger.error("Invalid OTP provided.")
             raise ValidationError("Invalid phone number or OTP.")
 
-        # Step 2: Generate tokens (access and refresh)
+        # Step 2: Mark the user as verified
+        if not user.isVerified:
+            user.isVerified = True
+            user.save()
+            logger.info(f"User with phone number {phoneNumber} has been verified successfully.")
+
+        # Step 3: Generate tokens (access and refresh)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
         logger.info(f"Generated tokens for user ID {user.id}: Access token: {access_token}, Refresh token: {refresh_token}")
 
-        # Step 3: Retrieve the user's businesses
+        # Step 4: Retrieve the user's businesses
         businesses = Business.objects.filter(owner=user)
 
         if not businesses.exists():
@@ -330,8 +456,8 @@ class VerifyOTPView(APIView):
                 'refresh_token': refresh_token,
                 'businesses': serializer.data
             }, status=status.HTTP_200_OK)
-#password reset:
 
+#password reset
 class PasswordResetRequestView(APIView):
     def post(self, request):
         phoneNumber = request.data.get('phoneNumber')  # Using request.data for better compatibility with DRF
@@ -398,3 +524,4 @@ class PasswordResetConfirmView(APIView):
             serializer.save()
             return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

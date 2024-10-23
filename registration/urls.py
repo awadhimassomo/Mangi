@@ -1,7 +1,9 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BusinessDetailView, BusinessListView, RegisterUserView, RegisterBusinessView, create_partner, delete_partner, list_partners,login_view, register_customer, retrieve_partner,switch_business, update_partner
+
+from inventory import views
+from .views import BusinessDetailView, BusinessListView, RegisterUserView, RegisterBusinessView, create_partner, delete_partner, list_partners,login_view, register_customer, retrieve_partner,switch_business, sync_customers, update_partner
 from .views import delete_user, update_user
 from .views import delete_business, update_business, list_users, get_routes, logout_view
 from .views import get_businessType
@@ -37,6 +39,7 @@ urlpatterns = [
     path('partners/update/<int:pk>/', update_partner, name='update_partner'),
     path('partners/delete/<int:pk>/', delete_partner, name='delete_partner'),
     path('businesses/', BusinessListView.as_view(), name='business_list'),
+    path('customers/sync-customers/', sync_customers, name='sync_customers'),
       
 ]
     

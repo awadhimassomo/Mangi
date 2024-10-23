@@ -1,5 +1,7 @@
 import logging
 from rest_framework import serializers
+
+from inventory.models import BusinessType
 from .models import CustomUser, Business, Customer, Partner
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import gettext_lazy as _
@@ -54,6 +56,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class BusinessSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), write_only=True)
+    businessType = serializers.CharField(write_only=True)  # Accept a name for the business type
 
     class Meta:
         model = Business
@@ -67,20 +70,38 @@ class BusinessSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Extract the owner from the validated data
         owner = validated_data.pop('owner')
-        # Create the business with the associated owner
+
+        # Extract the business type name from the validated data
+        business_type_name = validated_data.pop('businessType')
+
+        # Retrieve or create the BusinessType instance based on the name
+        business_type, created = BusinessType.objects.get_or_create(name=business_type_name)
+
+        # Log whether the BusinessType was created or already existed
+        if created:
+            logger.info(f"BusinessType '{business_type_name}' created successfully.")
+        else:
+            logger.info(f"BusinessType '{business_type_name}' already exists.")
+
+        # Assign the BusinessType instance to the validated data
+        validated_data['businessType'] = business_type
+
+        # Create the business with the associated owner and businessType
         business = Business.objects.create(owner=owner, **validated_data)
+        logger.info(f"Business '{business.businessName}' created for owner ID {owner.id}.")
         return business
 
     def validate(self, data):
-        # Custom validation logic if needed
-        # For example, validate that business name is unique for the owner
+        # Custom validation logic, if needed
         owner = data.get('owner')
         businessName = data.get('businessName')
 
         if Business.objects.filter(owner=owner, businessName=businessName).exists():
+            logger.warning(f"Business name '{businessName}' already exists for owner ID {owner.id}.")
             raise serializers.ValidationError("This business name already exists for the owner.")
 
         return data
+
 
 class UserLoginSerializer(serializers.Serializer):
     phoneNumber = serializers.CharField(write_only=True)

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CreateProduct, InstallmentListView, NotifySupplierAPIView, PreOrderNotificationAPIView, SyncProductsView, SyncSupplierView, create_sales, product_suggestions
+from .views import CreateProduct, InstallmentListView, NotifySupplierAPIView, PreOrderNotificationAPIView, SyncProductsView, SyncSaleView, SyncSupplierView, SyncTransactionView, create_sales, product_suggestions
 
 app_name = 'inventory'
 
@@ -23,7 +23,7 @@ urlpatterns = [
 #Supplierpath
     path('suppliers/',views.getSuppliers,name="suppliers"),
     path('suppliers/create/',views.createSupplier,name="create-supplier"),
-    path('suppliers/<str:pk>/update/',views.updateSupplier,name="update-supplier"),
+    path('suppliers/<uuid:id>/update/',views.updateSupplier,name="update-supplier"),
     path('suppliers/<str:pk>/delete/',views.deleteSupplier,name="delete-supplier"),
     path('suppliers/sync/', SyncSupplierView.as_view(), name='sync_suppliers'),
 #Categorypath
@@ -37,6 +37,7 @@ urlpatterns = [
     path('transactions/create/',views.createTransaction,name="create-transaction"),
     path('transactions/<str:pk>/update/',views.updateTransaction,name="update-transaction"),
     path('transactions/<str:pk>/delete/',views.deleteTransaction,name="delete-transaction"),
+    path('sync-transaction/', SyncTransactionView.as_view(), name='sync-transaction'),
 
   
 #Warehousepath
@@ -50,6 +51,7 @@ urlpatterns = [
 
 
     path('purchase/',views.list_purchases,name="purchase"),
+    path('sync-sale/', SyncSaleView.as_view(), name='sync-sale'),
     path('purchase/<int:pk>/delete/', views.delete_purchase, name='delete_purchase'),
     path('sales/create/', create_sales, name='create_sales'),
     path('installments/create/', views.create_installment, name='create_installment'),
@@ -70,6 +72,11 @@ urlpatterns = [
 
 #Preordering and Ordering
    path('preorder-notification/', PreOrderNotificationAPIView.as_view(), name='preorder-notification'),
-   path('notify-supplier/', NotifySupplierAPIView.as_view(), name='notify-supplier'),
+   path('notify-supplier/', NotifySupplierAPIView.as_view(), name='notify-supplier'),  # Create order endpoint
+    path('complete_order/<str:token>/', views.complete_order_view, name='complete_order'),
+    path('process_order/<str:token>/', views.process_order, name='process_order'),
+    path('cancel_order/<str:token>/', views.cancel_order, name='cancel_order'),
+    path('send_order/<str:token>/', views.send_order, name='send_order'),
+    path('orders/create/', views.CreateOrderAPIView.as_view(), name='create_order'), 
 
 ]

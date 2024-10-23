@@ -1,3 +1,4 @@
+import uuid
 from django.conf import settings
 from django.db import models
 from django.apps import apps
@@ -5,7 +6,9 @@ from django.forms import ValidationError
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.crypto import get_random_string
+
 import requests
+
 
 # Category model
 class Category(models.Model):
@@ -19,6 +22,7 @@ class Category(models.Model):
         ('pcs', 'Pieces'),
         ('box', 'Boxes'),
     ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     unit = models.CharField(max_length=3, choices=unit_choices, blank=True, null=True)
     unit_quantity = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, default=1)
@@ -39,26 +43,15 @@ class Category(models.Model):
         if self.subtype:
             details.append(f'SubType: {self.subtype}')
         return ' - '.join(details)
-
-# Warehouse model
-class Warehouse(models.Model):
-    warehouseName = models.CharField(max_length=255)
-    warehouseLocation = models.CharField(max_length=255)
-    address = models.ForeignKey('registration.Address', on_delete=models.PROTECT, null=True, blank=True)
-    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=False)
-
-    def __str__(self):
-        return self.warehouseName
-
-
+    
 
 # Supplier model
 class Supplier(models.Model):
-    MANUFACTURER = 'manufacturer'
-    DISTRIBUTOR = 'distributor'
-    WHOLESALER = 'wholesaler'
-    RETAILER = 'retailer'
-    OTHER = 'other'
+    MANUFACTURER = 'Manufacturer'
+    DISTRIBUTOR = 'Distributor'
+    WHOLESALER = 'Wholesaler'
+    RETAILER = 'Retailer'
+    OTHER = 'Other'
 
     supplierType_CHOICES = [
         (MANUFACTURER, 'Manufacturer'),
@@ -67,6 +60,7 @@ class Supplier(models.Model):
         (RETAILER, 'Retailer'),
         (OTHER, 'Other'),
     ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     supplierName  = models.CharField(max_length=255)
     contactPerson = models.CharField(max_length=255)
     contactEmail  = models.EmailField(null=True, blank=True)
@@ -80,11 +74,52 @@ class Supplier(models.Model):
     def __str__(self):
         return self.supplierName 
 
+class BusinessType(models.Model):
+    id = models.AutoField(primary_key=True)  # Explicitly add the ID field
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class PublicProduct(models.Model):
+    product_name = models.CharField(max_length=255)
+    barcode = models.CharField(max_length=255, unique=True, default="default_barcode_value")
+    businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, related_name="public_products")
+    description = models.TextField(null=True, blank=True)
+    date_added = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.product_name} ({self.barcode})"
+
+    
+class ProductBusinessTypeAssociation(models.Model):
+    public_product = models.ForeignKey(PublicProduct, on_delete=models.CASCADE, related_name="associations")
+    business_type = models.ForeignKey(BusinessType, on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.public_product.product_name} - {self.business_type.name}"
+
+    
+
+
+# Warehouse model
+class Warehouse(models.Model):
+    warehouseName = models.CharField(max_length=255)
+    warehouseLocation = models.CharField(max_length=255)
+    address = models.ForeignKey('registration.Address', on_delete=models.PROTECT, null=True, blank=True)
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=False)
+
+    def __str__(self):
+        return self.warehouseName
+
+
+
 class Product(models.Model):
     LOCATION_CHOICES = [
         ('warehouse', 'Warehouse'),
         ('Shop', 'Shop'),
-        ('online','online'),
+        ('online', 'online'),
     ]
 
     product_name = models.CharField(max_length=255, null=True, blank=True)
@@ -94,7 +129,7 @@ class Product(models.Model):
     barcode = models.CharField(max_length=255, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-    supplier_id = models.ForeignKey('Supplier', on_delete=models.PROTECT, null=True, blank=True)
+    supplier = models.ForeignKey('Supplier', on_delete=models.PROTECT, null=True, blank=True)
     category = models.ForeignKey('Category', on_delete=models.PROTECT, null=True, blank=True)
     warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True, blank=True)
     expire_date = models.DateField(null=True, blank=True)
@@ -106,22 +141,22 @@ class Product(models.Model):
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=False)
     isDeleted = models.BooleanField(default=False)
     isSynced = models.BooleanField(default=False)
-    lastSyncTime = models.DateTimeField(null=True, blank=True)   # You may want to keep this as null=False
+    lastSyncTime = models.DateTimeField(null=True, blank=True)
 
-    # Fields for image and stock management
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
     min_stock = models.IntegerField(default=20, null=True, blank=True, help_text="Minimum stock level to trigger restock warning")
     max_stock = models.IntegerField(null=True, blank=True, help_text="Maximum stock level to prevent overstocking")
-
-    # New fields for location tracking
     location_type = models.CharField(max_length=50, choices=LOCATION_CHOICES, default='store', null=True, blank=True)
     location_identifier = models.CharField(max_length=255, null=True, blank=True, help_text="Specific shelf or aisle in the store")
 
+    class Meta:
+        ordering = ['-date_updated']
+        unique_together = ('product_name', 'category')  # Ensure unique name-category pairs
+        constraints = [
+            models.UniqueConstraint(fields=['barcode'], name='unique_barcode')  # Ensure unique barcode
+        ]
+
     def sync_with_public_model(self):
-        """
-        Synchronize the product with the public product model if the barcode is present.
-        This method is useful for syncing with a shared or public product database.
-        """
         if not self.barcode:
             return  # Skip if there's no barcode
 
@@ -130,26 +165,49 @@ class Product(models.Model):
             barcode=self.barcode,
             defaults={
                 'product_name': self.product_name,
-                'description': self.description,  # Add description only if it's a new product
+                'description': self.description,
                 'businessType': self.business.businessType,
             }
         )
 
         if not created:
-            pass
+            pass  # Handle updates to public product here if needed
 
     def save(self, *args, **kwargs):
         """
-        Override the save method to sync with the public model after saving the product.
+        Override the save method to prevent creating duplicates.
+        If a product with the same barcode or name-category pair is found, update it instead.
         """
+        # Check if a product with the same barcode exists
+        if self.barcode:
+            existing_product_by_barcode = Product.objects.filter(barcode=self.barcode).exclude(id=self.id).first()
+            if existing_product_by_barcode:
+                # Update the existing product instead of creating a new one
+                existing_product_by_barcode.product_name = self.product_name
+                existing_product_by_barcode.price = self.price
+                existing_product_by_barcode.quantity += self.quantity
+                existing_product_by_barcode.save()
+                return
+
+        # Check if a product with the same name and category exists
+        if self.product_name and self.category:
+            existing_product_by_name_and_category = Product.objects.filter(
+                product_name=self.product_name,
+                category=self.category
+            ).exclude(id=self.id).first()
+
+            if existing_product_by_name_and_category:
+                # Update the existing product instead of creating a new one
+                existing_product_by_name_and_category.price = self.price
+                existing_product_by_name_and_category.quantity += self.quantity
+                existing_product_by_name_and_category.save()
+                return
+
+        # If no matching product is found, proceed with the standard save
         super().save(*args, **kwargs)
         self.sync_with_public_model()
 
     def reduce_quantity(self, amount):
-        """
-        Reduce the product quantity by the specified amount.
-        Raise an error if the reduction would result in a negative quantity.
-        """
         if amount > self.quantity:
             raise ValueError("Cannot reduce quantity below zero")
         self.quantity -= amount
@@ -157,20 +215,12 @@ class Product(models.Model):
         self.check_and_handle_stock()
 
     def increase_quantity(self, amount):
-        """
-        Increase the product quantity by the specified amount.
-        Raise an error if the increase would exceed the max stock level.
-        """
         if self.max_stock and (self.quantity + amount) > self.max_stock:
             raise ValueError("Cannot increase quantity beyond max stock level")
         self.quantity += amount
         self.save()
 
     def check_stock_status(self):
-        """
-        Check the stock status based on the current quantity.
-        Returns 'Low', 'Overstock', or 'Good' based on stock levels.
-        """
         if self.quantity < self.min_stock:
             return 'Low'
         elif self.max_stock and self.quantity > self.max_stock:
@@ -179,33 +229,22 @@ class Product(models.Model):
             return 'Good'
 
     def check_and_handle_stock(self):
-        """
-        Check the stock status and handle it if the stock is low.
-        If the stock is low, create a pre-order, notify the frontend, and notify the supplier.
-        """
         stock_status = self.check_stock_status()
         if stock_status == 'Low':
             self.create_preorder()
 
     def create_preorder(self):
-        """
-        Create a pre-order when the stock is low.
-        Notify the frontend and the supplier about the low stock.
-        """
-        preorder = preorder.objects.create(
+        preorder = Preorder.objects.create(
             product=self,
             supplier=self.supplier,
             quantity_needed=self.min_stock - self.quantity,
             status='Pending',
         )
-        # Trigger the API call to notify the frontend
         response_status = self.trigger_preorder_api(preorder)
         if response_status == 200:
             print("Pre-order notification successfully sent to the frontend.")
         else:
             print("Failed to send pre-order notification to the frontend.")
-
-        # Notify the supplier about the low stock
         supplier_notify_status = self.notify_supplier_about_low_stock(preorder)
         if supplier_notify_status == 200:
             print("Supplier notification successfully sent.")
@@ -213,10 +252,7 @@ class Product(models.Model):
             print("Failed to send supplier notification.")
 
     def trigger_preorder_api(self, preorder):
-        """
-        Trigger an API call to notify the frontend about the pre-order.
-        """
-        api_url = 'http://192.168.1.197:8000/inventory/preorder-notification/'  # Replace with your actual backend URL
+        api_url = 'http://192.168.1.197:8000/inventory/preorder-notification/'
         payload = {
             'preorder_id': preorder.id,
             'product_name': self.product_name,
@@ -226,47 +262,22 @@ class Product(models.Model):
         return response.status_code
 
     def notify_supplier_about_low_stock(self, preorder):
-        """
-        Notify the supplier about the low stock by triggering an API call.
-        """
-        api_url = 'http://192.168.1.197:8000/inventory/notify-supplier/'  # Replace with your actual backend URL
+        api_url = 'http://192.168.1.197:8000/inventory/notify-supplier/'
         payload = {
             'supplier_id': preorder.supplier.id,
             'product_name': self.product_name,
             'quantity_needed': preorder.quantity_needed,
-            'user': self.business.name,  # Assuming business name represents the user
+            'user': self.business.name,
         }
         response = requests.post(api_url, json=payload)
         return response.status_code
 
     def __str__(self):
-        """
-        String representation of the Product model.
-        """
         return self.product_name
 
-    class Meta:
-        """
-        Meta options for the Product model.
-        """
-        ordering = ['-date_updated']
 
-# Public API model
-class PublicProduct(models.Model):
-    product_name = models.CharField(max_length=255)
-    barcode = models.CharField(max_length=255, unique=True)
-    description = models.TextField(null=True, blank=True)  # Initial description only
-    businessType = models.CharField(max_length=255)  # To differentiate between different types of businesses
-    date_added = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.product_name} ({self.barcode})"
 
-    class Meta:
-        ordering = ['-date_added']
-        unique_together = ('product_name', 'barcode')  # Ensure no duplicates
-
-# Transaction model
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('cash', 'Cash'),
@@ -276,16 +287,20 @@ class Transaction(models.Model):
         ('loan', 'Loan'),
         ('other', 'Other'),
     ]
-
+  
+  
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=True  # Allow editing
+    )  
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
     transaction_date = models.DateField(default=timezone.now)
-    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=False)
+    business= models.ForeignKey('registration.Business', on_delete=models.CASCADE, null=False)
     customer = models.ForeignKey('registration.Customer', on_delete=models.SET_NULL, null=True, blank=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     outstanding_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_synced = models.BooleanField(default=False)  # Tracks whether the transaction has been synced with the server
+    is_deleted = models.BooleanField(default=False)  # Tracks whether the transaction has been marked as deleted
 
-    def __str__(self):
-        return f"{self.transaction_type} - {self.transaction_date}"
 
 #This method will create a preorder then send a notification to the frontend then when confirm it will delete it and create an actually order
 
@@ -332,6 +347,7 @@ class Order(models.Model):
         ('Cancelled', 'Cancelled'),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=50, unique=True)
     supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
@@ -339,22 +355,34 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     delivery_date = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
+    token = models.CharField(max_length=32, unique=True, blank=True, null=True)  # Token field
 
     def __str__(self):
-        return f"Order {self.order_number} - {self.supplier.name}"
+        return f"Order {self.order_number} - {self.supplier.supplierName}"
+
+    def save(self, *args, **kwargs):
+        # Generate a unique token if it doesn't already exist
+        if not self.token:
+            self.token = get_random_string(length=32)
+        super().save(*args, **kwargs)
 
 class OrderItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    product_id = models.ForeignKey('Product', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    
     def __str__(self):
-        return f"{self.quantity} x {self.product.product_name} in Order {self.order.order_number}"
+        product = Product.objects.get(id=self.product_id)
+        return f"{self.quantity} x {product.product_name} in Order {self.order.order_number}"
+
 
 # Purchase model
 class Purchase(models.Model):
+   
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -378,16 +406,43 @@ class Purchase(models.Model):
         # Calculate the total amount based on product cost and quantity
         self.total_amount = self.product.cost * self.quantity
         super().save(*args, **kwargs)
-
+        
 class Sales(models.Model):
-    transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.IntegerField()
+     
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=True  # Allow editing
+    )
+    transaction_id  = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    isSynced = models.BooleanField(default=False)  # Tracks if the sale is synced with the remote system
+    isDeleted = models.BooleanField(default=False)  # Marks if the sale is deleted (soft delete)
+    
+    def __str__(self):
+        return f"Sale {self.id} for transaction {self.transaction_id}"
+
+    def soft_delete(self):
+        """ Soft delete the sale by setting isDeleted to True """
+        self.isDeleted = True
+        self.save()
+
+    def mark_synced(self):
+        """ Mark the sale as synced """
+        self.isSynced = True
+        self.save()
+
+
+class SalesItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sale = models.ForeignKey(Sales, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.IntegerField()
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"Sale of {self.product} for transaction {self.transaction_id}"
+        return f"{self.quantity} x {self.product.product_name} (Sale ID: {self.sale.id})"
+
 
 
 
@@ -399,7 +454,8 @@ class Installment(models.Model):
         ('1_month', '1 Month'),
     ]
     
-    transaction = models.ForeignKey('Transaction', on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    transaction_id = models.ForeignKey('Transaction', on_delete=models.CASCADE)
     customer = models.ForeignKey('registration.Customer', on_delete=models.CASCADE, null=True, blank=True, related_name='installments')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='installments')
     due_date = models.DateField(blank=True, null=True)
@@ -415,7 +471,7 @@ class Installment(models.Model):
     def __str__(self):
         entity = self.customer or self.supplier
         entity_type = "Customer" if self.customer else "Supplier"
-        return f'Installment: {self.transaction} - Due: {self.due_date or "No due date set"} - {entity_type}: {entity}'
+        return f'Installment: {self.transaction_id} - Due: {self.due_date or "No due date set"} - {entity_type}: {entity}'
 
     def should_send_reminder(self):
         if not self.due_date:
@@ -466,8 +522,8 @@ class Expense(models.Model):
     ]
 
     date = models.DateField(default=timezone.now)
-    before_tax_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    after_tax_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    without_tax_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    with_tax_cost = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     approval_status = models.BooleanField(default=False)
     receipt = models.FileField(upload_to='receipts/', null=True, blank=True)
@@ -530,7 +586,7 @@ class ExpenseTerms(models.Model):
     # Policy details
     policy_description = models.TextField()  # Detailed description of the policy
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=True,default=0)  # Make it nullable temporarily
-
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     max_amount = models.DecimalField(max_digits=10, decimal_places=2)  # Maximum allowed amount
     enforcement_day = models.IntegerField()  # Day for enforcement (1-31)
     impacted_roles = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Roles impacted by this policy

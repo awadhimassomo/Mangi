@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Order</title>
+</head>
+<body>
+    <h1>Order #{{ order.order_number }}</h1>
+
+    <div>
+        <!-- Display PDF link or inline the PDF if the URL is available -->
+        <iframe src="{% url 'generate_order_pdf' order.token %}" width="100%" height="600px"></iframe>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button id="processOrderBtn" onclick="processOrder()">Process</button>
+        <button id="cancelOrderBtn" onclick="cancelOrder()">Cancel</button>
+        <button id="sendOrderBtn" onclick="sendOrder()">Send</button>
+    </div>
+
+    <script>
+        function processOrder() {
+            // Send AJAX request to process the order
+            fetch(`/process_order/{{ order.token }}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Order is being processed!');
+                }
+            }).catch(error => console.error('Error:', error));
+        }
+
+        function cancelOrder() {
+            // Send AJAX request to cancel the order
+            fetch(`/cancel_order/{{ order.token }}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Order has been canceled!');
+                }
+            }).catch(error => console.error('Error:', error));
+        }
+
+        function sendOrder() {
+            // Send AJAX request to send the order
+            fetch(`/send_order/{{ order.token }}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Order has been sent!');
+                }
+            }).catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

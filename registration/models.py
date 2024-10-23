@@ -46,17 +46,21 @@ class Role(models.Model):
         return self.get_name_display()
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self,phoneNumber, password=None, **extra_fields):
+    def create_user(self, phoneNumber, password=None, **extra_fields):
         if not phoneNumber:
             raise ValueError('The Phone Number field must be set')
+
+       
+
         user = self.model(phoneNumber=phoneNumber, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self,phoneNumber, password=None, **extra_fields):
+    def create_superuser(self, phoneNumber, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields['isVerified'] = True  # Superusers are always verified
         return self.create_user(phoneNumber, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -67,6 +71,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     id = models.AutoField(primary_key=True)
     vcard_qrImage = models.ImageField(upload_to='vcards/', blank=True, null=True)
+    isVerified = models.BooleanField(default=False)  # New field to check if the user is verified
 
     objects = CustomUserManager()
 
@@ -116,11 +121,9 @@ END:VCARD
             self.generate_vcard_qr_code()
         else:
             logger.info("vCard QR code already exists, skipping generation.")
-    
 
     def list_businesses(self):
-        return self.businesses.all()  
-
+        return self.businesses.all()
 
 class BusinessManager(models.Manager):
     def import_public_products(self, business_uuid):
@@ -176,7 +179,7 @@ class BusinessManager(models.Manager):
 
         logger.info(f"Finished importing products for business: {business.businessName}")
         return f"Imported {len(public_products)} products for business: {business.businessName}"
-
+    
 
 
 class Business(models.Model):
@@ -186,7 +189,6 @@ class Business(models.Model):
     businessAddress = models.CharField(max_length=255)
     businessPhoneNumber = models.CharField(max_length=20, null=True, blank=True)
     lipaNumber = models.CharField(max_length=15, blank=True, null=True)
-    businessType = models.CharField(max_length=100, blank=True, null=True)
     phoneNetwork = models.CharField(max_length=10, null=True, blank=True)
     website = models.URLField(blank=True, null=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -196,18 +198,21 @@ class Business(models.Model):
     isDeleted = models.BooleanField(default=False)
     hasBenefitedFromOffer = models.BooleanField(default=False)
 
+    # Establishing a relationship with BusinessType
+    businessType = models.ForeignKey('inventory.BusinessType', on_delete=models.SET_NULL, null=True, blank=True)
+
     objects = BusinessManager()
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         super().save(*args, **kwargs)
-        
+
         if not self.qrImage:
             self.generate_qr_code()
 
         if is_new:
             print(f"New business created: {self.businessName}, triggering predefined data insertion.")
-            Business.objects.import_public_products(self.uuid)   # Trigger predefined data insertion
+            Business.objects.import_public_products(self.uuid)  # Trigger predefined data insertion
 
     def generate_qr_code(self):
         vcard = f"""
@@ -231,7 +236,7 @@ END:VCARD
         qr.add_data(vcard)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
-        
+
         temp_name = f"qr-{self.pk}.png"
         buffer = BytesIO()
         img.save(buffer, 'PNG')
@@ -246,9 +251,6 @@ END:VCARD
 
     def __str__(self):
         return self.businessName if self.businessName else 'Unnamed Business'
-    
-  
-from django.db import models
 
 class BusinessProfile(models.Model):
     business = models.OneToOneField('Business', on_delete=models.CASCADE, related_name='profile')
@@ -290,26 +292,29 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.user.phoneNumber}'s Profile"
 
-# Signals for creating/updating profile
+# Signal for creating profile when user is created
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
+# Signal for saving profile when user is saved
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
+    # Ensure the profile exists before trying to save
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
     
-
 class Customer(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     phoneNumber = models.CharField(max_length=20, unique=True)
     tinNumber = models.CharField(max_length=100, null=True, blank=True)  # Added TIN number field
     date_added = models.DateTimeField(auto_now_add=True)
     business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
     frequency = models.IntegerField(default=1)  # Field to track frequency
+    isSynced = models.BooleanField(default=False)  # Field to track synchronization status
+    isDeleted = models.BooleanField(default=False)  # Field to track if the customer is deleted
 
     def __str__(self):
         return self.name

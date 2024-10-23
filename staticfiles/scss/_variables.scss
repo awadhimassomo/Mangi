@@ -1,14 +1,10 @@
-// 
-// variables.scss
-// 
-
 // Color variables
 
 $white:               #fff;
 $gray-100:            #f8f9fa;
 $gray-200:            #eff1f5;
 $gray-300:            #e2e7f1;
-$gray-400:            #ced4da;
+$gray-400:             #eb1f52;
 $gray-500:            #7c8bad;
 $gray-600:            #6c757d;
 $gray-700:            #536976;
@@ -22,8 +18,18 @@ $cyan:                #4bbbce;
 $yallow:              #ffc212;
 $red:                 #eb1f52;
 
+// Gradient definition
+$gradient-colors: linear-gradient(
+    to bottom, 
+    #EE4540, 
+    #C72C41, 
+    #801336, 
+    #510A32, 
+    #20142C
+);
 
-$primary:             $blue;
+// Primary theme colors
+$primary:             $gradient-colors;
 $secondary:           $gray-700;
 $info:                $cyan;
 $warning:             $yallow;
@@ -32,7 +38,6 @@ $danger:              $red;
 $light:               $gray-100;
 $dark:                $gray-900;
 $white:               $white;
-
 
 $theme-colors: (
     "primary":        $primary,
@@ -47,23 +52,45 @@ $theme-colors: (
 );
 
 $bg-overlay:         #10161e;
-
 $text-muted:         $gray-600;
 
 $base-font: 16px;
-
 $font-primary:          'Mandali', sans-serif;
-$font-secondary:        "Cerebri Sans,sans-serif";
+$font-secondary:        "Cerebri Sans, sans-serif";
 
-
-// font-weight
+// Font weights
 $font-weight-light:           300;
 $font-weight-normal:          400;
 $font-weight-medium:          500;
 $font-weight-semibold:        600;
 $font-weight-bold:            700;
 
-// box-shadow
+// Box shadows
 $box-shadow-sm:               0 4px 8px rgba($gray-900, 0.08);
 $box-shadow:                  0 5px 20px rgba($gray-900, .1);
 $box-shadow-lg:               0 5px 20px rgba($gray-900, .2);
+
+// Use gradient background globally where applicable
+body {
+  background: $gradient-colors;
+}
+
+// Buttons with gradient
+.btn-primary {
+  background: $gradient-colors;
+  border: none;
+}
+
+.navbar {
+  background: $gradient-colors;
+}
+
+.card {
+  background: $gradient-colors;
+  box-shadow: $box-shadow;
+}
+
+footer {
+  background: $gradient-colors;
+}
+

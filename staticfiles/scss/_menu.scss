@@ -1,7 +1,14 @@
-// 
-// menu.scss
-// 
+// Define the gradient for use
+$gradient-colors: linear-gradient(
+    to bottom, 
+    #EE4540, 
+    #C72C41, 
+    #801336, 
+    #510A32, 
+    #20142C
+);
 
+// Modify the navbar to include gradient
 .navbar-custom {
     padding: 20px 0px;
     padding-right: 0 !important;
@@ -10,6 +17,7 @@
     z-index: 999;
     margin-bottom: 0px;
     transition: all 0.5s ease-in-out;
+    background: $gradient-colors; // Apply gradient to the navbar background
 
     .navbar-nav {
         .nav-item {
@@ -28,7 +36,7 @@
 
                 &:hover,
                 &.active {
-                    color: $primary;
+                    color: $white; // Adjust to ensure it stands out on gradient background
                 }
 
                 &.active {
@@ -39,7 +47,7 @@
                         left: 10px;
                         right: 10px;
                         border-radius: 10px;
-                        border-bottom: 2px solid $primary;
+                        border-bottom: 2px solid $white;
                     }
                 }
             }
@@ -51,9 +59,9 @@
             }
 
             .nav-btn {
-                background-color: rgba($primary, 0.15);
-                border-color: rgba($primary, 0.2);
-                color: $primary;
+                background: rgba($white, 0.15);
+                border-color: rgba($white, 0.2);
+                color: $white;
                 transition: all 0.3s ease-in-out;
 
                 &:focus {
@@ -61,8 +69,8 @@
                 }
 
                 &:hover {
-                    background-color: $primary;
-                    color: $white;
+                    background: $white;
+                    color: $primary;
                 }
             }
         }
@@ -78,7 +86,7 @@
     font-size: 24px;
     margin-top: 5px;
     margin-bottom: 0px;
-    color: $dark;
+    color: $white;
 
     &:focus {
         outline: none;
@@ -86,51 +94,7 @@
     }
 }
 
-
-.nav {
-    .open {
-
-        >a,
-        >a:focus,
-        >a:hover {
-            background-color: transparent;
-            border-color: $blue;
-        }
-    }
-}
-
-.dropdown-lg {
-    width: 320px;
-
-    .dropdown-icon-item {
-        display: block;
-        border-radius: 3px;
-        line-height: 34px;
-        text-align: center;
-        padding: 15px 0 9px;
-        display: block;
-        border: 1px solid transparent;
-        color: $dark;
-
-        img {
-            height: 34px;
-        }
-
-        span {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        &:hover {
-            background-color: $light;
-        }
-    }
-}
-
-
-// navbar-light
+// Navbar light theme modification
 .navbar {
     &.navbar-light {
         .navbar-nav {
@@ -151,7 +115,7 @@
                 }
 
                 .nav-btn {
-                    background-color: rgba($white, 0.15);
+                    background: rgba($white, 0.15);
                     border-color: rgba($white, 0.2);
                     color: $white;
 
@@ -160,7 +124,7 @@
                     }
 
                     &:hover {
-                        background-color: $white;
+                        background: $white;
                         color: $primary;
                     }
                 }
@@ -179,9 +143,7 @@
     }
 }
 
-
-/********** navbar sticky *********/
-
+// Sticky navbar
 .nav-sticky {
     &.navbar-custom {
         margin-top: 0px;
@@ -199,29 +161,27 @@
 
                     &:hover,
                     &.active {
-                        color: $primary !important;
+                        color: $white !important;
                     }
 
                     &.active {
                         &::after {
-                            border-bottom: 2px solid $primary;
+                            border-bottom: 2px solid $white;
                         }
                     }
-
                 }
 
                 .nav-btn {
-                    background-color: rgba($primary, 0.15);
-                    border-color: rgba($primary, 0.2);
-                    color: $primary;
+                    background: rgba($white, 0.15);
+                    border-color: rgba($white, 0.2);
+                    color: $white;
 
                     &:hover {
-                        background-color: $primary;
-                        color: $white;
+                        background: $white;
+                        color: $primary;
                     }
                 }
             }
-
         }
     }
 
@@ -236,8 +196,7 @@
     }
 }
 
-/********* Responsive *********/
-
+// Responsive design
 @media (min-width: 200px) and (max-width: 991px) {
 
     .navbar-custom,
@@ -263,17 +222,16 @@
                 }
 
                 .nav-btn {
-                    background-color: rgba($primary, 0.15) !important;
-                    border-color: rgba($primary, 0.2) !important;
-                    color: $primary !important;
+                    background: rgba($white, 0.15) !important;
+                    border-color: rgba($white, 0.2) !important;
+                    color: $white !important;
 
                     &:hover,
                     &:focus {
-                        background-color: $primary !important;
-                        color: $white !important;
+                        background: $white !important;
+                        color: $primary !important;
                     }
                 }
-
             }
         }
 
@@ -309,11 +267,11 @@
                 border-radius: 50rem;
                 padding: 6px 15px;
                 margin-inline-end: 1px;
-    
+
                 &:hover,
                 &.active {
-                    background-color: rgba($primary, 0.2);
-                    color: $primary;
+                    background-color: rgba($white, 0.2);
+                    color: $white;
                 }
             }
         }
