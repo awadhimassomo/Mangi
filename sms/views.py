@@ -236,7 +236,7 @@ def send_sms(phone_number, total_sales, total_expenses, net_amount, loan_collect
     Date: {datetime.now().strftime('%Y-%m-%d')}
 
     Jumla ya Mauzo: {total_sales:,.2f} Tsh
-    Jumala ya MAtumizi: {total_expenses:,.2f} Tsh
+    Jumla ya Matumizi: {total_expenses:,.2f} Tsh
     Jumla Kuu: {net_amount:,.2f} Tsh
     Madeni yaliokusanywa: {loan_collections:,.2f} Tsh
 
