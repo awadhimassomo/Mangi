@@ -1,0 +1,804 @@
+{% extends 'webapp/base_webapp.html' %}
+
+{% block title %}Mangi Business Manager - Expenses{% endblock %}
+
+{% block additional_styles %}
+/* Chart styles */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.sales-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sales-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+:root {
+    --color-primary: #C72C41;
+    --color-primary-light: #EE4540;
+    --color-secondary: #801336;
+    --color-dark: #510A32;
+    --color-darker: #20142C;
+    --color-text: #333;
+    --color-text-light: #666;
+    --color-background: #f5f5f5;
+    --color-card: #fff;
+    --color-border: #e0e0e0;
+    --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+/* Top bar */
+.topbar {
+    background: linear-gradient(to right, var(--color-primary-light), var(--color-primary), var(--color-secondary), var(--color-dark), var(--color-darker));
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.search-box {
+    position: relative;
+    width: 300px;
+}
+
+.search-box input {
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    width: 100%;
+    border-radius: 4px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+}
+
+/* Main layout */
+.container {
+    display: flex;
+    min-height: calc(100vh - 64px);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background: linear-gradient(to bottom, var(--color-primary), var(--color-secondary), var(--color-dark));
+    color: white;
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+}
+
+.sidebar-nav {
+    list-style: none;
+    margin-top: 2rem;
+}
+
+.sidebar-nav li {
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-nav li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav li.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-left: 3px solid white;
+}
+
+.sidebar-nav i {
+    width: 24px;
+}
+
+/* Main content */
+.main-content {
+    flex-grow: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.page-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-secondary);
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.btn-outline:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.search-field {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    width: 300px;
+}
+
+/* Summary cards */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-card {
+    background-color: var(--color-card);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.summary-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.summary-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.icon-primary {
+    background-color: rgba(199, 44, 65, 0.1);
+    color: var(--color-primary);
+}
+
+.icon-green {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+}
+
+.icon-blue {
+    background-color: rgba(41, 128, 185, 0.1);
+    color: #2980b9;
+}
+
+.icon-orange {
+    background-color: rgba(230, 126, 34, 0.1);
+    color: #e67e22;
+}
+
+.summary-card-title {
+    color: var(--color-text-light);
+    font-size: 0.875rem;
+}
+
+.summary-card-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* Category tiles */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.category-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.category-tile {
+    background-color: var(--color-card);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.category-icon {
+    background-color: rgba(199, 44, 65, 0.1);
+    color: var(--color-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.trend-up {
+    color: #27ae60;
+}
+
+.trend-down {
+    color: #e74c3c;
+}
+
+.category-name {
+    color: var(--color-text-light);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.category-value {
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+/* Filters section */
+.filters-section {
+    background-color: var(--color-card);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.filter-field {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    background-color: white;
+}
+
+.date-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Expenses table */
+.expenses-section {
+    background-color: var(--color-card);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.expenses-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.expenses-table th {
+    background-color: rgba(0, 0, 0, 0.02);
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.expenses-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.expenses-table tr:hover {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.expense-id {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.expense-amount {
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-approved {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+    border: 1px solid rgba(39, 174, 96, 0.2);
+}
+
+.status-pending {
+    background-color: rgba(230, 126, 34, 0.1);
+    color: #e67e22;
+    border: 1px solid rgba(230, 126, 34, 0.2);
+}
+
+.status-rejected {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-light);
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-view {
+    color: var(--color-primary);
+}
+
+.btn-edit {
+    color: #2980b9;
+}
+
+.btn-delete {
+    color: #e74c3c;
+}
+
+.pagination {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.page-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.page-btn.active {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.page-btn:hover:not(.active) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    display: none;
+}
+
+.modal {
+    background-color: white;
+    border-radius: 8px;
+    width: 600px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--color-text-light);
+}
+
+.modal-body {
+    padding: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+    .summary-cards,
+    .category-tiles {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70px;
+    }
+    
+    .sidebar-nav li span {
+        display: none;
+    }
+    
+    .sidebar-nav li {
+        justify-content: center;
+    }
+    
+    .sidebar-nav i {
+        width: auto;
+        font-size: 1.25rem;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .page-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .search-field {
+        flex-grow: 1;
+        width: auto;
+    }
+    
+    .filters-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 576px) {
+    .summary-cards,
+    .category-tiles {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        display: none;
+    }
+    
+    .topbar {
+        padding: 1rem;
+    }
+    
+    .user-nav {
+        gap: 0.5rem;
+    }
+    
+    .search-box {
+        display: none;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<!-- Main Content Container -->
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Sales Header -->
+    <div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Business Expenses</h1>
+                <p class="text-white opacity-80">Track your business performance</p>
+            </div>
+            <div>
+                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2">
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Sales Card -->
+        <div class="bg-white rounded-lg shadow p-6 sales-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Expenses</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">$24,780</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 12.5% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-primary-light text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Orders Card -->
+        <div class="bg-white rounded-lg shadow p-6 sales-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Orders</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">486</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 8.2% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-blue-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Average Sale Card -->
+        <div class="bg-white rounded-lg shadow p-6 sales-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Average Sale</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">$51.00</h3>
+                    <p class="text-red-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-down mr-1"></i> 3.1% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-purple-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customers Card -->
+        <div class="bg-white rounded-lg shadow p-6 sales-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">New Customers</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">124</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 18.7% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-users text-green-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

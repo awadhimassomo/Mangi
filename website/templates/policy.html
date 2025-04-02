@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #eee;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #C72C41;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-width: 120px;
+        }
+        .header .company-info {
+            text-align: right;
+        }
+        .company-info h1 {
+            font-size: 1.8em;
+            margin: 0;
+            color: #510A32;
+        }
+        .company-info p {
+            margin: 5px 0;
+        }
+        .policy-section {
+            margin-bottom: 25px;
+        }
+        .policy-section h2 {
+            color: #801336;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+        .policy-section h3 {
+            color: #801336;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .policy-section ul {
+            padding-left: 20px;
+        }
+        .policy-section ul li {
+            margin-bottom: 8px;
+        }
+        .effective-date {
+            font-style: italic;
+            margin-top: 30px;
+            color: #666;
+        }
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+    <title>Privacy Policy</title>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div>
+                {% if business_profile.logo %}
+                <img src="{{ business_profile.logo.url }}" alt="Company Logo">
+                {% endif %}
+            </div>
+            <div class="company-info">
+                <h1>{{ business_profile.business.businessName }}</h1>
+                <p>TIN: {{ business_profile.tinNumber|default:"None" }}</p>
+                <p>Address: 1730 Dodoma,</p>
+                <p>Email: info@sotech.com</p>
+            </div>
+        </div>
+
+        <!-- Privacy Policy Title -->
+        <h1 style="text-align: center; color: #510A32;">PRIVACY POLICY</h1>
+        <p class="effective-date" style="text-align: center;">Last Updated: March 15, 2025</p>
+        
+        <!-- Introduction Section -->
+        <div class="policy-section">
+            <h2>INTRODUCTION</h2>
+            <p>Welcome to Mangi. We respect your privacy and are committed to the protection of your personal information. This privacy policy explains how we collect, use, process, and share your information when you use our mobile application and associated services.</p>
+            <p>This policy is designed to comply with privacy laws in all jurisdictions where our app is available, with specific provisions for Tanzanian users to ensure compliance with the Electronic and Postal Communications Act (EPOCA), the Cybercrimes Act, and the Personal Data Protection Act.</p>
+        </div>
+
+        <!-- Who We Are Section -->
+        <div class="policy-section">
+            <h2>WHO WE ARE</h2>
+            <p>Mangi is a business management application that provides inventory management, sales tracking, supplier relationship management, customer data management, and other business functions. Our application is designed to run offline and yet provide strong business management capabilities.</p>
+        </div>
+
+        <!-- Information We Collect Section -->
+        <div class="policy-section">
+            <h2>INFORMATION WE COLLECT</h2>
+            <p>Following information we collect:</p>
+            
+            <h3>Personal Information</h3>
+            <ul>
+                <li>User Information: Name, contact details, login credentials</li>
+                <li>Business Information: Business name, address, business ID, tax ID</li>
+                <li>Employee Information: When adding employees or partners to your account</li>
+            </ul>
+            
+            <h3>Transaction and Usage Information</h3>
+            <ul>
+                <li>Sales Data: Products, quantities, prices, dates, and times</li>
+                <li>Inventory Information: Stock levels, product details, expiry dates</li>
+                <li>Customer Information: Customer names, contact information, purchase history</li>
+                <li>Supplier Information: Supplier details, contact information, supplied products</li>
+                <li>Financial Information: Expenses, revenues, loans, installments</li>
+                <li>Location Data: Business location and login locations</li>
+                <li>Login Time: Login time to monitor business operating hours</li>
+            </ul>
+            
+            <h3>Technical Information</h3>
+            <ul>
+                <li>Device Information: Type of device, operating system, and version</li>
+                <li>App Usage Data: Features used, time, and how you use our app</li>
+                <li>Error Reports: Performance and crash reports</li>
+                <li>Connection Information: Online or offline status</li>
+            </ul>
+        </div>
+
+        <!-- How We Use Your Information Section -->
+        <div class="policy-section">
+            <h2>HOW WE USE YOUR INFORMATION</h2>
+            <p>We use your information for the following purposes:</p>
+            <ul>
+                <li>Providing Our Services: Processing transactions, managing your stock, recording expenses, and other fundamental business activities</li>
+                <li>Improving Our Services: Debugging, creating new features, and improving features</li>
+                <li>Offline Capability: Saving data on your device to allow app usage offline</li>
+                <li>Data Synchronization: Syncing offline data with our servers whenever connectivity is restored</li>
+                <li>Business Analysis: Offering reports and analysis of your business performance</li>
+                <li>Support and Communication: Answering your questions and offering support</li>
+                <li>Security: Keeping your account and data safe from unauthorized use</li>
+            </ul>
+        </div>
+
+        <!-- Legal Basis for Processing Section -->
+        <div class="policy-section">
+            <h2>LEGAL BASIS FOR PROCESSING</h2>
+            <p>We handle your information in accordance with principles that are in line with Tanzania's data protection regulations:</p>
+            <ul>
+                <li>Performance of Contract: Processing that is needed in order to be able to offer you our services</li>
+                <li>Legitimate Interests: Where processing is in our legitimate business interests and is not overridden by your rights</li>
+                <li>Consent: Where you have given specific consent for specific types of processing, which can be withdrawn at any time</li>
+                <li>Legal Obligation: Where processing is needed to comply with our legal obligations under Tanzania law</li>
+                <li>Public Interest: Where processing is needed to fulfill a task that is performed in the public interest, as it is required for the Tanzania authorities</li>
+                <li>Vital Interests: Where processing is needed for safeguarding your vital interests or the vital interests of some other person</li>
+            </ul>
+        </div>
+
+        <!-- Data Sharing and Disclosure Section -->
+        <div class="policy-section">
+            <h2>DATA SHARING AND DISCLOSURE</h2>
+            <p>We can share and disclose your data with:</p>
+            <ul>
+                <li>Service Providers: Third-party service vendors who help us in providing and improving our services</li>
+                <li>Business Partners: Whenever we explicitly utilize features to reveal information with suppliers or customers</li>
+                <li>Legal Requirements: Where required by relevant law, regulation, or legal procedure</li>
+                <li>Business Transfers: When in the event of a sale, merger, or acquisition</li>
+                <li>With Your Consent: In other situations explained at collection with your consent</li>
+            </ul>
+            
+            <h3>API Access and Data Licensing</h3>
+            <p>If you join our public API program, certain non-personally identifiable business information will be available through our API to third parties on terms of data licensing we decide and according to your configuration settings. All API access and data sharing comply with Tanzania's Electronic and Postal Communications Act (EPOCA) and other legislations related to electronic communications and data sharing.</p>
+        </div>
+
+        <!-- Data Storage and Security Section -->
+        <div class="policy-section">
+            <h2>DATA STORAGE AND SECURITY</h2>
+            <ul>
+                <li>Local Storage: For providing best performance and offline features, your data is locally stored on your device for the most part</li>
+                <li>Synchronization: Where there is internet connectivity, your data can be synchronized with our secure servers to enable backup, recovery, and access on various devices</li>
+                <li>Security Measures: We implement appropriate technical and organizational measures to secure protection of your data during storage and transmission</li>
+                <li>Data Protection: Your local and synced data is protected using industry standard encryption and security protocols</li>
+                <li>Data Breach Notification: If your personal data is the subject of a data breach, we will notify you and the appropriate authorities as required by law</li>
+                <li>Data Retention: We will retain your data as long as necessary to run our service and meet legal obligations</li>
+            </ul>
+            
+            <h3>Compliance with Regional Requirements</h3>
+            <p>We have appropriate data storage practices to comply with laws of countries that we have a presence in, including maintaining appropriate data localization regulations and maintaining safe cross-border data flows where permissible. For users in Tanzania, we structure our data processing and storage to address the requirements of Tanzania's Electronic and Postal Communications Act (EPOCA) and Cybercrimes Act.</p>
+        </div>
+
+        <!-- Your Rights and Choices Section -->
+        <div class="policy-section">
+            <h2>YOUR RIGHTS AND CHOICES</h2>
+            <p>As one of our service customers, you have considerable rights in respect of your personal data. These rights will vary geographically, but generally comprise:</p>
+            <ul>
+                <li>Access: Request access to your personal data we hold</li>
+                <li>Correction: Request correction of inaccurate or incomplete information</li>
+                <li>Deletion: Request erasure of your personal data where it is legally appropriate</li>
+                <li>Restriction: Request restriction of processing of your data</li>
+                <li>Data Portability: Request us to port your data to you or a third party where technically feasible</li>
+                <li>Objection: Object to processing of your personal data on legitimate interests grounds</li>
+                <li>Withdraw Consent: Withdraw consent where we are processing your information on the basis of consent</li>
+            </ul>
+            
+            <h3>Additional Rights for Tanzania Users</h3>
+            <p>Tanzanian users have some rights under Tanzania's data protection law, including:</p>
+            <ul>
+                <li>All of the above rights</li>
+                <li>The right to complain to the Tanzania Communications Regulatory Authority (TCRA)</li>
+                <li>Other protections under the Personal Data Protection Act</li>
+            </ul>
+            <p>We will respond to you within the time limit specified by applicable law. To exercise these rights, please contact us with the details provided in the Contact Us section.</p>
+            <p>Remember that some of these rights are restricted where we have significant legitimate interests in processing your data or where there are legal requirements.</p>
+        </div>
+
+        <!-- Children's Privacy Section -->
+        <div class="policy-section">
+            <h2>CHILDREN'S PRIVACY</h2>
+            <p>Our services are not intended for use by individuals below the age of 18 years. As per Tanzania's child protection act, we do not intentionally collect personal information from children under the age of 18. If you are a parent or guardian and you suspect we may have collected information about a child, kindly inform us at once using the contact information below, and we will strive to delete such information and shut down any account created.</p>
+        </div>
+
+        <!-- International Data Transfers Section -->
+        <div class="policy-section">
+            <h2>INTERNATIONAL DATA TRANSFERS</h2>
+            <p>Our services could involve the transmission, storage, and processing of your personal data to and within other nations of the world where our servers are located and operations are based.</p>
+            <p>We take precautions when transferring personal data outside our country, including:</p>
+            <ul>
+                <li>Utilizing approved standard contractual clauses from qualified authorities</li>
+                <li>Recipient countries with adequate data protection laws</li>
+                <li>Implementing additional security measures for sensitive information</li>
+            </ul>
+            <p>For all users, including Tanzanian users, we structure our cross-border data transfers in a manner that is respectful of applicable laws and regulations and ensures uninterrupted availability and integrity of our services. Regional requirements for compliance are balanced against making sure that we have access to available, secure, and effective backup systems.</p>
+        </div>
+
+        <!-- Specific Features and Privacy Implications Section -->
+        <div class="policy-section">
+            <h2>SPECIFIC FEATURES AND PRIVACY IMPLICATIONS</h2>
+            
+            <h3>Offline Functionality</h3>
+            <ul>
+                <li>Data Storage: Business and user information is stored locally on your device</li>
+                <li>Synchronization: Data is synced with our servers when internet connectivity is present</li>
+            </ul>
+            
+            <h3>Barcode Generation</h3>
+            <ul>
+                <li>Business Card Feature: Barcodes are generated by the app that can be used as business cards</li>
+                <li>Information Shared: Barcodes can contain business identifiers readable by scanners</li>
+            </ul>
+            
+            <h3>Supplier and Customer Communication</h3>
+            <ul>
+                <li>Contact Integration: The application can use your device contacts to include suppliers</li>
+                <li>Messaging: The application can accommodate messaging to suppliers based on inventory levels</li>
+            </ul>
+            
+            <h3>Location Tracking</h3>
+            <ul>
+                <li>Login Location: The application records login location data</li>
+                <li>Business Analysis: The data is used for business operational patterns knowledge</li>
+            </ul>
+            
+            <h3>Business Partner Features</h3>
+            <ul>
+                <li>Multi-user Access: The application allows the owner of a business to provide access to partners, accountants, or consultants</li>
+                <li>Access Controls: Different permission levels control what information can be accessed by various users</li>
+            </ul>
+            
+            <h3>Data Analytics and Reporting</h3>
+            <ul>
+                <li>Usage Patterns: We analyze sales data, date and time, to provide business insights</li>
+                <li>Expiry Tracking: We manage product expiry data to send reminders and recommendations</li>
+            </ul>
+            
+            <h3>Public API</h3>
+            <ul>
+                <li>Data Sharing: Based on your choice, non-personal business data can be exposed through our API</li>
+                <li>Control: You decide what data is exposed through your setup</li>
+            </ul>
+        </div>
+
+        <!-- Third-Party Integrations Section -->
+        <div class="policy-section">
+            <h2>THIRD-PARTY INTEGRATIONS</h2>
+            
+            <h3>Payment Processing</h3>
+            <ul>
+                <li>Financial Data: Payment information is managed according to our payment partners' privacy policies</li>
+                <li>Transaction Records: We save transaction records in our system</li>
+            </ul>
+            
+            <h3>Exchange Rate APIs</h3>
+            <ul>
+                <li>Currency Information: We may pull exchange rate information from third-party APIs</li>
+                <li>Financial Calculations: The data is used to calculate revenues and expenses</li>
+            </ul>
+            
+            <h3>OCR Services</h3>
+            <ul>
+                <li>Document Processing: We may use third-party OCR services for bank statement scanning features</li>
+                <li>Data Processing: Documents are processed from images to extract relevant information</li>
+            </ul>
+        </div>
+
+        <!-- Data Retention and Deletion Section -->
+        <div class="policy-section">
+            <h2>DATA RETENTION AND DELETION</h2>
+            <ul>
+                <li>Account Information: Active for your account</li>
+                <li>Transaction Data: Stored for fiscal and legal compliance purposes</li>
+                <li>Deletion Requests: Specific data will be retained even in the case of deletion requests due to legal and regulatory purposes</li>
+            </ul>
+        </div>
+
+        <!-- Regional Privacy Requirements Section -->
+        <div class="policy-section">
+            <h2>REGIONAL PRIVACY REQUIREMENTS</h2>
+            
+            <h3>Global Standards</h3>
+            <p>We pledge to implement the highest global privacy and data protection standards in all nations where our app is made available. Our practices are intended to comply with significant privacy guidelines like:</p>
+            <ul>
+                <li>General Data Protection Regulation (GDPR) principles</li>
+                <li>California Consumer Privacy Act (CCPA) guidelines</li>
+                <li>African Union Convention on Cyber Security and Protection of Personal Data</li>
+            </ul>
+            
+            <h3>Tanzania-Specific Compliance</h3>
+            <p>For Tanzanian users, we have particular compliance with:</p>
+            <ul>
+                <li>Electronic and Postal Communications Act (EPOCA): We meet all the electronic communications and data handling standards.</li>
+                <li>Cybercrimes Act: We have security protocols in place to protect against unauthorized access and cyber attacks.</li>
+                <li>Personal Data Protection Act: We comply with principles for lawful processing of personal data.</li>
+                <li>Tanzania Communications Regulatory Authority (TCRA) Guidelines: We are fully compliant with all relevant TCRA rules and directives.</li>
+            </ul>
+            
+            <h3>Local Data Requirements for Tanzania Users</h3>
+            <ul>
+                <li>Data Localization: Where legally necessary, certain data may be hosted on Tanzanian-based servers.</li>
+                <li>Registration Requirements: We maintain appropriate registrations with appropriate Tanzanian authorities.</li>
+                <li>Phone Number Format: We manage phone numbers as per Tanzania format (numbers starting with 255).</li>
+                <li>National Language Issues: We provide main information in both English and Swahili where required by Tanzanian law.</li>
+            </ul>
+        </div>
+
+        <!-- Changes to Privacy Policy Section -->
+        <div class="policy-section">
+            <h2>CHANGES TO THIS PRIVACY POLICY</h2>
+            <p>We may update this notice from time to time to comply with changes in our practices or the law. We will bring important changes to your attention by placing the new notice on our app or website and, where the change applies, notifying you directly.</p>
+            <p>For Tanzanian users, we will ensure that any updates continue to be consistent with the provisions of Tanzania's Electronic and Postal Communications Act (EPOCA), the Cybercrimes Act, and other applicable laws.</p>
+        </div>
+
+        <!-- Contact Us Section -->
+        <div class="policy-section">
+            <h2>CONTACT US</h2>
+            <p>If you have questions or concerns about this privacy policy or our data practices, please contact us at:</p>
+            <p>Email: privacy@mangiapp.com<br>
+            Address: 1730 Dodoma,<br>
+            Phone: +255687046323</p>
+            
+            <h3>Regional Regulatory Authorities</h3>
+            <h4>For Tanzanian Users</h4>
+            <p>You can also contact the Tanzania Communications Regulatory Authority (TCRA) in case of data protection concerns:</p>
+            <p>Tanzania Communications Regulatory Authority (TCRA)<br>
+            Mawasiliano Towers<br>
+            20 Sam Nujoma Road<br>
+            P.O. Box 474<br>
+            14414 Dar es Salaam, Tanzania<br>
+            Phone: +255 22 2199760-9<br>
+            Website: www.tcra.go.tz</p>
+            
+            <h4>For Users Outside Other Regions</h4>
+            <p>For concerns relating to data protection in your area, please use your regional data protection authority's contact details.</p>
+        </div>
+
+        <!-- Footer Information -->
+        <div class="footer">
+            <p>© {{ business_profile.business.businessName }} - All Rights Reserved</p>
+            <p>If you have any questions, please contact us at <strong>info@sotech.com</strong>.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <style>
+        :root {
+            --primary-color: #750000;
+            --secondary-color: #801336;
+            --tertiary-color: #20142C;
+            --light-gray: #f5f5f5;
+            --border-radius: 15px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .otp-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 0 auto;
+            width: 80%;
+            max-width: 350px;
+        }
+        
+        .otp-input {
+            width: 45px;
+            height: 55px;
+            font-size: 24px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+        
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .timer {
+            font-size: 20px;
+            color: var(--primary-color);
+            margin: 30px 0;
+        }
+        
+        .verify-button {
+            width: 80%;
+            height: 60px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .verify-button:hover {
+            background-color: #630000;
+        }
+        
+        .resend-button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+            padding: 10px;
+        }
+        
+        .resend-button:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .login-prompt {
+            margin-top: 5px;
+        }
+        
+        .login-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 15px;
+            margin-left: 5px;
+        }
+        
+        .login-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .modal-message {
+            margin-bottom: 20px;
+        }
+        
+        .modal-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--secondary-color);
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 350px;
+            background-color: var(--tertiary-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 1001;
+        }
+        
+        .toast.success {
+            background-color: var(--primary-color);
+        }
+        
+        .toast.error {
+            background-color: var(--tertiary-color);
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Please enter the complete OTP</h1>
+        
+        <div class="otp-container">
+            <input type="text" maxlength="1" class="otp-input" id="otp1" autofocus>
+            <input type="text" maxlength="1" class="otp-input" id="otp2">
+            <input type="text" maxlength="1" class="otp-input" id="otp3">
+            <input type="text" maxlength="1" class="otp-input" id="otp4">
+            <input type="text" maxlength="1" class="otp-input" id="otp5">
+        </div>
+        
+        <div class="timer" id="timer">05:00</div>
+        
+        <button class="verify-button" id="verifyButton">Verify Phone Number</button>
+        
+        <button class="resend-button" id="resendButton" disabled>Resend OTP</button>
+        
+        <div class="login-prompt">
+            Already have an account?
+            <a href="#" class="login-link">Login</a>
+        </div>
+    </div>
+    
+    <!-- Information/Success Modal -->
+    <div class="modal" id="infoModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="infoIcon" style="color: blue;">i</div>
+            <h2 class="modal-title" id="infoTitle">Information</h2>
+            <p class="modal-message" id="infoMessage">OTP has been resent successfully.</p>
+            <button class="modal-button" id="infoButton">OK</button>
+        </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-icon" style="color: red;">!</div>
+            <h2 class="modal-title">Error</h2>
+            <p class="modal-message" id="errorMessage">Failed to resend OTP.</p>
+            <button class="modal-button" id="errorButton">Dismiss</button>
+        </div>
+    </div>
+    
+    <!-- Verifying Modal -->
+    <div class="modal" id="verifyingModal">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <h2 class="modal-title">Verifying</h2>
+            <p class="modal-message">Please wait while we verify your request.</p>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // DOM Elements
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const timerElement = document.getElementById('timer');
+        const verifyButton = document.getElementById('verifyButton');
+        const resendButton = document.getElementById('resendButton');
+        
+        const infoModal = document.getElementById('infoModal');
+        const infoIcon = document.getElementById('infoIcon');
+        const infoTitle = document.getElementById('infoTitle');
+        const infoMessage = document.getElementById('infoMessage');
+        const infoButton = document.getElementById('infoButton');
+        
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorButton = document.getElementById('errorButton');
+        
+        const verifyingModal = document.getElementById('verifyingModal');
+        const toast = document.getElementById('toast');
+        
+        // Variables
+        let timerInterval;
+        let remainingTime = 300; // 5 minutes in seconds
+        
+        // URL parameters (simulating route arguments in Flutter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const phoneNumber = urlParams.get('phoneNumber') || '+255123456789'; // Default value for testing
+        const businessId = parseInt(urlParams.get('business_id') || '1'); // Default value for testing
+        
+        // Initialize
+        function init() {
+            startTimer();
+            setupOtpInputs();
+            setupEventListeners();
+        }
+        
+        // Timer functions
+        function startTimer() {
+            remainingTime = 300; // Reset to 5 minutes
+            resendButton.disabled = true;
+            updateTimerDisplay();
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    resendButton.disabled = false;
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Setup OTP input fields
+        function setupOtpInputs() {
+            otpInputs.forEach((input, index) => {
+                // Auto-focus next input
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1) {
+                        if (index < otpInputs.length - 1) {
+                            otpInputs[index + 1].focus();
+                        }
+                    }
+                });
+                
+                // Handle backspace
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace') {
+                        if (e.target.value === '' && index > 0) {
+                            otpInputs[index - 1].focus();
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            verifyButton.addEventListener('click', verifyOtp);
+            resendButton.addEventListener('click', resendOtp);
+            infoButton.addEventListener('click', () => infoModal.style.display = 'none');
+            errorButton.addEventListener('click', () => errorModal.style.display = 'none');
+        }
+        
+        // Get OTP from inputs
+        function getOtp() {
+            return Array.from(otpInputs).map(input => input.value).join('');
+        }
+        
+        // Clear OTP inputs
+        function clearOtpInputs() {
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
+            otpInputs[0].focus();
+        }
+        
+        // Verify OTP
+        function verifyOtp() {
+            const otp = getOtp();
+            
+            if (otp.length !== 5) {
+                showToast('Please enter the complete OTP', 'error');
+                return;
+            }
+            
+            showVerifyingModal();
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Close verifying modal
+                verifyingModal.style.display = 'none';
+                
+                // Show success toast (in a real app, this would depend on the API response)
+                showToast('Phone number verified successfully', 'success');
+                
+                // Simulate redirection after successful verification
+                setTimeout(() => {
+                    // Redirect to dashboard/home page
+                    // In a real app, this would redirect to the appropriate page based on business type
+                    // window.location.href = '/dashboard';
+                    
+                    // For demo purposes, just show a message
+                    showInfoModal('Success', 'Verification successful. You will be redirected to the dashboard.');
+                }, 2000);
+            }, 2000);
+        }
+        
+        // Resend OTP
+        function resendOtp() {
+            clearOtpInputs();
+            
+            // Simulate API call
+            setTimeout(() => {
+                startTimer();
+                showInfoModal('Information', 'OTP has been resent successfully.');
+            }, 1500);
+        }
+        
+        // Show info modal
+        function showInfoModal(title, message, iconColor = 'blue') {
+            infoTitle.textContent = title;
+            infoMessage.textContent = message;
+            infoIcon.style.color = iconColor;
+            infoModal.style.display = 'flex';
+        }
+        
+        // Show error modal
+        function showErrorModal(message) {
+            errorMessage.textContent = message;
+            errorModal.style.display = 'flex';
+        }
+        
+        // Show verifying modal
+        function showVerifyingModal() {
+            verifyingModal.style.display = 'flex';
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

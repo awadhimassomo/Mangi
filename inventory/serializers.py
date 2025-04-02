@@ -1,7 +1,7 @@
 #serializer the  data
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import BusinessType, Expense, Installment, Order, OrderItem, Product, Sales, SalesItem,Supplier,Category,Transaction,Warehouse,Purchase
+from .models import BusinessType, Expense, ExpensePolicy, Installment, Order, OrderItem, Product, Sales, SalesItem,Supplier,Category,Transaction,Warehouse,Purchase
 
 
 
@@ -77,14 +77,7 @@ class BusinessTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class ExpenseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Expense
-        fields = [
-            'id', 'date', 'without_tax_cost', 'with_tax_cost', 
-            'total', 'approval_status', 'receipt', 'vendor', 
-            'payment_method', 'notes', 'business', 'category'
-        ]
+
 
 
 class ProductSuggestionSerializer(serializers.ModelSerializer):
@@ -268,5 +261,32 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+        
+class ExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
+        fields = [
+            'id', 'date', 'without_tax_cost', 'with_tax_cost', 
+            'total', 'approval_status', 'receipt', 'vendor', 
+            'payment_method', 'notes', 'business', 'category'
+        ]
+
+class ExpensePolicySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExpensePolicy
+        fields = [
+            'id',
+            'user',
+            'name',
+            'categories',
+            'max_amount',
+            'timeframe',
+            'rules',
+            'status',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
 
 

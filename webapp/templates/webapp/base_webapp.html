@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mangi POS{% endblock %}</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-light': '#EE4540',
+                        primary: '#C72C41',
+                        secondary: '#801336',
+                        dark: '#510A32',
+                        darker: '#20142C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Gradient Background */
+        .brand-gradient {
+            background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        /* Fullscreen Layout */
+        .full-width {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        {% block additional_styles %}{% endblock %}
+    </style>
+</head>
+<body class="bg-gray-100 flex h-screen overflow-hidden">
+    <!-- Side Menu -->
+    <aside class="brand-gradient text-white w-16 md:w-64 flex flex-col h-screen fixed left-0 top-0 transition-all duration-300 z-10">
+        <!-- Logo Area -->
+        <div class="p-4 border-b border-opacity-20 border-white">
+            <div class="flex items-center">
+                <span class="text-white font-bold text-xl mr-2 hidden md:inline">Mangi</span>
+                <span class="bg-white bg-opacity-20 text-white text-xs px-2 py-1 rounded hidden md:inline">POS</span>
+                <span class="text-white font-bold text-xl md:hidden">M</span>
+            </div>
+        </div>
+        
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-2 py-4 space-y-2">
+            <a href="{% url 'webapp:dashboard' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/dashboard/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-tachometer-alt text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Dashboard</span>
+            </a>
+            <a href="{% url 'webapp:sales' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/sales/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-chart-line text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Sales</span>
+            </a>
+            <a href="{% url 'webapp:stocks' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/stocks/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-box text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Stocks</span>
+            </a>
+            <a href="{% url 'webapp:orders' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/orders/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-shopping-cart text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Orders</span>
+            </a>
+            <a href="{% url 'webapp:expenses' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/expenses/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-credit-card text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Expenses</span>
+            </a>
+            <a href="{% url 'webapp:loans' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/loans/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-hand-holding-usd text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Loans</span>
+            </a>
+            <a href="{% url 'webapp:suppliers' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/suppliers/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-truck text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Suppliers</span>
+            </a>
+            <a href="{% url 'webapp:customers' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/customers/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-users text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Customers</span>
+            </a>
+            <a href="{% url 'webapp:reports' %}" class="flex items-center p-2 rounded-md {% if request.path == '/webapp/reports/' %}bg-white bg-opacity-20{% else %}text-opacity-80{% endif %} text-white hover:bg-opacity-30 transition-colors duration-200">
+                <i class="fas fa-chart-bar text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Reports</span>
+            </a>
+            <a href="#" class="flex items-center p-2 rounded-md text-white text-opacity-80 hover:bg-white hover:bg-opacity-20 hover:text-white transition-colors duration-200">
+                <i class="fas fa-cog text-xl md:mr-3"></i>
+                <span class="hidden md:inline">Settings</span>
+            </a>
+        </nav>
+        
+        <!-- User Profile Section -->
+        <div class="p-4 border-t border-opacity-20 border-white">
+            <a href="#" class="flex items-center">
+                <i class="fas fa-user-circle text-xl md:mr-3 text-white text-opacity-80"></i>
+                <span class="hidden md:inline text-white text-opacity-80">User Profile</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-1 overflow-auto pl-16 md:pl-64 w-full">
+        <!-- Top Navigation Bar -->
+        <div class="bg-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <!-- Business Name -->
+                        <div class="ml-6 flex items-center">
+                            <button class="bg-gray-100 text-gray-700 px-3 py-1 rounded-md flex items-center text-sm">
+                                <i class="fas fa-building mr-2"></i>
+                                Unknown Business
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="flex-1 flex items-center justify-center px-2 lg:ml-6 lg:justify-end">
+                        <div class="max-w-lg w-full lg:max-w-xs">
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input id="search" name="search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Search" type="search">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Navigation -->
+                    <div class="flex items-center">
+                        <!-- Notification Bell -->
+                        <button class="p-2 ml-3 text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Notifications">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        
+                        <!-- Calculator Button -->
+                        <button id="show-calculator-btn" class="p-2 ml-3 text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Show calculator">
+                            <i class="fas fa-calculator"></i>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div class="ml-3 relative">
+                            <div>
+                                <button class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out" id="user-menu" aria-expanded="false" aria-haspopup="true">
+                                    <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name=User&color=7F9CF5&background=EBF4FF" alt="User profile">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Additional Modals and Content -->
+    {% block additional_content %}{% endblock %}
+    
+    <!-- Common JavaScript -->
+    <script>
+        // Common JS functions across webapp
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add your common JavaScript here
+        });
+    </script>
+    
+    <!-- Page Specific JavaScript -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

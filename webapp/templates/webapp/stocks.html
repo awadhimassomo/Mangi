@@ -1,0 +1,290 @@
+{% extends 'webapp/base_webapp.html' %}
+
+{% block title %}Mangi POS - Stocks Management{% endblock %}
+
+{% block additional_styles %}
+.stock-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stock-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.brand-gradient-light {
+    background: linear-gradient(to right, #EE4540, #C72C41);
+}
+{% endblock %}
+
+{% block content %}
+<!-- Main Content Container -->
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Stocks Header -->
+    <div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Stocks Management</h1>
+                <p class="text-white opacity-80">Manage your inventory and stock levels</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add Stock
+                </button>
+                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter by category" aria-label="Filter stock items by category">
+                    <option value="all" selected>All Categories</option>
+                    <option value="food">Food Items</option>
+                    <option value="beverages">Beverages</option>
+                    <option value="supplies">Kitchen Supplies</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stocks Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Stock Items -->
+        <div class="bg-white rounded-lg shadow p-6 stock-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Stock Items</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">142</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 8.2% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-box text-primary-light text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Low Stock Items -->
+        <div class="bg-white rounded-lg shadow p-6 stock-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Low Stock Items</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">23</h3>
+                    <p class="text-red-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 12.5% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-yellow-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Out of Stock -->
+        <div class="bg-white rounded-lg shadow p-6 stock-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Out of Stock</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">8</h3>
+                    <p class="text-red-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-down mr-1"></i> 3.1% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times-circle text-red-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stock Value -->
+        <div class="bg-white rounded-lg shadow p-6 stock-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Stock Value</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 4.2M</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 5.3% <span class="text-gray-400">vs last period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-green-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stock Items Table -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-xl font-semibold">Stock Items</h2>
+            <div class="relative">
+                <input type="text" placeholder="Search stocks..." class="px-4 py-2 border rounded-md pr-10">
+                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Stock Item 1 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-drumstick-bite text-primary"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Chicken Breasts</div>
+                                    <div class="text-sm text-gray-500">SKU: CHK-BRT-001</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Meat</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">125</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">kg</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 4,500</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 562,500</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">In Stock</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit item"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900" title="Delete item"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Stock Item 2 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-seedling text-green-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Tomatoes</div>
+                                    <div class="text-sm text-gray-500">SKU: VEG-TOM-002</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Vegetables</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">48</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">kg</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 2,200</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 105,600</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Low Stock</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit item"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900" title="Delete item"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Stock Item 3 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-wine-bottle text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Red Wine</div>
+                                    <div class="text-sm text-gray-500">SKU: BEV-WIN-005</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Beverages</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">32</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">bottle</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 18,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 576,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">In Stock</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit item"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900" title="Delete item"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Stock Item 4 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-utensils text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Paper Napkins</div>
+                                    <div class="text-sm text-gray-500">SKU: SUP-NAP-010</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Supplies</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">0</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">pack</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 3,500</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 0</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Out of Stock</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit item"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900" title="Delete item"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="px-6 py-4 flex items-center justify-between border-t">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">142</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="#" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">1</a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</a>
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">15</a>
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Stock management JavaScript can be added here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize stock management functionality
+        console.log("Stock management page loaded");
+    });
+</script>
+{% endblock %}
