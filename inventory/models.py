@@ -505,9 +505,8 @@ class Installment(models.Model):
             raise ValidationError('Either a customer or supplier must be set.')
         if self.customer and self.supplier:
             raise ValidationError('Only one of customer or supplier can be set.')
-
-
-
+        
+        
 class Expense(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('Cash', 'Cash'),
@@ -521,77 +520,218 @@ class Expense(models.Model):
         ('Other', 'Other'),  # Add other categories as needed
     ]
 
-    date = models.DateField(default=timezone.now)
-    without_tax_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    with_tax_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    approval_status = models.BooleanField(default=False)
-    receipt = models.FileField(upload_to='receipts/', null=True, blank=True)
-    vendor = models.CharField(max_length=255, null=True, blank=True)
-    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, default='Cash')
-    notes = models.TextField(null=True, blank=True)
-    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=True)  
+    # Core Fields
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    date = models.DateField(default=timezone.now, verbose_name="Expense Date")
+    without_tax_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Cost Without Tax"
+    )
+    with_tax_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Cost With Tax"
+    )
+    total = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Total Cost"
+    )
+    approval_status = models.BooleanField(
+        default=False, verbose_name="Approval Status"
+    )
+    receipt = models.FileField(
+        upload_to='receipts/', null=True, blank=True, verbose_name="Receipt File"
+    )
+    vendor = models.CharField(
+        max_length=255, null=True, blank=True, verbose_name="Vendor Name"
+    )
+    payment_method = models.CharField(
+        max_length=50,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='Cash',
+        verbose_name="Payment Method"
+    )
+    notes = models.TextField(null=True, blank=True, verbose_name="Notes")
+    recurring = models.BooleanField(default=False)
+    business = models.ForeignKey(
+        'registration.Business',
+        on_delete=models.CASCADE,
+        verbose_name="Associated Business"
+    )
+    category = models.CharField(
+        max_length=50,
+        choices=CATEGORY_CHOICES,
+        null=True,
+        verbose_name="Expense Category"
+    )
+    policy = models.ForeignKey(
+        'ExpensePolicy',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='expenses',
+        verbose_name="Associated Policy"
+    )
 
     def __str__(self):
         return f"{self.vendor} - Total: {self.total}"
 
     def clean(self):
-        # Validate expense against ExpenseTerms
-        self.validate_expense_terms()
+        """Custom validation logic to enforce expense policies."""
+        self.validate_against_policy()
 
-    def validate_expense_terms(self):
-        # Get the user's role
-        user_role = self.business.owner.role  # Assuming the Business model has an owner field
-        
-        # Fetch relevant policies based on the user's role and category
-        policies = ExpenseTerms.objects.filter(
-            impacted_roles=user_role,
-            category=self.category  # Filter by category
+    def validate_against_policy(self):
+        """Validates the expense against applicable policies."""
+        if not self.business or not self.category:
+            raise ValidationError("Business and category must be specified.")
+
+        # Fetch applicable policies for this business and category
+        applicable_policies = ExpensePolicy.objects.filter(
+            user=self.business.owner,  # Assuming ExpensePolicy is tied to a user
+            categories__contains=self.category,
+            status='active'
         )
 
-        if not policies.exists():
-            raise ValidationError("No applicable expense policy for the selected category.")
+        if not applicable_policies.exists():
+            raise ValidationError(
+                f"No active expense policy exists for the selected category: {self.category}."
+            )
 
-        for policy in policies:
+        for policy in applicable_policies:
+            # Validate the expense total
             if self.total > policy.max_amount:
                 raise ValidationError(
-                    f"Total amount exceeds the maximum allowed for this policy: {policy.policy_description}"
+                    f"Expense total ({self.total}) exceeds the maximum allowed "
+                    f"({policy.max_amount}) for the policy: {policy.name}."
                 )
-            if self.date.day != policy.enforcement_day:
+            # Validate enforcement day if applicable
+            if policy.timeframe == 'monthly' and self.date.day > 31:
                 raise ValidationError(
-                    f"Expense date must be on the enforcement day of this policy: {policy.policy_description}"
+                    f"Expense date ({self.date}) does not align with the policy timeframe ({policy.timeframe})."
                 )
 
     def save(self, *args, **kwargs):
-        self.clean()  # Call the clean method to enforce validation
+        """Custom save logic to enforce validation."""
+        self.clean()  # Validate before saving
         super().save(*args, **kwargs)
 
 
-class ExpenseTerms(models.Model):
 
+
+class ExpensePolicy(models.Model):
+    # Category choices for standardization
     CATEGORY_CHOICES = [
-    ('Travel', 'Travel'),
-    ('Supplies', 'Supplies'),
-    ('Meals', 'Meals'),
-    ('Other', 'Other'),  # Add more categories as necessary
-]
-    # Define roles as choices
-    ROLE_CHOICES = [
-        ('management', 'Management'),
-        ('sales', 'Sales'),
-        ('general', 'General Team'),
+        ('Travel', 'Travel'),
+        ('Supplies', 'Supplies'),
+        ('Meals', 'Meals'),
+        ('Other', 'Other'),  # Add more categories as necessary
     ]
 
-    # Policy details
-    policy_description = models.TextField()  # Detailed description of the policy
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, null=True,default=0)  # Make it nullable temporarily
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    max_amount = models.DecimalField(max_digits=10, decimal_places=2)  # Maximum allowed amount
-    enforcement_day = models.IntegerField()  # Day for enforcement (1-31)
-    impacted_roles = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Roles impacted by this policy
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the policy
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the policy was created
+    # Status options
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('draft', 'Draft'),
+        ('expired', 'Expired'),
+    ]
+
+    # Core Fields
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # Unique identifier for the policy
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='expense_policies'
+    )  # Links the policy to a specific user
+    name = models.CharField(max_length=255, verbose_name="Policy Name")  # Name of the policy (e.g., "Travel Expenses")
+    max_amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Maximum Allowable Expense"
+    )  # Maximum allowable expense under this policy
+    categories = models.JSONField(
+        verbose_name="Categories",
+        help_text="Allowed categories under this policy. Example: ['Travel', 'Meals']",
+        default=list
+    )  # JSON array of categories allowed in this policy
+    timeframe = models.CharField(
+        max_length=50, 
+        verbose_name="Timeframe", 
+        help_text="The timeframe for the policy (e.g., daily, weekly, monthly)."
+    )  # Timeframe for the policy (daily, weekly, monthly)
+    rules = models.TextField(
+        verbose_name="Rules", 
+        blank=True, 
+        null=True, 
+        help_text="Optional additional rules for the policy."
+    )  # Optional text describing additional rules for the policy
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='active', 
+        verbose_name="Policy Status"
+    )  # Status of the policy (Active, Inactive, Draft, Expired)
+
+    # Metadata Fields
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")  # When the policy was created
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Last Updated At")  # When the policy was last updated
 
     def __str__(self):
-        return f"{self.policy_description} - Max: {self.max_amount} - Role: {self.impacted_roles}"
+        return f"{self.name} - Max: {self.max_amount} - Status: {self.status}"
+
+class ExpenseCategory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Notification(models.Model):
+    NOTIFICATION_TYPE_CHOICES = [
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+        ('in_app', 'In-App'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    type = models.CharField(
+        max_length=20,
+        choices=NOTIFICATION_TYPE_CHOICES,
+        default='in_app',
+        verbose_name="Notification Type"
+    )  # Specifies the notification type
+    message = models.TextField(verbose_name="Notification Message")
+    is_read = models.BooleanField(default=False, verbose_name="Is Read")
+    send_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Scheduled Time",
+        help_text="Time to send the notification. Leave blank for immediate."
+    )  # Optional scheduling field
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+
+    def __str__(self):
+        return f"Notification for {self.user} - {self.type}: {self.message[:50]}"
+
+    def clean(self):
+        """Custom validation to ensure valid notification settings."""
+        if self.type in ['email', 'sms'] and not self.send_at:
+            raise ValidationError(
+                f"Scheduled time is required for {self.type} notifications."
+            )
+
+class ExpenseAuditLog(models.Model):
+    ENTITY_CHOICES = [
+        ('Expense', 'Expense'),
+        ('ExpensePolicy', 'ExpensePolicy'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    entity_type = models.CharField(max_length=50, choices=ENTITY_CHOICES)
+    entity_id = models.UUIDField()
+    action = models.CharField(max_length=50)  # e.g., created, updated, deleted
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    details = models.JSONField(null=True, blank=True)  # Stores the before/after state
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.entity_type} - {self.action} by {self.performed_by} at {self.timestamp}"
+

@@ -71,6 +71,7 @@ def generate_reference():
     return str(uuid.uuid4())
 
 
+
 class ResendOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -136,7 +137,7 @@ def send_otp_via_sms(phoneNumber, otp):
         payload = {
             "from": from_,
             "to": phoneNumber,
-            "text": f"Your OTP is {otp}",
+            "text": f"Your OTP are {otp}",
             "reference": reference,
         }
 
@@ -457,35 +458,53 @@ class VerifyOTPView(APIView):
                 'businesses': serializer.data
             }, status=status.HTTP_200_OK)
 
-#password reset
+
 class PasswordResetRequestView(APIView):
     def post(self, request):
         phoneNumber = request.data.get('phoneNumber')  # Using request.data for better compatibility with DRF
         if not phoneNumber:
             return JsonResponse({'error': 'Phone number is required'}, status=400)
         
-        if not CustomUser.objects.filter(phoneNumber=phoneNumber).exists():
+        # Check if the user with the given phone number exists
+        try:
+            user = CustomUser.objects.get(phoneNumber=phoneNumber)
+        except CustomUser.DoesNotExist:
             return JsonResponse({'error': 'Invalid phone number'}, status=400)
         
-        user = CustomUser.objects.get(phoneNumber=phoneNumber)
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        reset_link = request.build_absolute_uri(
-            f'/password-reset-confirm/{uid}/{token}/'
+        # Retrieve the business associated with the user
+        try:
+            business = Business.objects.get(owner=user)
+            business_id = business.id
+        except Business.DoesNotExist:
+            return JsonResponse({'error': 'No business associated with this user.'}, status=400)
+
+        # Generate OTP
+        otp = generate_otp()  # Generate OTP
+        
+        # Store the OTP in the OTPCredit model with an expiry time
+        otp_expiry = timezone.now() + timedelta(minutes=10)  # OTP valid for 10 minutes
+
+        # Include business_id in defaults
+        OTPCredit.objects.update_or_create(
+            user=user, 
+            defaults={'otp': otp, 'otp_expiry': otp_expiry, 'business_id': business_id}
         )
+        
         # Generate the message to be sent
-        message = f'Click the link to reset your password: {reset_link}'
+        message = f'Your password reset OTP is: {otp}'
         if reset_password(user.phoneNumber, message):
-            return JsonResponse({'message': 'Password reset link sent successfully'})
+            return JsonResponse({'message': 'OTP sent successfully'})
         else:
             return JsonResponse({'error': 'Failed to send SMS'}, status=500)
+
+
 
 def reset_password(phoneNumber, message):
     try:
         from_ = "OTP"  # Sender name
-        url = settings.MESSAGING_SERVICE_URL
+        url = 'https://messaging-service.co.tz/api/sms/v1/text/single'
         headers = {
-            'Authorization': settings.MESSAGING_SERVICE_AUTHORIZATION,
+            'Authorization': "Basic YXRoaW06TWFtYXNob2tv",
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
@@ -509,19 +528,75 @@ def reset_password(phoneNumber, message):
         print(f'Error sending SMS: {e}')
         return False
 
+def generate_otp():
+    import random
+    return str(random.randint(10000, 99999))
+
+
+
+class OTPVerificationView(APIView):
+    def post(self, request):
+        phoneNumber = request.data.get('phoneNumber')
+        otp = request.data.get('otp')
+
+        if not phoneNumber or not otp:
+            return JsonResponse({'error': 'Phone number and OTP are required'}, status=400)
+
+        try:
+            user = CustomUser.objects.get(phoneNumber=phoneNumber)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'Invalid phone number'}, status=400)
+
+        # Verify OTP using OTPCredit model or external cache
+        try:
+            otp_record = OTPCredit.objects.get(user=user, otp=otp)
+            if timezone.now() > otp_record.otp_expiry:
+                return JsonResponse({'error': 'OTP has expired'}, status=400)
+        except OTPCredit.DoesNotExist:
+            return JsonResponse({'error': 'Invalid OTP'}, status=400)
+
+        # OTP verified successfully, delete OTP record
+        otp_record.delete()
+
+        return JsonResponse({'message': 'OTP verified successfully'})
+
+class PasswordResetView(APIView):
+    def post(self, request):
+        phoneNumber = request.data.get('phoneNumber')
+        newPassword = request.data.get('newPassword')
+
+        if not phoneNumber or not newPassword:
+            return JsonResponse({'error': 'Phone number and new password are required'}, status=400)
+
+        try:
+            user = CustomUser.objects.get(phoneNumber=phoneNumber)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'Invalid phone number'}, status=400)
+
+        # Update password
+        user.set_password(newPassword)
+        user.otp = None  # Clear the OTP after successful password reset
+        user.save()
+
+        return JsonResponse({'message': 'Password reset successfully'})
 
 #comfirming password
 
 class PasswordResetConfirmView(APIView):
-    def post(self, request, uidb64, token):
-        serializer = PasswordResetConfirmSerializer(data={
-            'uid': uidb64,
-            'token': token,
-            'new_password': request.data.get('new_password')
-        })
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        phone_number = request.data.get('phone_number')
+        new_password = request.data.get('new_password')
+
+        # Assuming you have a CustomUser model with a phone_number field
+        try:
+            user = CustomUser.objects.get(phoneNumber=phone_number)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User with this phone number does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Set the new password
+        user.set_password(new_password)
+        user.save()
+
+        return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
+
     

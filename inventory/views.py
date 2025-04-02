@@ -16,12 +16,13 @@ from django.utils.crypto import get_random_string
 import logging  # For logging data received
 from datetime import timedelta
 logger = logging.getLogger(__name__)
+from rest_framework import permissions
 
 
 from sms.views import generate_reference
-from .serializers import CreateOrderSerializer, ExpenseSerializer, InstallmentSerializer, OrderItemSerializer, ProductSerializer, ProductSuggestionSerializer, SalesSerializer,SupplierSerializer,CategorySerializer
+from .serializers import CreateOrderSerializer, ExpensePolicySerializer, ExpenseSerializer, InstallmentSerializer, OrderItemSerializer, ProductSerializer, ProductSuggestionSerializer, SalesSerializer,SupplierSerializer,CategorySerializer #ExpenseSerializer,
 from .serializers import TransactionSerializer,WarehouseSerializer,PurchaseSerializer
-from .models import BusinessType, Expense, Installment, Order, OrderItem, Product, ProductBusinessTypeAssociation, PublicProduct, Sales, SalesItem,Supplier,Category,Transaction,Warehouse,Purchase
+from .models import BusinessType, Expense, ExpensePolicy, Installment, Order, OrderItem, Product, ProductBusinessTypeAssociation, PublicProduct, Sales, SalesItem,Supplier,Category,Transaction,Warehouse,Purchase
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import status,viewsets
@@ -1677,6 +1678,10 @@ def delete_purchase(request, pk):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_expense(request):
+    # Print the incoming data to the console
+    print("Received data:", request.data)
+    
+    # Continue with the normal processing of data
     serializer = ExpenseSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -1763,3 +1768,32 @@ def product_suggestions(request):
     serializer = ProductSuggestionSerializer(products, many=True)
     
     return Response({'suggestions': serializer.data})
+
+
+class ExpensePolicyListCreateView(generics.ListCreateAPIView):
+    """
+    GET: List all expense policies for the authenticated user.
+    POST: Create a new expense policy.
+    """
+    serializer_class = ExpensePolicySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ExpensePolicy.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ExpensePolicyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET: Retrieve a specific expense policy.
+    PUT/PATCH: Update the policy.
+    DELETE: Delete the policy.
+    """
+    serializer_class = ExpensePolicySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return ExpensePolicy.objects.filter(user=self.request.user)

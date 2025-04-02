@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Registration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-light: #EE4540;
+            --primary: #C72C41;
+            --secondary: #801336;
+            --dark: #510A32;
+            --darker: #20142C;
+            --light-gray: #f5f5f5;
+            --border-radius: 25px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        .header {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .brand-gradient {
+            background: linear-gradient(to right, var(--primary-light), var(--primary), var(--secondary), var(--dark), var(--darker));
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 16px 20px;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-text {
+            color: white;
+        }
+        
+        .header-text h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .header-text p {
+            margin: 4px 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .language-icon {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .language-icon:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .language-menu {
+            position: absolute;
+            right: 20px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 100;
+        }
+        
+        .language-menu.active {
+            display: block;
+        }
+        
+        .language-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .language-menu li {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .language-menu li:hover {
+            background-color: #f5f5f5;
+        }
+        
+        /* Step indicator styling based on screenshot */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding: 0 40px;
+        }
+        
+        .step-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+            transform: translateY(-20px);
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 33.33%;
+        }
+        
+        .step-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            color: #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .step.active .step-number {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(199, 44, 65, 0.3);
+        }
+        
+        .step.completed .step-number {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .step-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #777;
+            margin: 0 auto;
+            margin-top: 8px;
+        }
+        
+        .step.active .step-text {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Style for individual steps with specific background colors */
+        #step1 .step-number {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        #step2 .step-number, #step3 .step-number {
+            background-color: #f0f0f0;
+            color: #666;
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+        
+        .form-step {
+            display: none;
+        }
+        
+        .form-step.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .phone-field {
+            display: flex;
+        }
+        
+        .phone-field select {
+            width: 30%;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .phone-field input {
+            width: 70%;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+        }
+        
+        .button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+        
+        .button-secondary {
+            background-color: var(--dark);
+            color: white;
+        }
+        
+        .button-secondary:hover {
+            background-color: var(--darker);
+        }
+        
+        .otp-container {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .otp-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .resend-link {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .resend-link:hover {
+            text-decoration: underline;
+        }
+        
+        .timer {
+            color: var(--primary);
+            font-weight: bold;
+            text-align: right;
+            margin-bottom: 15px;
+        }
+        
+        .info-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+        
+        /* Login link styling */
+        .login-link-container {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .login-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .login-link:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .form-container {
+                padding: 16px;
+            }
+            
+            .step-title {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand-gradient">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1 id="headerTitle">Business Registration</h1>
+                    <p>Register your business with us</p>
+                </div>
+                <div class="language-icon" id="languageIcon">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div class="language-menu" id="languageMenu">
+                    <ul>
+                        <li>English</li>
+                        <li>Swahili</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stepper">
+            <div class="step-line"></div>
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-text">Business Info</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-text">Personal Info</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-text">Verify Phone</div>
+            </div>
+        </div>
+        
+        <div class="form-container">
+            <!-- Step 1: Business Information -->
+            <div class="form-step active" id="formStep1">
+                <div class="form-group">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessAddress">Business Address</label>
+                    <input type="text" id="businessAddress" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessType">Business Type</label>
+                    <select id="businessType" required>
+                        <option value="" disabled selected>Select Business Type</option>
+                        <option value="warehouse">Warehouse</option>
+                        <option value="pharmacy">Pharmacy</option>
+                        <option value="retail_store">Retail Store</option>
+                        <option value="spare_parts_shop">Spare Parts Shop</option>
+                        <option value="furniture_shop">Furniture Shop</option>
+                        <option value="hardware_store">Hardware Store</option>
+                        <option value="liquor_Store">Liquor Store</option>
+                        <option value="cosmetics_Store">Cosmetics Store</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessPhone">Phone Number</label>
+                    <div class="phone-field">
+                        <select id="businessPhoneCode">
+                            <option value="+255">+255 (TZ)</option>
+                        </select>
+                        <input type="tel" id="businessPhone" placeholder="687046323" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phoneNetwork">Phone Network</label>
+                    <select id="phoneNetwork" required>
+                        <option value="" disabled selected>Select Phone Network</option>
+                        <option value="voda">Vodacom</option>
+                        <option value="airtel">Airtel</option>
+                        <option value="tigo">Tigo</option>
+                        <option value="zantel">Zantel</option>
+                        <option value="ttcl">TTCL</option>
+                        <option value="halotel">Halotel</option>
+                    </select>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="useLipaNumber">
+                    <label for="useLipaNumber">Use Lipa Number</label>
+                </div>
+                
+                <div class="form-group" id="lipaNumberGroup" style="display: none;">
+                    <label for="lipaNumber">Lipa Number</label>
+                    <input type="text" id="lipaNumber">
+                </div>
+                
+                <p class="info-text">For more information, please call our customer service.</p>
+                
+                <div class="button-group">
+                    <button class="button button-secondary" disabled>Back</button>
+                    <button class="button button-primary" id="nextStep1">Continue</button>
+                </div>
+                
+                <div class="login-link-container">
+                    Already have an account? <a href="/webapp/login" class="login-link">Log in</a>
+                </div>
+            </div>
+            
+            <!-- Step 2: Personal Information -->
+            <div class="form-step" id="formStep2">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="personalPhone">Phone Number</label>
+                    <div class="phone-field">
+                        <select id="personalPhoneCode">
+                            <option value="+255">+255 (TZ)</option>
+                        </select>
+                        <input type="tel" id="personalPhone" placeholder="687046323" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="acceptTerms">
+                    <label for="acceptTerms">I accept the terms and conditions</label>
+                </div>
+                
+                <div class="button-group">
+                    <button class="button button-secondary" id="backStep2">Back</button>
+                    <button class="button button-primary" id="nextStep2">Register</button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Verify Phone Number -->
+            <div class="form-step" id="formStep3">
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Enter OTP</label>
+                        <div class="timer" id="otpTimer">05:00</div>
+                    </div>
+                    
+                    <div class="otp-container">
+                        <input type="text" class="otp-input" maxlength="1" id="otp1">
+                        <input type="text" class="otp-input" maxlength="1" id="otp2">
+                        <input type="text" class="otp-input" maxlength="1" id="otp3">
+                        <input type="text" class="otp-input" maxlength="1" id="otp4">
+                        <input type="text" class="otp-input" maxlength="1" id="otp5">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="button button-secondary" id="backStep3">Back</button>
+                    <button class="button button-primary" id="verifyOtpBtn">Verify Phone Number</button>
+                    <button class="button button-tertiary" id="resendOtpBtn" disabled>Resend OTP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Modal -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content">
+            <div style="margin-bottom: 20px;">
+                <img src="/api/placeholder/50/50" alt="Loading" />
+            </div>
+            <p id="loadingText">Processing...</p>
+        </div>
+    </div>
+    
+    <!-- Error/Message Modal -->
+    <div class="modal" id="messageModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Information</h3>
+            <p id="modalMessage"></p>
+            <button class="button button-primary" id="closeMessageBtn">OK</button>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const languageIcon = document.getElementById('languageIcon');
+        const languageMenu = document.getElementById('languageMenu');
+        const steps = [
+            document.getElementById('step1'),
+            document.getElementById('step2'),
+            document.getElementById('step3')
+        ];
+        const formSteps = [
+            document.getElementById('formStep1'),
+            document.getElementById('formStep2'),
+            document.getElementById('formStep3')
+        ];
+        const currentStep = {
+            value: 0
+        };
+        
+        // Default language
+        let currentLanguage = 'English';
+        
+        // Global timer variables
+        let timerInterval;
+        let timerSeconds = 60;
+        
+        // Initialize the page
+        function init() {
+            setupEventListeners();
+            updateLanguage(currentLanguage);
+            
+            // Close language menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!languageIcon.contains(event.target) && !languageMenu.contains(event.target)) {
+                    languageMenu.classList.remove('active');
+                }
+            });
+        }
+        
+        // Update step visuals
+        function updateSteps() {
+            steps.forEach((step, index) => {
+                if (index < currentStep.value) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                } else if (index === currentStep.value) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else {
+                    step.classList.remove('active', 'completed');
+                }
+            });
+            
+            formSteps.forEach((formStep, index) => {
+                if (index === currentStep.value) {
+                    formStep.classList.add('active');
+                } else {
+                    formStep.classList.remove('active');
+                }
+            });
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Next buttons
+            document.getElementById('nextStep1').addEventListener('click', () => {
+                if (validateStep1()) {
+                    currentStep.value = 1;
+                    updateSteps();
+                }
+            });
+            
+            document.getElementById('nextStep2').addEventListener('click', () => {
+                if (validateStep2()) {
+                    currentStep.value = 2;
+                    updateSteps();
+                    register();
+                }
+            });
+            
+            // Back buttons
+            document.getElementById('backStep2').addEventListener('click', () => {
+                currentStep.value = 0;
+                updateSteps();
+            });
+            
+            document.getElementById('backStep3').addEventListener('click', () => {
+                currentStep.value = 1;
+                updateSteps();
+                clearInterval(timerInterval);
+            });
+            
+            // Verify OTP button
+            document.getElementById('verifyOtpBtn').addEventListener('click', () => {
+                verifyOtp();
+            });
+            
+            // Resend OTP button
+            document.getElementById('resendOtpBtn').addEventListener('click', () => {
+                resendOtpCode();
+            });
+            
+            // OTP input handling - auto-advance
+            const otpInputs = document.querySelectorAll('.otp-input');
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1) {
+                        if (index < otpInputs.length - 1) {
+                            otpInputs[index + 1].focus();
+                        }
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value.length === 0) {
+                        if (index > 0) {
+                            otpInputs[index - 1].focus();
+                        }
+                    }
+                });
+            });
+            
+            // Modal close buttons
+            document.getElementById('closeMessageBtn').addEventListener('click', () => {
+                messageModal.style.display = 'none';
+            });
+            
+            // Language icon
+            languageIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                languageMenu.classList.toggle('active');
+            });
+            
+            // Language menu items
+            languageMenu.addEventListener('click', (e) => {
+                if (e.target.tagName === 'LI') {
+                    currentLanguage = e.target.textContent;
+                    languageMenu.classList.remove('active');
+                    updateLanguage(currentLanguage);
+                }
+            });
+        }
+
+        // Validate step 1
+        function validateStep1() {
+            const businessName = document.getElementById('businessName').value;
+            const businessAddress = document.getElementById('businessAddress').value;
+            const businessType = document.getElementById('businessType').value;
+            const businessPhone = document.getElementById('businessPhone').value;
+            const phoneNetwork = document.getElementById('phoneNetwork').value;
+            
+            if (!businessName || !businessAddress || !businessType || !businessPhone || !phoneNetwork) {
+                showMessage('Error', 'Please fill in all required fields');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Validate step 2
+        function validateStep2() {
+            const fullName = document.getElementById('fullName').value;
+            const personalPhone = document.getElementById('personalPhone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const acceptTerms = document.getElementById('acceptTerms').checked;
+            
+            if (!fullName || !personalPhone || !password || !confirmPassword) {
+                showMessage('Error', 'Please fill in all required fields');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Error', 'Passwords do not match');
+                return false;
+            }
+            
+            if (!acceptTerms) {
+                showMessage('Error', 'Please accept the terms and conditions');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Register function
+        function register() {
+            showLoading('Registering...');
+            
+            // Simulate API call with setTimeout
+            setTimeout(() => {
+                hideLoading();
+                currentStep.value = 2;
+                updateSteps();
+                startOtpTimer();
+            }, 2000);
+        }
+        
+        // Verify OTP function
+        function verifyOtp() {
+            const otp = document.querySelectorAll('.otp-input').map(input => input.value).join('');
+            
+            if (otp.length !== 5) {
+                showMessage('Error', 'Please enter the complete OTP');
+                return;
+            }
+            
+            showLoading('Verifying...');
+            
+            // Simulate API call with setTimeout
+            setTimeout(() => {
+                hideLoading();
+                showMessage('Success', 'Phone number verified successfully');
+                
+                // Simulate redirection
+                setTimeout(() => {
+                    showMessage('Success', 'Registration completed successfully. Redirecting to dashboard...');
+                }, 2000);
+            }, 2000);
+        }
+        
+        // Resend OTP function
+        function resendOtpCode() {
+            document.querySelectorAll('.otp-input').forEach(input => {
+                input.value = '';
+            });
+            
+            showLoading('Sending new OTP...');
+            
+            // Simulate API call with setTimeout
+            setTimeout(() => {
+                hideLoading();
+                showMessage('Information', 'OTP has been resent successfully');
+                startOtpTimer();
+            }, 2000);
+        }
+        
+        // OTP Timer functions
+        function startOtpTimer() {
+            clearInterval(timerInterval);
+            timerSeconds = 60;
+            document.getElementById('resendOtpBtn').disabled = true;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('resendOtpBtn').disabled = false;
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            document.getElementById('otpTimer').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Modal functions
+        function showLoading(message) {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loadingModal').style.display = 'block';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingModal').style.display = 'none';
+        }
+        
+        function showMessage(title, message) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('messageModal').style.display = 'block';
+        }
+        
+        // Language functions
+        function updateLanguage(lang) {
+            // This would normally load translations from a file or API
+            const translations = {
+                English: {
+                    headerTitle: 'Business Registration',
+                    businessInfo: 'Business Info',
+                    personalInfo: 'Personal Info',
+                    verifyPhone: 'Verify Phone',
+                    // Add more translations here
+                },
+                Swahili: {
+                    headerTitle: 'Usajili wa Biashara',
+                    businessInfo: 'Taarifa za Biashara',
+                    personalInfo: 'Taarifa Binafsi',
+                    verifyPhone: 'Thibitisha Simu',
+                    // Add more translations here
+                }
+            };
+            
+            // Update UI elements with translations
+            document.getElementById('headerTitle').textContent = translations[lang].headerTitle;
+            document.querySelector('#step1 .step-text').textContent = translations[lang].businessInfo;
+            document.querySelector('#step2 .step-text').textContent = translations[lang].personalInfo;
+            document.querySelector('#step3 .step-text').textContent = translations[lang].verifyPhone;
+            // Update more elements as needed
+        }
+        
+        // Initialize the page
+        init();
+    </script>
+</body>
+</html>

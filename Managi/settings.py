@@ -53,7 +53,8 @@ INSTALLED_APPS = [
      'django_filters',
      'rest_framework_simplejwt.token_blacklist',
      'website',
-    'registration.apps.RegistrationConfig'
+    'registration.apps.RegistrationConfig',
+    'webapp',
 ]
 
 REST_FRAMEWORK = {
@@ -92,7 +93,10 @@ ROOT_URLCONF = 'Managi.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'webapp', 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -216,5 +220,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS=True
 
 ALLOWED_HOSTS =['*']
-
-

@@ -1,0 +1,584 @@
+{% extends 'webapp/base_webapp.html' %}
+
+{% block title %}Mangi POS - Reports & Analytics{% endblock %}
+
+{% block additional_styles %}
+.report-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-container-small {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+.kpi-up {
+    color: #10b981;
+}
+
+.kpi-down {
+    color: #ef4444;
+}
+
+.date-filter {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+}
+
+.date-filter:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.progress-bar-width-85 {
+    width: 85%;
+}
+
+.progress-bar-width-72 {
+    width: 72%;
+}
+
+.progress-bar-width-68 {
+    width: 68%;
+}
+
+.progress-bar-width-60 {
+    width: 60%;
+}
+
+.progress-bar-width-48 {
+    width: 48%;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Main Content Container -->
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Reports Header -->
+    <div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Reports & Analytics</h1>
+                <p class="text-white opacity-80">Business performance insights and metrics</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <select class="date-filter" title="Select report period" aria-label="Select report period">
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="last7days" selected>Last 7 Days</option>
+                    <option value="last30days">Last 30 Days</option>
+                    <option value="thismonth">This Month</option>
+                    <option value="lastmonth">Last Month</option>
+                    <option value="thisyear">This Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Export report data">
+                    <i class="fas fa-file-export mr-2"></i> Export
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Key Performance Indicators -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Revenue -->
+        <div class="bg-white rounded-lg shadow p-6 report-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 7.85M</h3>
+                    <p class="text-sm font-medium mt-2 kpi-up">
+                        <i class="fas fa-arrow-up mr-1"></i> 12.3% <span class="text-gray-400">vs. previous period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-primary-light text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gross Profit -->
+        <div class="bg-white rounded-lg shadow p-6 report-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Gross Profit</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 4.32M</h3>
+                    <p class="text-sm font-medium mt-2 kpi-up">
+                        <i class="fas fa-arrow-up mr-1"></i> 8.7% <span class="text-gray-400">vs. previous period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-green-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Expenses -->
+        <div class="bg-white rounded-lg shadow p-6 report-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Expenses</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 2.16M</h3>
+                    <p class="text-sm font-medium mt-2 kpi-down">
+                        <i class="fas fa-arrow-up mr-1"></i> 5.2% <span class="text-gray-400">vs. previous period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-receipt text-red-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Net Profit -->
+        <div class="bg-white rounded-lg shadow p-6 report-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Net Profit</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 2.16M</h3>
+                    <p class="text-sm font-medium mt-2 kpi-up">
+                        <i class="fas fa-arrow-up mr-1"></i> 11.6% <span class="text-gray-400">vs. previous period</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-piggy-bank text-blue-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Secondary KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Average Order Value -->
+        <div class="bg-white rounded-lg shadow p-4 report-card">
+            <div class="flex items-center">
+                <div class="h-10 w-10 bg-indigo-500 bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-shopping-basket text-indigo-500"></i>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs font-medium">Avg. Order Value</p>
+                    <h3 class="text-lg font-bold text-gray-800">TZS 12,500</h3>
+                </div>
+                <div class="ml-auto text-sm font-medium kpi-up">
+                    <i class="fas fa-arrow-up mr-1"></i> 3.1%
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Retention -->
+        <div class="bg-white rounded-lg shadow p-4 report-card">
+            <div class="flex items-center">
+                <div class="h-10 w-10 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-user-check text-purple-500"></i>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs font-medium">Customer Retention</p>
+                    <h3 class="text-lg font-bold text-gray-800">78.5%</h3>
+                </div>
+                <div class="ml-auto text-sm font-medium kpi-up">
+                    <i class="fas fa-arrow-up mr-1"></i> 2.4%
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inventory Turnover -->
+        <div class="bg-white rounded-lg shadow p-4 report-card">
+            <div class="flex items-center">
+                <div class="h-10 w-10 bg-yellow-500 bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-boxes text-yellow-500"></i>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs font-medium">Inventory Turnover</p>
+                    <h3 class="text-lg font-bold text-gray-800">4.2x</h3>
+                </div>
+                <div class="ml-auto text-sm font-medium kpi-up">
+                    <i class="fas fa-arrow-up mr-1"></i> 0.3x
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Revenue Trend Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Revenue Trend</h2>
+                <div class="flex space-x-2">
+                    <button class="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200" title="View by day">Day</button>
+                    <button class="px-2 py-1 text-xs font-medium text-white bg-primary rounded hover:bg-primary-dark" title="View by week">Week</button>
+                    <button class="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200" title="View by month">Month</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Sales by Category Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Sales by Category</h2>
+                <button class="text-primary-light hover:text-primary text-sm" title="View detailed category breakdown">View Details</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Top Products -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Top Selling Products</h2>
+            </div>
+            <div class="p-4">
+                <div class="space-y-4">
+                    <!-- Product 1 -->
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                            <i class="fas fa-utensils text-gray-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium">Grilled Chicken Plate</h3>
+                            <div class="flex items-center">
+                                <div class="h-2 bg-primary-light rounded-full w-full max-w-xs">
+                                    <div class="h-2 bg-primary rounded-full progress-bar-width-85"></div>
+                                </div>
+                                <span class="ml-2 text-sm text-gray-500">456 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 2 -->
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                            <i class="fas fa-hamburger text-gray-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium">Beef Burger Deluxe</h3>
+                            <div class="flex items-center">
+                                <div class="h-2 bg-primary-light rounded-full w-full max-w-xs">
+                                    <div class="h-2 bg-primary rounded-full progress-bar-width-72"></div>
+                                </div>
+                                <span class="ml-2 text-sm text-gray-500">380 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 3 -->
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                            <i class="fas fa-coffee text-gray-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium">Cappuccino</h3>
+                            <div class="flex items-center">
+                                <div class="h-2 bg-primary-light rounded-full w-full max-w-xs">
+                                    <div class="h-2 bg-primary rounded-full progress-bar-width-68"></div>
+                                </div>
+                                <span class="ml-2 text-sm text-gray-500">352 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 4 -->
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                            <i class="fas fa-pizza-slice text-gray-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium">Margherita Pizza</h3>
+                            <div class="flex items-center">
+                                <div class="h-2 bg-primary-light rounded-full w-full max-w-xs">
+                                    <div class="h-2 bg-primary rounded-full progress-bar-width-60"></div>
+                                </div>
+                                <span class="ml-2 text-sm text-gray-500">318 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 5 -->
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                            <i class="fas fa-glass-martini-alt text-gray-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium">Fresh Fruit Juice</h3>
+                            <div class="flex items-center">
+                                <div class="h-2 bg-primary-light rounded-full w-full max-w-xs">
+                                    <div class="h-2 bg-primary rounded-full progress-bar-width-48"></div>
+                                </div>
+                                <span class="ml-2 text-sm text-gray-500">254 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales by Time -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Sales by Time of Day</h2>
+            </div>
+            <div class="p-4 chart-container-small">
+                <canvas id="timeChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Customer Demographics -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Customer Demographics</h2>
+            </div>
+            <div class="p-4 chart-container-small">
+                <canvas id="demographicsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reports List -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="p-4 border-b">
+            <h2 class="text-lg font-semibold">Available Reports</h2>
+        </div>
+        <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Sales Report -->
+                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Sales Report</h3>
+                            <p class="text-xs text-gray-500">Detailed sales analysis</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Inventory Report -->
+                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-boxes text-green-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Inventory Report</h3>
+                            <p class="text-xs text-gray-500">Stock levels and turnover</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Financial Report -->
+                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-money-bill-wave text-purple-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Financial Report</h3>
+                            <p class="text-xs text-gray-500">Profit & loss statement</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Staff Performance -->
+                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user-tie text-yellow-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Staff Performance</h3>
+                            <p class="text-xs text-gray-500">Employee productivity</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Customer Analysis -->
+                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-users text-red-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Customer Analysis</h3>
+                            <p class="text-xs text-gray-500">Customer behavior and loyalty</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tax Report -->
+                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-file-invoice text-gray-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Tax Report</h3>
+                            <p class="text-xs text-gray-500">Tax calculation and summary</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Revenue Trend Chart
+        const revCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue (TZS)',
+                    data: [950000, 1100000, 850000, 1200000, 980000, 1350000, 1420000],
+                    backgroundColor: 'rgba(199, 44, 65, 0.1)',
+                    borderColor: '#C72C41',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: '#C72C41',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'TZS ' + (value/1000) + 'K';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'TZS ' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Category Chart
+        const catCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Food', 'Beverages', 'Desserts', 'Others'],
+                datasets: [{
+                    data: [45, 30, 15, 10],
+                    backgroundColor: [
+                        '#C72C41', 
+                        '#EE4540', 
+                        '#5E1224', 
+                        '#801336'
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Time Chart
+        const timeCtx = document.getElementById('timeChart').getContext('2d');
+        const timeChart = new Chart(timeCtx, {
+            type: 'bar',
+            data: {
+                labels: ['6-9 AM', '9-12 PM', '12-3 PM', '3-6 PM', '6-9 PM', '9-12 AM'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [42, 85, 145, 98, 125, 65],
+                    backgroundColor: '#C72C41'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Demographics Chart
+        const demoCtx = document.getElementById('demographicsChart').getContext('2d');
+        const demographicsChart = new Chart(demoCtx, {
+            type: 'pie',
+            data: {
+                labels: ['18-24', '25-34', '35-44', '45-54', '55+'],
+                datasets: [{
+                    data: [15, 35, 25, 18, 7],
+                    backgroundColor: [
+                        '#5E1224', 
+                        '#801336', 
+                        '#C72C41', 
+                        '#EE4540',
+                        '#CD5D7D'
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

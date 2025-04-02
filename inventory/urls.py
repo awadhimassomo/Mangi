@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CreateProduct, InstallmentListView, NotifySupplierAPIView, PreOrderNotificationAPIView, SyncProductsView, SyncSaleView, SyncSupplierView, SyncTransactionView, create_sales, product_suggestions
+from .views import CreateProduct, ExpensePolicyDetailView, ExpensePolicyListCreateView, InstallmentListView, NotifySupplierAPIView, PreOrderNotificationAPIView, SyncProductsView, SyncSaleView, SyncSupplierView, SyncTransactionView, create_sales, product_suggestions
 
 app_name = 'inventory'
 
@@ -11,6 +11,9 @@ urlpatterns = [
     path('products/<str:pk>/update/',views.updateProduct,name="update-product"),
     path('products/<str:pk>/delete/',views.deleteProduct,name="delete-product"),
     path('products/sync/', SyncProductsView.as_view(), name='sync_products'),
+
+    path('expense-policies/', ExpensePolicyListCreateView.as_view(), name='expense-policy-list'),
+    path('expense-policies/<uuid:id>/', ExpensePolicyDetailView.as_view(), name='expense-policy-detail'),
 
 
     

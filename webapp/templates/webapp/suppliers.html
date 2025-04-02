@@ -1,0 +1,309 @@
+{% extends 'webapp/base_webapp.html' %}
+
+{% block title %}Mangi POS - Suppliers Management{% endblock %}
+
+{% block additional_styles %}
+.supplier-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.supplier-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.tag-active {
+    background-color: #d4f5e2;
+    color: #00b248;
+}
+
+.tag-inactive {
+    background-color: #f5f5f5;
+    color: #757575;
+}
+
+.tag-pending {
+    background-color: #ffe8d9;
+    color: #ff5722;
+}
+
+.brand-gradient-light {
+    background: linear-gradient(to right, #EE4540, #C72C41);
+}
+{% endblock %}
+
+{% block content %}
+<!-- Main Content Container -->
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Suppliers Header -->
+    <div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Suppliers Management</h1>
+                <p class="text-white opacity-80">Manage your suppliers and vendor relationships</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add Supplier
+                </button>
+                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2">
+                    <option value="all" selected>All Suppliers</option>
+                    <option value="food">Food & Ingredients</option>
+                    <option value="beverages">Beverages</option>
+                    <option value="equipment">Equipment & Supplies</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Suppliers Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Suppliers -->
+        <div class="bg-white rounded-lg shadow p-6 supplier-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Suppliers</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">47</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 4 <span class="text-gray-400">new this month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-truck text-primary-light text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Suppliers -->
+        <div class="bg-white rounded-lg shadow p-6 supplier-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Active Suppliers</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">38</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 2 <span class="text-gray-400">more than last month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Orders -->
+        <div class="bg-white rounded-lg shadow p-6 supplier-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Orders This Month</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">85</h3>
+                    <p class="text-red-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-down mr-1"></i> 3.1% <span class="text-gray-400">vs last month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-blue-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Amount Spent -->
+        <div class="bg-white rounded-lg shadow p-6 supplier-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Amount Spent (MTD)</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 8.4M</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 8.2% <span class="text-gray-400">vs last month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-purple-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Suppliers Table -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-xl font-semibold">Suppliers Directory</h2>
+            <div class="relative">
+                <input type="text" placeholder="Search suppliers..." class="px-4 py-2 border rounded-md pr-10">
+                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Supplier 1 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-building text-primary"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Arusha Fresh Foods Ltd</div>
+                                    <div class="text-sm text-gray-500">Supplier ID: SUP-001</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Food & Ingredients</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">John Makundi</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">+255 754 123 456</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">john@arushafresh.co.tz</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 1,450,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-active">Active</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i></button>
+                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-shopping-cart"></i></button>
+                            <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Supplier 2 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-wine-bottle text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Tanzania Beverages Co.</div>
+                                    <div class="text-sm text-gray-500">Supplier ID: SUP-002</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Beverages</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Sarah Kimaro</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">+255 765 987 654</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">sarah@tzbeverages.co.tz</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 0</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-active">Active</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i></button>
+                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-shopping-cart"></i></button>
+                            <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Supplier 3 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-utensils text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Dar Kitchen Supplies</div>
+                                    <div class="text-sm text-gray-500">Supplier ID: SUP-003</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Equipment & Supplies</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Mohammed Hassan</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">+255 713 456 789</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">mhassan@darsupplies.co.tz</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 235,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-inactive">Inactive</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i></button>
+                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-shopping-cart"></i></button>
+                            <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Supplier 4 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-cheese text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Kilimanjaro Dairy Products</div>
+                                    <div class="text-sm text-gray-500">Supplier ID: SUP-004</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Food & Ingredients</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Grace Mbeki</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">+255 789 234 567</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">grace@kilimanjarodairy.co.tz</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 780,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-pending">Pending</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i></button>
+                            <button class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-shopping-cart"></i></button>
+                            <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="px-6 py-4 flex items-center justify-between border-t">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">47</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="#" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">1</a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</a>
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">12</a>
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Suppliers management JavaScript can be added here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize suppliers management functionality
+        console.log("Suppliers management page loaded");
+    });
+</script>
+{% endblock %}

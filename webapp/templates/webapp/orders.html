@@ -1,0 +1,322 @@
+{% extends 'webapp/base_webapp.html' %}
+
+{% block title %}Mangi POS - Purchase Orders Management{% endblock %}
+
+{% block additional_styles %}
+.order-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.tag-pending {
+    background-color: #fff8e1;
+    color: #ffa000;
+}
+
+.tag-approved {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+.tag-delivered {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.tag-cancelled {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.brand-gradient-light {
+    background: linear-gradient(to right, #EE4540, #C72C41);
+}
+{% endblock %}
+
+{% block content %}
+<!-- Main Content Container -->
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Orders Header -->
+    <div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Purchase Orders Management</h1>
+                <p class="text-white opacity-80">Track and manage orders to your suppliers</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Create new purchase order">
+                    <i class="fas fa-plus mr-2"></i> New Order
+                </button>
+                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter orders by status" aria-label="Filter orders by status">
+                    <option value="all" selected>All Orders</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orders Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Orders -->
+        <div class="bg-white rounded-lg shadow p-6 order-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Orders</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">124</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 8 <span class="text-gray-400">new this month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-primary-light text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Orders -->
+        <div class="bg-white rounded-lg shadow p-6 order-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Pending Orders</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">18</h3>
+                    <p class="text-yellow-500 text-sm font-medium mt-2">
+                        <i class="fas fa-exclamation-circle mr-1"></i> <span class="text-gray-400">Awaiting approval</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-yellow-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Spend -->
+        <div class="bg-white rounded-lg shadow p-6 order-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Spend (MTD)</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 12.4M</h3>
+                    <p class="text-red-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 14.2% <span class="text-gray-400">vs last month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-green-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Suppliers Count -->
+        <div class="bg-white rounded-lg shadow p-6 order-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Active Suppliers</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">28</h3>
+                    <p class="text-green-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-up mr-1"></i> 2 <span class="text-gray-400">new this month</span>
+                    </p>
+                </div>
+                <div class="h-14 w-14 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-truck text-purple-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orders Table -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-xl font-semibold">Recent Purchase Orders</h2>
+            <div class="relative">
+                <input type="text" placeholder="Search orders..." class="px-4 py-2 border rounded-md pr-10" aria-label="Search orders">
+                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Delivery</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Order 1 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-042</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <span class="font-medium text-gray-600">AS</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Arusha Suppliers Ltd</div>
+                                    <div class="text-sm text-gray-500">Food & Beverages</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 25, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 30, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">24 items</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 2,450,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-pending">Pending</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit order"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900" title="Cancel order"><i class="fas fa-times"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Order 2 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-041</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <span class="font-medium text-gray-600">DW</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Dar Wholesalers</div>
+                                    <div class="text-sm text-gray-500">Groceries</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 22, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 26, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">18 items</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 1,850,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-approved">Approved</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit order"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900" title="Cancel order"><i class="fas fa-times"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Order 3 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-040</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <span class="font-medium text-gray-600">KT</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Kilimanjaro Traders</div>
+                                    <div class="text-sm text-gray-500">Packaging Materials</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 18, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 21, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">6 items</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 750,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-delivered">Delivered</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
+                            <button class="text-green-600 hover:text-green-900 mr-3" title="Mark as received"><i class="fas fa-check"></i></button>
+                            <button class="text-gray-400 cursor-not-allowed" title="Cannot cancel delivered order" disabled><i class="fas fa-times"></i></button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Order 4 -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-039</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <span class="font-medium text-gray-600">MS</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Mwanza Supplies</div>
+                                    <div class="text-sm text-gray-500">Kitchen Equipment</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 15, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 25, 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3 items</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 3,200,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-cancelled">Cancelled</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Duplicate order"><i class="fas fa-copy"></i></button>
+                            <button class="text-gray-400 cursor-not-allowed" title="Cannot edit cancelled order" disabled><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="px-6 py-4 flex items-center justify-between border-t">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Previous page">Previous</a>
+                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Next page">Next</a>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">124</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Previous page">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="#" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 1">1</a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 2">2</a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 3">3</a>
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 13">13</a>
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Next page">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Order Modal Trigger -->
+    <div class="fixed bottom-6 right-6">
+        <button class="bg-primary-light hover:bg-primary rounded-full p-4 text-white shadow-lg" title="Create new purchase order">
+            <i class="fas fa-plus text-xl"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Purchase Orders management JavaScript can be added here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize purchase orders management functionality
+        console.log("Purchase Orders management page loaded");
+    });
+</script>
+{% endblock %}

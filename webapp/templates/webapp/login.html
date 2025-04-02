@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        :root {
+            --primary-light: #EE4540;
+            --primary: #C72C41;
+            --secondary: #801336;
+            --dark: #510A32;
+            --darker: #20142C;
+            --light-gray: #f5f5f5;
+            --border-radius: 25px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .login-container {
+            display: flex;
+            width: 80%;
+            max-width: 1200px;
+            height: 80vh;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .left-side {
+            flex: 1;
+            background: linear-gradient(to bottom, var(--primary-light), var(--primary), var(--secondary), var(--dark), var(--darker));
+            background-size: cover;
+            background-position: center;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            position: relative;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .left-side h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .left-side p {
+            font-size: 1.2rem;
+            max-width: 80%;
+        }
+        
+        .right-side {
+            flex: 1;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+        
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin-bottom: 1.5rem;
+            background-image: url('/api/placeholder/100/100');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .title {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #555;
+            text-align: center;
+        }
+        
+        .info-text {
+            font-size: 1rem;
+            color: #777;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-container {
+            width: 80%;
+            max-width: 400px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .phone-input-container {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        
+        .country-code {
+            padding: 0.75rem;
+            background-color: #f9f9f9;
+            border-right: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+        }
+        
+        .phone-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .phone-input-container:focus-within {
+            border-color: var(--primary);
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .forgot-link {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .signup-container {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .signup-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        
+        .signup-link:hover {
+            text-decoration: underline;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                width: 90%;
+                height: auto;
+            }
+            
+            .left-side {
+                display: none;
+            }
+            
+            .right-side {
+                border-radius: 20px;
+            }
+            
+            .form-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="left-side">
+            <h1>Mangi POS</h1>
+            <p>Streamline your business operations with our powerful point of sale system</p>
+        </div>
+        <div class="right-side">
+            <div class="logo"></div>
+            <h1 class="title">Welcome Back</h1>
+            <p class="subtitle">We're glad to see you again!</p>
+            <p class="info-text">Personal Information</p>
+            
+            <div class="form-container">
+                <div class="form-group">
+                    <div class="phone-input-container">
+                        <div class="country-code">+255</div>
+                        <input type="tel" id="phoneNumber" class="phone-input" placeholder="687046323">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="password-container">
+                        <input type="password" id="password" class="form-input" placeholder="Password">
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="remember-forgot">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe">Remember me</label>
+                    </div>
+                    <a href="#" class="forgot-link">Forgot Password?</a>
+                </div>
+                
+                <button type="button" class="login-button" id="loginButton">Login</button>
+                
+                <div class="signup-container">
+                    <span>Don't have an account?</span>
+                    <a href="#" class="signup-link">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Modal -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content">
+            <div style="margin-bottom: 20px; display: flex; justify-content: center;">
+                <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="18" stroke="#801336" stroke-width="4" fill="none">
+                        <animate attributeName="stroke-dasharray" dur="1.5s" repeatCount="indefinite" from="0 113" to="113 0"/>
+                    </circle>
+                </svg>
+            </div>
+            <p id="loadingText">Processing login...</p>
+        </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <p id="errorMessage">Wrong credentials</p>
+            <button class="login-button" style="margin-top: 15px;" id="errorOkButton">OK</button>
+        </div>
+    </div>
+    
+   <script>
+    // DOM Elements
+const phoneNumberInput = document.getElementById('phoneNumber');
+const passwordInput = document.getElementById('password');
+const togglePasswordButton = document.getElementById('togglePassword');
+const loginButton = document.getElementById('loginButton');
+const loadingModal = document.getElementById('loadingModal');
+const errorModal = document.getElementById('errorModal');
+const errorOkButton = document.getElementById('errorOkButton');
+const loadingText = document.getElementById('loadingText');
+const errorMessage = document.getElementById('errorMessage');
+
+// Toggle password visibility
+togglePasswordButton.addEventListener('click', function() {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    
+    // Change the eye icon
+    if (type === 'password') {
+        togglePasswordButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+            </svg>
+        `;
+    } else {
+        togglePasswordButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash" viewBox="0 0 16 16">
+                <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7 7 0 0 0-2.79.588l.77.771A6 6 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486z"/>
+                <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829"/>
+                <path d="M3.35 5.47q-.27.24-.518.487A13 13 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7 7 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12z"/>
+            </svg>
+        `;
+    }
+});
+
+// Login button click handler
+loginButton.addEventListener('click', function() {
+    handleLogin();
+});
+
+// Also allow login on Enter key press
+passwordInput.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        handleLogin();
+    }
+});
+
+function handleLogin() {
+    const phoneNumber = phoneNumberInput.value.trim();
+    const password = passwordInput.value.trim();
+    
+    if (phoneNumber === '' || password === '') {
+        // Show error for empty fields
+        errorMessage.textContent = 'Please enter phone number and password';
+        errorModal.style.display = 'block';
+        return;
+    }
+    
+    // Format phone number with country code
+    const formattedPhoneNumber = '+255' + phoneNumber;
+    
+    // Show loading modal
+    loadingText.textContent = 'Processing login...';
+    loadingModal.style.display = 'block';
+    
+    // Prepare data for the API call
+    const loginData = {
+        phoneNumber: formattedPhoneNumber,
+        password: password
+    };
+    
+    // Make the API call to login endpoint
+    fetch('/Registration/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken() // Function to get CSRF token (defined below)
+        },
+        body: JSON.stringify(loginData)
+    })
+    .then(response => {
+        // First check if the response is ok (status in the range 200-299)
+        if (!response.ok) {
+            // Custom handling for 401 Unauthorized
+            if (response.status === 401) {
+                throw new Error('Invalid phone number or password');
+            }
+            // Custom handling for 498 (unverified account)
+            if (response.status === 498) {
+                throw new Error('Account not verified');
+            }
+            return response.json().then(data => {
+                throw new Error(data.error || 'Login failed');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle successful login
+        loadingModal.style.display = 'none';
+        
+        // Store tokens in localStorage or sessionStorage
+        localStorage.setItem('accessToken', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
+        
+        // Store other user data if needed
+        localStorage.setItem('userData', JSON.stringify({
+            username: data.username,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            role: data.role,
+            isStaff: data.is_staff,
+            ownerId: data.owner_id
+        }));
+        
+        // Redirect to appropriate page based on user role or businesses
+        if (data.businesses && data.businesses.length > 1) {
+            // If user has multiple businesses, redirect to business selection page
+            window.location.href = '/select-business/';
+        } else if (data.businesses && data.businesses.length === 1) {
+            // If user has one business, set it as active and redirect to dashboard
+            localStorage.setItem('activeBusiness', JSON.stringify(data.businesses[0]));
+            window.location.href = '/webapp/dashboard/';
+        } else {
+            // If user has no businesses, redirect to create business page
+            window.location.href = '/create-business/';
+        }
+    })
+    .catch(error => {
+        // Handle login error
+        loadingModal.style.display = 'none';
+        
+        if (error.message === 'Account not verified') {
+            errorMessage.textContent = 'Your account is not verified. Please verify your account to proceed.';
+        } else {
+            errorMessage.textContent = error.message || 'Invalid credentials';
+        }
+        
+        errorModal.style.display = 'block';
+    });
+}
+
+// Function to get CSRF token from cookies
+function getCsrfToken() {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+    
+    return cookieValue || '';
+}
+
+// Close error modal when OK button is clicked
+errorOkButton.addEventListener('click', function() {
+    errorModal.style.display = 'none';
+});
+
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    if (event.target === errorModal) {
+        errorModal.style.display = 'none';
+    }
+});
+   </script>
+</body>
+</html>

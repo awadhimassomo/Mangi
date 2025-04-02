@@ -24,8 +24,6 @@ urlpatterns = [
     path('Registration/',include('registration.urls')),
     path('inventory/',include('inventory.urls')),
     path('sms/',include('sms.urls')),
-   
-
-    
+    path('webapp/', include('webapp.urls')),
     
 ]
