@@ -12,8 +12,7 @@ from django.views.generic import TemplateView
 logging.getLogger('weasyprint').setLevel(logging.WARNING)
 logging.getLogger('fontTools.subset').setLevel(logging.WARNING)
 
-# Ensure the necessary DLL directory is set
-os.add_dll_directory(r"C:\msys64\mingw64\bin")  # Adjust this to your environment
+
 
 def index(request):
     return render(request, 'index.html')
