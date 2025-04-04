@@ -1,0 +1,50 @@
+/* Mangi Brand Colors
+------------------
+#EE4540 (primary-light)
+#C72C41 (primary)
+#801336 (secondary)
+#510A32 (dark)
+#20142C (darker)
+*/
+
+/* Badge Styling */
+.mangi-badge {
+    background-color: #C72C41;
+    color: white;
+}
+
+/* Featured Plan Styling */
+.plan-featured {
+    border-top: 3px solid #C72C41;
+}
+
+/* Pricing Elements */
+.pricing-check {
+    color: #C72C41;
+}
+
+.pricing-close {
+    color: #dc3545;
+}
+
+/* Custom Plan Background */
+.plan-custom {
+    background: linear-gradient(to bottom right, rgba(238, 69, 64, 0.02), rgba(32, 20, 44, 0.02));
+}
+
+/* Badge Position */
+.badge-position {
+    position: absolute;
+    top: -10px;
+    right: 10px;
+}
+
+/* Price Section */
+.price-section {
+    padding: 2rem 0;
+}
+
+/* Space Between Sections */
+.section-divider {
+    padding: 3rem 0;
+}

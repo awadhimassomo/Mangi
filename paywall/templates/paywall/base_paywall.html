@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mangi Subscription{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/materialdesignicons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'paywall/css/subscription.css' %}">
+    
+    <style>
+        .brand-gradient {
+            background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+        }
+        .subscription-header {
+            background: linear-gradient(to right, #C72C41, #801336);
+            color: white;
+        }
+        body {
+            padding-top: 76px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg fixed-top navbar-custom sticky-dark" id="navbar-sticky">
+        <div class="container">
+            <!-- LOGO -->
+            <a class="logo text-uppercase" href="/">
+                <img src="{% static 'images/logo-dark.png' %}" alt="Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="mdi mdi-menu"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mx-auto navbar-center">
+                    <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="/#features" class="nav-link">Features</a></li>
+                    <li class="nav-item"><a href="/#pricing" class="nav-link">Pricing</a></li>
+                    <li class="nav-item"><a href="/#contact" class="nav-link">Contact Us</a></li>
+                </ul>
+                <ul class="navbar-nav navbar-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a href="/webapp/dashboard/" class="nav-link">Dashboard</a></li>
+                        <li class="nav-item"><a href="/webapp/logout/" class="btn btn-sm nav-btn">Logout</a></li>
+                    {% else %}
+                        <li class="nav-item"><a href="/webapp/login/" class="nav-link">Login</a></li>
+                        <li class="nav-item"><a href="/webapp/signup/" class="btn btn-sm nav-btn">Sign Up</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <!-- Main Content -->
+    <main>
+        <div class="container py-5 mt-3">
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card shadow">
+                        <div class="card-header subscription-header">
+                            <h4 class="mb-0">{% block card_title %}Subscription Management{% endblock %}</h4>
+                        </div>
+                        <div class="card-body">
+                            {% block paywall_content %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer bg-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <p class="mb-0"> Mangi POS. All rights reserved.</p>
+                </div>
+                <div class="col-lg-6 text-lg-end">
+                    <p class="mb-0">
+                        <a href="/privacy" class="text-decoration-none text-muted me-3">Privacy Policy</a>
+                        <a href="/terms" class="text-decoration-none text-muted">Terms of Service</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+{% extends "paywall/base_paywall.html" %}
+
+{% block title %}Subscription Update by Phone - Mangi POS{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .brand-gradient {
+        background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+    }
+    .btn-primary {
+        background-color: #C72C41;
+    }
+    .btn-primary:hover {
+        background-color: #801336;
+    }
+    .header-text {
+        color: #510A32;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold header-text">Subscription Update by Phone</h1>
+        <p class="text-gray-600">Update subscription for a user by phone number</p>
+    </div>
+
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6">
+            {% if target_user %}
+            <div class="mb-4">
+                <h2 class="text-xl font-semibold">User Details</h2>
+                <p><strong>Phone Number:</strong> {{ target_user.phoneNumber }}</p>
+                {% if target_user.username %}<p><strong>Username:</strong> {{ target_user.username }}</p>{% endif %}
+                {% if target_user.email %}<p><strong>Email:</strong> {{ target_user.email }}</p>{% endif %}
+                <p><strong>Current Status:</strong> {{ subscription.status|title }}</p>
+                {% if subscription.status == 'active' %}
+                    <p><strong>Expires:</strong> {{ subscription.subscription_end_date|date:"F j, Y" }}</p>
+                {% elif subscription.status == 'trial' %}
+                    <p><strong>Trial Days Left:</strong> {{ subscription.days_left_in_trial }}</p>
+                {% endif %}
+            </div>
+
+            <form method="POST" class="mt-6">
+                {% csrf_token %}
+                <input type="hidden" name="phone_number" value="{{ target_user.phoneNumber }}">
+                
+                <div class="mb-4">
+                    <label for="status" class="block text-gray-700 text-sm font-bold mb-2">Subscription Status:</label>
+                    <select id="status" name="status" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="active" {% if subscription.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="trial" {% if subscription.status == 'trial' %}selected{% endif %}>Trial</option>
+                        <option value="expired" {% if subscription.status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="duration_days" class="block text-gray-700 text-sm font-bold mb-2">Duration (days):</label>
+                    <input type="number" id="duration_days" name="duration_days" value="365" min="1" max="3650" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <p class="text-sm text-gray-500 mt-1">For 'active' subscriptions only</p>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <a href="{% url 'admin_dashboard' %}" class="text-sm text-blue-500 hover:text-blue-700">Cancel</a>
+                    <button type="submit" name="update_subscription" class="btn-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Update Subscription
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <form method="POST" class="mt-6">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="phone_number" class="block text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+                    <input type="text" id="phone_number" name="phone_number" value="{{ phone_number }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="+255713091865">
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <a href="{% url 'admin_dashboard' %}" class="text-sm text-blue-500 hover:text-blue-700">Cancel</a>
+                    <button type="submit" class="btn-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Find User
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

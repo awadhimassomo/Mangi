@@ -87,10 +87,19 @@ def login(request):
             data = json.loads(request.body)
             phone_number = data.get('phoneNumber')
             password = data.get('password')
+            remember_me = data.get('rememberMe', False)
             
             # Here you would typically authenticate the user
             # For now, we'll just return dummy successful response
             # In a real app, you'd verify credentials and generate tokens
+            
+            # Set session expiration based on remember_me flag
+            if remember_me:
+                # Set session to expire in 30 days (or your preferred duration)
+                request.session.set_expiry(60 * 60 * 24 * 30)  # 30 days in seconds
+            else:
+                # Use default session expiration (browser close)
+                request.session.set_expiry(0)
             
             # Dummy success response for testing
             return JsonResponse({
@@ -124,3 +133,56 @@ def signup(request):
     View function for the signup page.
     """
     return render(request, 'webapp/Signup.html')
+
+
+def forgot_password_page(request):
+    """
+    View function for the forgot password page.
+    This only renders the template. The actual API calls are made directly to the SMS app endpoints.
+    """
+    return render(request, 'webapp/forgot_password.html')
+
+
+def reset_password_page(request):
+    """
+    View function for the reset password page.
+    This only renders the template. The actual API calls are made directly to the SMS app endpoints.
+    """
+    return render(request, 'webapp/reset_password.html')
+
+
+def phone_format_help(request):
+    """
+    Developer helper view to show valid phone numbers in the database.
+    This helps when testing the password reset functionality.
+    Only available in DEBUG mode.
+    """
+    from django.conf import settings
+    from django.http import JsonResponse
+    from django.contrib.auth import get_user_model
+    
+    if not settings.DEBUG:
+        return JsonResponse({'error': 'This view is only available in DEBUG mode'}, status=403)
+    
+    User = get_user_model()
+    # Get a sample of phone numbers from the database (for testing only)
+    sample_users = User.objects.all().values('phoneNumber')[:5]
+    
+    return JsonResponse({
+        'message': 'This is a developer helper to show valid phone formats in the database.',
+        'note': 'Use these phone numbers when testing the password reset functionality.',
+        'phone_format_tips': [
+            'Phone numbers should be entered in the format: 255XXXXXXXXX',
+            'Do not use a leading + sign',
+            'Do not use a leading 0',
+            'Do not include spaces or dashes',
+        ],
+        'sample_phone_numbers': [user['phoneNumber'] for user in sample_users if user['phoneNumber']]
+    })
+
+
+def test_reset_page(request):
+    """
+    Developer tool page for testing the SMS app's password reset API with different phone number formats.
+    """
+    return render(request, 'webapp/test_reset.html')

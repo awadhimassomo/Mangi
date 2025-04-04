@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Password Reset API - Mangi</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .brand-gradient {
+            background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #801336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #C72C41;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-gradient">
+        <h1>Mangi Password Reset API Tester</h1>
+        <p>This page allows you to test the SMS app's password reset API with different phone number formats.</p>
+    </div>
+    
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="phoneNumber">Enter Phone Number:</label>
+        <input type="text" id="phoneNumber" placeholder="e.g. 0712345678">
+    </div>
+    
+    <div class="form-group">
+        <button id="testButton">Test API Call</button>
+    </div>
+    
+    <div class="results">
+        <h2>Request Format:</h2>
+        <pre id="requestFormat"></pre>
+        
+        <h2>API Response:</h2>
+        <pre id="apiResponse"></pre>
+        
+        <h2>Sample Phone Number Formats:</h2>
+        <ul>
+            <li><button class="sample-format" data-format="0712345678">With leading zero: 0712345678</button></li>
+            <li><button class="sample-format" data-format="712345678">Without leading zero: 712345678</button></li>
+            <li><button class="sample-format" data-format="255712345678">With country code: 255712345678</button></li>
+            <li><button class="sample-format" data-format="+255712345678">With plus sign: +255712345678</button></li>
+        </ul>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneNumberInput = document.getElementById('phoneNumber');
+            const testButton = document.getElementById('testButton');
+            const requestFormatDisplay = document.getElementById('requestFormat');
+            const apiResponseDisplay = document.getElementById('apiResponse');
+            const sampleFormatButtons = document.querySelectorAll('.sample-format');
+            
+            // Add event listeners to sample format buttons
+            sampleFormatButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    phoneNumberInput.value = this.dataset.format;
+                });
+            });
+            
+            testButton.addEventListener('click', function() {
+                const phoneNumber = phoneNumberInput.value.trim();
+                const requestData = { phoneNumber: phoneNumber };
+                
+                // Display request format
+                requestFormatDisplay.textContent = JSON.stringify(requestData, null, 2);
+                
+                // Make the API call
+                fetch('/sms/passwordrest/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => {
+                    // Include status code in the response info
+                    const statusText = `Status Code: ${response.status} (${response.statusText})`;
+                    
+                    return response.json().then(data => {
+                        // Display API response
+                        apiResponseDisplay.textContent = statusText + '\n\n' + JSON.stringify(data, null, 2);
+                        return data;
+                    }).catch(err => {
+                        apiResponseDisplay.textContent = statusText + '\n\nError parsing JSON: ' + err.message;
+                    });
+                })
+                .catch(error => {
+                    apiResponseDisplay.textContent = 'Network Error: ' + error.message;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
