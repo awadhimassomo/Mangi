@@ -25,5 +25,5 @@ urlpatterns = [
     path('inventory/',include('inventory.urls')),
     path('sms/',include('sms.urls')),
     path('webapp/', include('webapp.urls')),
-    
+    path('paywall/', include('paywall.urls')),
 ]

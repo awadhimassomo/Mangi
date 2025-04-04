@@ -1,0 +1,45 @@
+{% extends 'paywall/base_paywall.html' %}
+
+{% block card_title %}Payment History{% endblock %}
+
+{% block paywall_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Your Payment History</h4>
+            <a href="{% url 'paywall:subscription' %}" class="btn btn-outline-primary">Back to Subscription</a>
+        </div>
+        
+        {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Transaction ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
+                                <td>{{ payment.plan.name }}</td>
+                                <td>{{ payment.amount }}</td>
+                                <td>{{ payment.payment_method }}</td>
+                                <td>{{ payment.transaction_id }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <p class="mb-0">You don't have any payment records yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

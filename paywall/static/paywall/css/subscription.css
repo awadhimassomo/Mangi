@@ -1,0 +1,60 @@
+.brand-gradient {
+    background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+}
+
+.subscription-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.plan-card {
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover, .plan-card.selected {
+    border-color: #C72C41;
+    transform: scale(1.02);
+}
+
+.plan-header {
+    background: linear-gradient(to right, #C72C41, #801336);
+    color: white;
+}
+
+.btn-primary {
+    background-color: #C72C41;
+    border-color: #C72C41;
+}
+
+.btn-primary:hover {
+    background-color: #801336;
+    border-color: #801336;
+}
+
+.trial-banner {
+    background: linear-gradient(to right, #EE4540, #C72C41);
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-method-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-method-card:hover, .payment-method-card.selected {
+    border-color: #C72C41;
+    background-color: rgba(199, 44, 65, 0.05);
+}
+
+.subscription-header {
+    background: linear-gradient(to right, #C72C41, #801336);
+    color: white;
+}

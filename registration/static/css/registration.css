@@ -1,0 +1,192 @@
+/* Mangi Brand Colors
+------------------
+#EE4540 (primary-light)
+#C72C41 (primary)
+#801336 (secondary)
+#510A32 (dark)
+#20142C (darker)
+*/
+
+/* Brand-specific styling */
+.mangi-primary {
+    color: #C72C41;
+}
+
+.mangi-primary-bg {
+    background-color: #C72C41;
+}
+
+.mangi-secondary {
+    color: #801336;
+}
+
+.mangi-dark {
+    color: #510A32;
+}
+
+/* Button styling */
+.btn-mangi {
+    background-color: #C72C41;
+    color: white;
+}
+
+.btn-mangi:hover {
+    background-color: #801336;
+    color: white;
+}
+
+/* Background sections */
+.mangi-gradient-section {
+    background: linear-gradient(to right, #C72C41, #801336);
+}
+
+/* Brand gradient */
+.brand-gradient {
+    background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+}
+
+/* Section titles */
+.section-title {
+    margin-bottom: 50px;
+}
+
+.section-title h2 {
+    position: relative;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    font-weight: 700;
+}
+
+.section-title h2:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background: #C72C41;
+}
+
+.section-title h2.text-center:after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Screenshot section */
+.screenshot-section {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+.screenshot-title {
+    color: #C72C41;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    font-size: 36px;
+}
+
+.screenshot-description {
+    margin-bottom: 2rem;
+    color: #6c757d;
+    font-size: 18px;
+}
+
+.screenshot-item {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    transition: transform 0.3s ease;
+}
+
+.screenshot-item:hover {
+    transform: translateY(-10px);
+}
+
+/* Testimonials */
+.testimonial-card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+    transition: transform 0.3s ease-in-out;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    position: relative;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.testimonial-card:before {
+    content: '"';
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 60px;
+    color: rgba(199, 44, 65, 0.1);
+    font-family: serif;
+}
+
+.testimonial-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 auto;
+    border: 3px solid #C72C41;
+    overflow: hidden;
+}
+
+.testimonial-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 15px;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.star-rating {
+    color: #ffc107;
+    margin-bottom: 1rem;
+}
+
+/* General section styling */
+.section {
+    padding: 80px 0;
+}
+
+.section-light {
+    background-color: #f8f9fa;
+}
+
+/* Custom spacing */
+.section-spacing {
+    padding: 4rem 0;
+}
+
+/* Slider navigation */
+.swiper-button-custom {
+    color: #C72C41;
+    background-color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.swiper-button-custom:hover {
+    background-color: #C72C41;
+    color: #fff;
+}

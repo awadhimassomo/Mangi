@@ -55,6 +55,7 @@ INSTALLED_APPS = [
      'website',
     'registration.apps.RegistrationConfig',
     'webapp',
+    'paywall',
 ]
 
 REST_FRAMEWORK = {
@@ -85,8 +86,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-   
+    'paywall.middleware.PaywallMiddleware',  # Add paywall middleware
 ]
+
+# Paywall settings
+PAYWALL_TRIAL_DAYS = 30  # Default trial period in days
 
 ROOT_URLCONF = 'Managi.urls'
 
@@ -96,6 +100,8 @@ TEMPLATES = [
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
             os.path.join(BASE_DIR, 'webapp', 'templates'),
+            os.path.join(BASE_DIR, 'paywall', 'templates'),  # Add paywall templates
+            os.path.join(BASE_DIR, 'website', 'templates'),  # Add website templates
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -178,7 +184,7 @@ AUTH_USER_MODEL = 'registration.CustomUser'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Dar_es_Salaam'
 
 USE_I18N = True
 

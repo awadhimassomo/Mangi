@@ -3,7 +3,8 @@
 {% load static %}
 
 {% block content %}
-
+<!-- Add CSS link to the pricing stylesheet -->
+<link rel="stylesheet" href="{% static 'css/pricing.css' %}">
 
         <!-- home-agency start -->
         <section class="hero-2" id="home">
@@ -14,7 +15,7 @@
                         <div class="avatar avatar-xl rounded-circle bg-soft-primary text-primary shadow-sm mb-4">
                             <i class="mdi mdi-rocket-launch mb-0 h2"></i>
                         </div>
-                        <h1 class="hero-title fw-bold mb-4 display-5">Manage Your Finacial Activities  With <span class="text-primary">Mangi</span></h1>
+                        <h1 class="hero-title fw-bold mb-4 display-5">Manage Your Business Activities  With <span class="text-primary">Mangi</span></h1>
                         <p class="opacity-75 mb-4 pb-3 fs-17"> What sets us apart is our ecosystem focus. Unlike traditional POS systems, we don't just manage transactions—we manage relationships and growth. Our platform enables businesses to directly connect with suppliers for seamless stock management, engage with customers to foster loyalty, and access microfinance to fuel growth. Plus, our offline-first policy ensures businesses remain operational even in areas with unstable internet access.</p>
                         <a href="https://wa.me/255687046323" class="btn btn-lg btn-gradient-primary" target="_blank">Get Started Today</a>
 
@@ -88,6 +89,182 @@
 <!-- features start -->
 <section class="section bg-light features-bg " id="features">
     <div class="container">
+
+        <!-- Pricing Plans Section -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8 col-lg-6 text-center">
+                <h6 class="subtitle">Our <span class="fw-bold">Pricing</span></h6>
+                <h2 class="title">Choose the Plan That Fits Your Business</h2>
+                <p class="text-muted">
+                    Start with our 30-day free trial. Our flexible pricing options are designed to grow with your business needs.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Anza (Starter) Plan -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header text-center bg-white border-0 pt-3">
+                        <h5 class="card-title">Anza 🚀</h5>
+                        <p class="text-muted small mb-0">Small businesses & startups</p>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <div class="py-2">
+                            <h4 class="mb-0">TZS 4,900</h4>
+                            <p class="text-muted small">per month</p>
+                            <p class="text-muted small">Yearly: TZS 49,000 <span class="badge mangi-badge">Save 10%</span></p>
+                        </div>
+                        <hr>
+                        <ul class="list-unstyled mb-3 small text-start">
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> 1 Business</li>
+                            <li class="mb-2"><i class="mdi mdi-close pricing-close me-2"></i> Offline Mode</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Mobile Only</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Basic Inventory</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Basic Analytics</li>
+                        </ul>
+                        <a href="{% url 'paywall:subscription' %}" class="btn btn-sm btn-outline-primary">Get Started</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Endeleza (Grow) Plan -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm plan-featured">
+                    <div class="badge-position">
+                        <span class="badge bg-primary">Popular</span>
+                    </div>
+                    <div class="card-header text-center bg-white border-0 pt-3">
+                        <h5 class="card-title">Endeleza 🔥</h5>
+                        <p class="text-muted small mb-0">Growing businesses</p>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <div class="py-2">
+                            <h4 class="mb-0">TZS 12,900</h4>
+                            <p class="text-muted small">per month</p>
+                            <p class="text-muted small">Yearly: TZS 129,000 <span class="badge mangi-badge">Save 16%</span></p>
+                        </div>
+                        <hr>
+                        <ul class="list-unstyled mb-3 small text-start">
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> 3 Businesses</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Offline Mode</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Web & Mobile</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Full Inventory</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Advanced Analytics</li>
+                        </ul>
+                        <a href="{% url 'paywall:subscription' %}" class="btn btn-sm btn-primary">Get Started</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dumu (Enterprise) Plan -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header text-center bg-white border-0 pt-3">
+                        <h5 class="card-title">Dumu 💎</h5>
+                        <p class="text-muted small mb-0">Large enterprises</p>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <div class="py-2">
+                            <h4 class="mb-0">TZS 49,999</h4>
+                            <p class="text-muted small">per month</p>
+                            <p class="text-muted small">Yearly: TZS 499,000 <span class="badge mangi-badge">Save 17%</span></p>
+                        </div>
+                        <hr>
+                        <ul class="list-unstyled mb-3 small text-start">
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Unlimited Businesses</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Offline Mode</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> All Platforms</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> AI-Powered Features</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> 24/7 VIP Support</li>
+                        </ul>
+                        <a href="{% url 'paywall:subscription' %}" class="btn btn-sm btn-outline-primary">Get Started</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Custom (One-time) Plan -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm plan-custom">
+                    <div class="card-header text-center bg-transparent border-0 pt-3">
+                        <h5 class="card-title">Custom 🏆</h5>
+                        <p class="text-muted small mb-0">Custom businesses</p>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <div class="py-2">
+                            <h4 class="mb-0">Contact Us</h4>
+                            <p class="text-muted small">One-time payment</p>
+                            <p class="text-muted small">Starting at TZS 1,200,000</p>
+                        </div>
+                        <hr>
+                        <ul class="list-unstyled mb-3 small text-start">
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Unlimited Access</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Custom Features</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Dedicated Support</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Custom Integrations</li>
+                            <li class="mb-2"><i class="mdi mdi-check-circle me-2 pricing-check"></i> Onsite Training</li>
+                        </ul>
+                        <a href="{% url 'paywall:subscription' %}" class="btn btn-sm btn-outline-primary">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <a href="{% url 'paywall:subscription' %}" class="btn btn-primary btn-sm">View Full Comparison</a>
+            </div>
+        </div>
+
+        <div class="py-5"></div>
+
+        <!-- App Screens start -->
+        <section class="section overflow-hidden" id="screenshot">
+            <div class="container">
+                <div class="row justify-content-center mb-5">
+                    <div class="col-md-8 col-lg-6 text-center">
+                        <h6 class="subtitle">App <span class="fw-bold">Screens</span></h6>
+                        <h2 class="title">Mangi POS in Action</h2>
+                        <p class="text-muted mb-0">See how our intuitive interface makes business management simpler than ever before.</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <!-- Swiper -->
+                        <div class="screen-slider overflow-hidden">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide">
+                                    <img src="{% static 'images/screenshot/1.jpg' %}" alt="Dashboard" class="img-fluid" />
+                                </div>
+                                <div class="swiper-slide">
+                                    <img src="{% static 'images/screenshot/2.jpg' %}" alt="Inventory Management" class="img-fluid" />
+                                </div>
+                                <div class="swiper-slide">
+                                    <img src="{% static 'images/screenshot/3.jpg' %}" alt="Point of Sale" class="img-fluid" />
+                                </div>
+                                <div class="swiper-slide">
+                                    <img src="{% static 'images/screenshot/4.jpg' %}" alt="Reports" class="img-fluid" />
+                                </div>
+                                <div class="swiper-slide">
+                                    <img src="{% static 'images/screenshot/5.jpg' %}" alt="Customer Management" class="img-fluid" />
+                                </div>
+                                <div class="swiper-slide">
+                                    <img src="{% static 'images/screenshot/6.jpg' %}" alt="Supplier Management" class="img-fluid" />
+                                </div>
+                            </div>
+                            <!-- Add Pagination -->
+                            <div class="swiper-pagination"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- App Screens end -->
+
+        <!-- Add spacing between sections -->
+        <div class="py-5"></div>
+
         <div class="row align-items-center">
             <div class="col-lg-5">
                 <h1 class="fs-38 mb-4">Connecting People and Places</h1>

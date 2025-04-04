@@ -79,11 +79,14 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background-color: #ddd;
+            background-color: #801336;
             margin-bottom: 1.5rem;
-            background-image: url('/api/placeholder/100/100');
-            background-size: cover;
-            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
         }
         
         .title {
@@ -273,7 +276,7 @@
             <p>Streamline your business operations with our powerful point of sale system</p>
         </div>
         <div class="right-side">
-            <div class="logo"></div>
+            <div class="logo">M</div>
             <h1 class="title">Welcome Back</h1>
             <p class="subtitle">We're glad to see you again!</p>
             <p class="info-text">Personal Information</p>
@@ -303,14 +306,14 @@
                         <input type="checkbox" id="rememberMe">
                         <label for="rememberMe">Remember me</label>
                     </div>
-                    <a href="#" class="forgot-link">Forgot Password?</a>
+                    <a href="{% url 'webapp:forgot_password' %}" class="forgot-link">Forgot Password?</a>
                 </div>
                 
                 <button type="button" class="login-button" id="loginButton">Login</button>
                 
                 <div class="signup-container">
                     <span>Don't have an account?</span>
-                    <a href="#" class="signup-link">Sign up</a>
+                    <a href="{% url 'webapp:signup' %}" class="signup-link">Sign up</a>
                 </div>
             </div>
         </div>
@@ -389,6 +392,7 @@ passwordInput.addEventListener('keypress', function(event) {
 function handleLogin() {
     const phoneNumber = phoneNumberInput.value.trim();
     const password = passwordInput.value.trim();
+    const rememberMe = document.getElementById('rememberMe').checked;
     
     if (phoneNumber === '' || password === '') {
         // Show error for empty fields
@@ -407,7 +411,8 @@ function handleLogin() {
     // Prepare data for the API call
     const loginData = {
         phoneNumber: formattedPhoneNumber,
-        password: password
+        password: password,
+        rememberMe: rememberMe
     };
     
     // Make the API call to login endpoint

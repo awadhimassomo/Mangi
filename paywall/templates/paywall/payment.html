@@ -1,0 +1,174 @@
+{% extends 'paywall/base_paywall.html' %}
+
+{% block card_title %}Complete Payment{% endblock %}
+
+{% block paywall_content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h4 class="mb-3">Selected Plan: {{ plan.name }}</h4>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Plan Details</h5>
+                    <span class="badge bg-primary">{{ plan.duration_days }} days</span>
+                </div>
+                <p>{{ plan.description }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted">Total Amount</span>
+                    <h5 class="mb-0">{{ plan.price }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" action="{% url 'paywall:process_payment' %}">
+    {% csrf_token %}
+    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Payment Method</h4>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card payment-method-card h-100" onclick="selectPaymentMethod('credit_card')">
+                        <div class="card-body text-center">
+                            <i class="fas fa-credit-card fa-3x mb-3"></i>
+                            <h5>Credit Card</h5>
+                            <p class="text-muted mb-0">Visa, Mastercard, etc.</p>
+                            <input type="radio" name="payment_method" value="credit_card" class="d-none payment-method-radio" id="credit_card_radio" title="Credit Card Payment Option">
+                            <label for="credit_card_radio" class="d-none">Credit Card Payment Option</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card payment-method-card h-100" onclick="selectPaymentMethod('mobile_money')">
+                        <div class="card-body text-center">
+                            <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                            <h5>Mobile Money</h5>
+                            <p class="text-muted mb-0">M-Pesa, Airtel Money, etc.</p>
+                            <input type="radio" name="payment_method" value="mobile_money" class="d-none payment-method-radio" id="mobile_money_radio" title="Mobile Money Payment Option">
+                            <label for="mobile_money_radio" class="d-none">Mobile Money Payment Option</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card payment-method-card h-100" onclick="selectPaymentMethod('bank_transfer')">
+                        <div class="card-body text-center">
+                            <i class="fas fa-university fa-3x mb-3"></i>
+                            <h5>Bank Transfer</h5>
+                            <p class="text-muted mb-0">Direct bank transfer</p>
+                            <input type="radio" name="payment_method" value="bank_transfer" class="d-none payment-method-radio" id="bank_transfer_radio" title="Bank Transfer Payment Option">
+                            <label for="bank_transfer_radio" class="d-none">Bank Transfer Payment Option</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="payment-details" class="row mb-4 d-none">
+        <!-- This section will be populated dynamically based on the selected payment method -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="mb-3">Payment Details</h5>
+                    
+                    <div id="credit-card-form" class="payment-form d-none">
+                        <div class="mb-3">
+                            <label for="card-number" class="form-label">Card Number</label>
+                            <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="expiry-date" class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" id="expiry-date" placeholder="MM/YY">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="text" class="form-control" id="cvv" placeholder="123">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="mobile-money-form" class="payment-form d-none">
+                        <div class="mb-3">
+                            <label for="phone-number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone-number" placeholder="e.g., 0712345678">
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> You will receive a prompt on your phone to complete the payment.
+                        </div>
+                    </div>
+                    
+                    <div id="bank-transfer-form" class="payment-form d-none">
+                        <div class="alert alert-info">
+                            <h6>Bank Account Details</h6>
+                            <p class="mb-1">Bank: Example Bank</p>
+                            <p class="mb-1">Account Name: Mangi POS</p>
+                            <p class="mb-1">Account Number: 1234567890</p>
+                            <p class="mb-0">Reference: YOUR-USERNAME</p>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transaction-id" class="form-label">Transaction Reference</label>
+                            <input type="text" class="form-control" id="transaction-id" placeholder="Enter transaction reference">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 text-end">
+            <a href="{% url 'paywall:subscription' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="submit-payment" disabled>Complete Payment</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    function selectPaymentMethod(method) {
+        // Remove selection from all cards
+        document.querySelectorAll('.payment-method-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Select the clicked card
+        const selectedCard = document.querySelector(`.payment-method-card:has(input[value="${method}"])`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            document.querySelector(`input[value="${method}"]`).checked = true;
+        }
+        
+        // Show payment details section
+        document.getElementById('payment-details').classList.remove('d-none');
+        
+        // Hide all payment forms
+        document.querySelectorAll('.payment-form').forEach(form => {
+            form.classList.add('d-none');
+        });
+        
+        // Show the selected payment form
+        const formId = `${method.replace('_', '-')}-form`;
+        document.getElementById(formId).classList.remove('d-none');
+        
+        // Enable submit button
+        document.getElementById('submit-payment').disabled = false;
+    }
+    
+    // Alternative approach if the :has selector is not supported
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Trigger selectPaymentMethod with the value
+            selectPaymentMethod(radio.value);
+        });
+    });
+</script>
+{% endblock %}
