@@ -1,0 +1,257 @@
+{% extends 'learninghub/base_learninghub.html' %}
+
+{% block title %}Sponsor Opportunities | Learning Hub{% endblock %}
+
+{% block additional_styles %}
+.sponsor-gradient {
+    background: linear-gradient(120deg, rgba(238, 69, 64, 0.1), rgba(199, 44, 65, 0.1));
+}
+
+.tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+{% endblock %}
+
+{% block learninghub_content %}
+<div class="py-8 px-4 md:px-8">
+    <!-- Hero Section -->
+    <div class="sponsor-gradient rounded-xl p-6 md:p-10 mb-12">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-2/3 mb-8 md:mb-0 md:pr-10">
+                <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-4" data-i18n="partnerWithLeaders">Partner with Industry Leaders</h1>
+                <p class="text-lg text-gray-600 mb-6" data-i18n="sponsorDescription">Our sponsors offer exclusive programs, resources, and opportunities designed specifically for entrepreneurs and startups ready to scale. Discover how these partnerships can accelerate your business growth.</p>
+                <div class="flex flex-wrap gap-3">
+                    <span class="tag bg-primary bg-opacity-10 text-primary" data-i18n="fundingOpportunities">Funding Opportunities</span>
+                    <span class="tag bg-secondary bg-opacity-10 text-secondary" data-i18n="mentorshipPrograms">Mentorship Programs</span>
+                    <span class="tag bg-dark bg-opacity-10 text-dark" data-i18n="technicalResources">Technical Resources</span>
+                    <span class="tag bg-primary-light bg-opacity-10 text-primary-light" data-i18n="marketAccess">Market Access</span>
+                </div>
+            </div>
+            <div class="md:w-1/3">
+                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978" alt="Business Partnership" class="rounded-lg shadow-lg w-full h-auto">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Featured Sponsors Section -->
+    <div class="mb-12">
+        <div class="flex flex-wrap items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-gray-800" data-i18n="featuredSponsors">Featured Sponsors</h2>
+            <a href="#all-sponsors" class="text-primary hover:text-primary-light font-semibold flex items-center">
+                <span data-i18n="viewAll">View All</span>
+                <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for sponsor in sponsors|slice:":3" %}
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+                <div class="relative">
+                    <div class="h-48 bg-gray-100 overflow-hidden">
+                        {% if sponsor.logo %}
+                            <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="w-full h-full object-contain p-6">
+                        {% else %}
+                            <div class="flex items-center justify-center h-full">
+                                <i class="fas fa-building text-5xl text-gray-300"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold" data-i18n="featured">Featured</div>
+                </div>
+                
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-3">{{ sponsor.name }}</h3>
+                    <p class="text-gray-600 mb-4">{{ sponsor.description|truncatechars:120 }}</p>
+                    
+                    <h4 class="font-semibold text-gray-700 mb-2" data-i18n="entrepreneurPrograms">Entrepreneur Programs:</h4>
+                    <ul class="mb-5">
+                        <li class="flex items-center mb-2">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-sm" data-i18n="startupFunding">Startup Funding</span>
+                        </li>
+                        <li class="flex items-center mb-2">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-sm" data-i18n="mentorshipCoaching">Mentorship & Coaching</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-sm" data-i18n="technicalResources">Technical Resources</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="{% url 'learninghub:sponsor_detail' sponsor.id %}" class="block text-center bg-gradient-to-r from-primary to-secondary text-white py-2 px-4 rounded-md hover:opacity-90 transition-opacity">
+                        <span data-i18n="exploreOpportunities">Explore Opportunities</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Benefits Section -->
+    <div class="mb-12 bg-white rounded-xl p-8 shadow-md">
+        <h2 class="text-2xl font-bold text-gray-800 mb-8 text-center" data-i18n="howSponsorsSupport">How Our Sponsors Support Entrepreneurs</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="bg-primary bg-opacity-10 rounded-full p-5 inline-block mb-4">
+                    <i class="fas fa-hand-holding-usd text-primary text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2" data-i18n="fundingInvestment">Funding & Investment</h3>
+                <p class="text-gray-600 text-sm" data-i18n="fundingDescription">Access to capital, investor networks, and funding opportunities to grow your business.</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="bg-secondary bg-opacity-10 rounded-full p-5 inline-block mb-4">
+                    <i class="fas fa-users text-secondary text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2" data-i18n="mentorship">Mentorship</h3>
+                <p class="text-gray-600 text-sm" data-i18n="mentorshipDescription">Connect with industry experts who provide guidance, advice, and valuable feedback.</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="bg-dark bg-opacity-10 rounded-full p-5 inline-block mb-4">
+                    <i class="fas fa-laptop-code text-dark text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2" data-i18n="techResourcesTitle">Technical Resources</h3>
+                <p class="text-gray-600 text-sm" data-i18n="techResourcesDescription">Cloud credits, software licenses, and tools to build and scale your product.</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="bg-primary-light bg-opacity-10 rounded-full p-5 inline-block mb-4">
+                    <i class="fas fa-network-wired text-primary-light text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2" data-i18n="marketAccessTitle">Market Access</h3>
+                <p class="text-gray-600 text-sm" data-i18n="marketAccessDescription">Opportunities to showcase your solution and access new markets and customers.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Featured Sponsor Showcase -->
+    <div class="mb-12 bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+            <div class="md:w-2/5 bg-gradient-to-br from-primary to-secondary p-8 text-white">
+                <h2 class="text-2xl font-bold mb-4" data-i18n="ourSponsors">Our Sponsors</h2>
+                <p class="mb-4" data-i18n="sponsorShowcaseDesc">Connect with our network of industry leaders who provide funding, mentorship, and resources to help your business grow.</p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-white bg-opacity-20 rounded-full px-3 py-1 text-sm">Funding</span>
+                    <span class="bg-white bg-opacity-20 rounded-full px-3 py-1 text-sm">Mentorship</span>
+                    <span class="bg-white bg-opacity-20 rounded-full px-3 py-1 text-sm">Resources</span>
+                </div>
+                <a href="#all-sponsors" class="inline-block bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-opacity-90 transition-colors">
+                    <span data-i18n="viewAllSponsors">View All Sponsors</span>
+                </a>
+            </div>
+            <div class="md:w-3/5 p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Sponsor Card 1 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-building text-3xl text-gray-300"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800" data-i18n-sponsor="techCorp">TechCorp</h3>
+                                <span class="text-xs text-primary-light font-medium">Technology Partner</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">Provides cloud resources, infrastructure support, and technology guidance to startups.</p>
+                        <div class="flex justify-end">
+                            <a href="#" class="text-primary text-sm font-medium hover:underline flex items-center">
+                                <span data-i18n="learnMore">Learn More</span>
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Sponsor Card 2 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-chart-line text-3xl text-gray-300"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800" data-i18n-sponsor="investPro">InvestPro</h3>
+                                <span class="text-xs text-secondary font-medium">Investment Partner</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">Offers seed funding, investment opportunities, and financial mentorship for growth.</p>
+                        <div class="flex justify-end">
+                            <a href="#" class="text-primary text-sm font-medium hover:underline flex items-center">
+                                <span data-i18n="learnMore">Learn More</span>
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Sponsors Section -->
+    <div id="all-sponsors">
+        <h2 class="text-2xl font-bold text-gray-800 mb-8" data-i18n="sponsorNetwork">Our Sponsor Network</h2>
+        
+        {% if sponsors %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for sponsor in sponsors %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+                    <a href="{% url 'learninghub:sponsor_detail' sponsor.id %}" class="block">
+                        <div class="h-36 bg-gray-100 overflow-hidden">
+                            {% if sponsor.logo %}
+                                <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="w-full h-full object-contain p-4">
+                            {% else %}
+                                <div class="flex items-center justify-center h-full">
+                                    <i class="fas fa-building text-4xl text-gray-300"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg">{{ sponsor.name }}</h3>
+                                <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">Partner</span>
+                            </div>
+                            <p class="text-gray-600 text-sm my-3">{{ sponsor.description|truncatechars:100 }}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-primary-light text-sm font-medium">View Programs</span>
+                                <i class="fas fa-arrow-right text-primary-light"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col-span-full text-center py-12 bg-white rounded-xl shadow border border-gray-100">
+                    <div class="flex justify-center mb-6">
+                        <div class="rounded-full bg-blue-50 p-5">
+                            <i class="fas fa-handshake text-blue-400 text-5xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3" data-i18n="noSponsorsAvailable">No Sponsors Available</h3>
+                    <p class="text-gray-600 mb-8 max-w-md mx-auto" data-i18n="expandingSponsorNetwork">We're currently expanding our sponsor network. Check back soon for exciting partnership opportunities.</p>
+                    
+                    <div class="border-t border-gray-100 pt-8 mt-6 max-w-lg mx-auto">
+                        <h4 class="font-semibold text-lg mb-2" data-i18n="becomeASponsor">Interested in becoming a sponsor?</h4>
+                        <p class="text-gray-600 mb-4" data-i18n="sponsorNetworkDescription">Join our network of industry-leading companies supporting the next generation of entrepreneurs and innovators.</p>
+                        <a href="#contact" class="inline-block bg-gradient-to-r from-primary to-secondary text-white py-2 px-6 rounded-md hover:opacity-90 transition-opacity">
+                            <span data-i18n="contactUs">Contact Us</span>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Call to Action -->
+    <div class="mt-12 bg-gradient-to-r from-primary to-secondary rounded-xl p-8 text-white text-center">
+        <h2 class="text-2xl font-bold mb-4">Interested in becoming a sponsor?</h2>
+        <p class="mb-6 max-w-2xl mx-auto">Join our network of industry-leading companies supporting the next generation of entrepreneurs and innovators.</p>
+        <a href="#" class="inline-block bg-primary text-white font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">
+            Partner With Us
+        </a>
+    </div>
+</div>
+{% endblock %}

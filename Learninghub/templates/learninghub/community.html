@@ -1,0 +1,213 @@
+{% extends 'learninghub/base_learninghub.html' %}
+
+{% block title %}Community | Learning Hub{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Community</h1>
+    
+    <!-- Community Introduction -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">Join Our Learning Community</h2>
+        <p class="text-gray-600 mb-4">Connect with fellow learners, share knowledge, participate in discussions, and collaborate on projects. Our community is a supportive space for growth and networking.</p>
+        <div class="flex flex-wrap gap-3">
+            <span class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-md">
+                <i class="fas fa-users mr-1"></i> 5,000+ members
+            </span>
+            <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-md">
+                <i class="fas fa-comments mr-1"></i> Active discussions
+            </span>
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-md">
+                <i class="fas fa-hands-helping mr-1"></i> Peer support
+            </span>
+            <span class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-md">
+                <i class="fas fa-project-diagram mr-1"></i> Collaboration opportunities
+            </span>
+        </div>
+    </div>
+    
+    <!-- Discussion Forums -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Discussion Forums</h2>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-medium">Popular Discussion Topics</h3>
+                    <a href="#" class="text-primary hover:underline text-sm">View All</a>
+                </div>
+            </div>
+            
+            <!-- Forum Topics -->
+            <div>
+                <a href="#" class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start">
+                        <div class="bg-blue-100 text-blue-800 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium mb-1">Web Development Best Practices</h4>
+                            <p class="text-gray-600 text-sm line-clamp-1">Discussion on modern web development techniques and best practices.</p>
+                            <div class="flex text-xs text-gray-500 mt-2 gap-3">
+                                <span><i class="fas fa-comment-alt mr-1"></i> 45 replies</span>
+                                <span><i class="fas fa-eye mr-1"></i> 230 views</span>
+                                <span><i class="fas fa-clock mr-1"></i> Updated 2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="#" class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start">
+                        <div class="bg-green-100 text-green-800 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium mb-1">Data Science Projects Collaboration</h4>
+                            <p class="text-gray-600 text-sm line-clamp-1">Looking for partners for data science projects and competitions.</p>
+                            <div class="flex text-xs text-gray-500 mt-2 gap-3">
+                                <span><i class="fas fa-comment-alt mr-1"></i> 32 replies</span>
+                                <span><i class="fas fa-eye mr-1"></i> 178 views</span>
+                                <span><i class="fas fa-clock mr-1"></i> Updated 5 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="#" class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start">
+                        <div class="bg-yellow-100 text-yellow-800 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium mb-1">Career Advice & Job Opportunities</h4>
+                            <p class="text-gray-600 text-sm line-clamp-1">Sharing career advice, job openings, and interview preparation tips.</p>
+                            <div class="flex text-xs text-gray-500 mt-2 gap-3">
+                                <span><i class="fas fa-comment-alt mr-1"></i> 87 replies</span>
+                                <span><i class="fas fa-eye mr-1"></i> 456 views</span>
+                                <span><i class="fas fa-clock mr-1"></i> Updated yesterday</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="#" class="block p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start">
+                        <div class="bg-red-100 text-red-800 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium mb-1">Help & Support</h4>
+                            <p class="text-gray-600 text-sm line-clamp-1">Get assistance with course content, technical issues, or general questions.</p>
+                            <div class="flex text-xs text-gray-500 mt-2 gap-3">
+                                <span><i class="fas fa-comment-alt mr-1"></i> 124 replies</span>
+                                <span><i class="fas fa-eye mr-1"></i> 671 views</span>
+                                <span><i class="fas fa-clock mr-1"></i> Updated 30 min ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="p-4 text-center border-t border-gray-200">
+                <button class="px-4 py-2 text-primary border border-primary rounded-md hover:bg-primary hover:text-white transition-colors">
+                    Start a New Discussion
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Community Events -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Upcoming Community Events</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Event Card -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="font-bold mb-2">Monthly Code Challenge</div>
+                <p class="text-gray-600 text-sm mb-3">Put your skills to the test in our monthly coding competition with prizes.</p>
+                <div class="flex text-sm text-gray-500 mb-3">
+                    <div class="mr-3"><i class="far fa-calendar-alt mr-1"></i> June 20, 2025</div>
+                    <div><i class="far fa-clock mr-1"></i> All day</div>
+                </div>
+                <button class="w-full py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
+                    Join Event
+                </button>
+            </div>
+            
+            <!-- Event Card -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="font-bold mb-2">Virtual Networking Meetup</div>
+                <p class="text-gray-600 text-sm mb-3">Connect with industry professionals and fellow learners in a casual online meetup.</p>
+                <div class="flex text-sm text-gray-500 mb-3">
+                    <div class="mr-3"><i class="far fa-calendar-alt mr-1"></i> June 17, 2025</div>
+                    <div><i class="far fa-clock mr-1"></i> 7:00 PM</div>
+                </div>
+                <button class="w-full py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
+                    Join Event
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Community Leaders -->
+    <div>
+        <h2 class="text-xl font-bold mb-4">Community Leaders</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Leader Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 text-center">
+                <div class="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden">
+                    <img src="https://via.placeholder.com/150" alt="Community Leader" class="w-full h-full object-cover">
+                </div>
+                <div class="font-medium">Sarah Johnson</div>
+                <div class="text-sm text-gray-500 mb-2">Web Development</div>
+                <div class="flex justify-center gap-2">
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-github"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            
+            <!-- Leader Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 text-center">
+                <div class="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden">
+                    <img src="https://via.placeholder.com/150" alt="Community Leader" class="w-full h-full object-cover">
+                </div>
+                <div class="font-medium">Michael Chen</div>
+                <div class="text-sm text-gray-500 mb-2">Data Science</div>
+                <div class="flex justify-center gap-2">
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-github"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            
+            <!-- Leader Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 text-center">
+                <div class="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden">
+                    <img src="https://via.placeholder.com/150" alt="Community Leader" class="w-full h-full object-cover">
+                </div>
+                <div class="font-medium">Jessica Patel</div>
+                <div class="text-sm text-gray-500 mb-2">Mobile Development</div>
+                <div class="flex justify-center gap-2">
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-github"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            
+            <!-- Leader Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 text-center">
+                <div class="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden">
+                    <img src="https://via.placeholder.com/150" alt="Community Leader" class="w-full h-full object-cover">
+                </div>
+                <div class="font-medium">David Wilson</div>
+                <div class="text-sm text-gray-500 mb-2">Design & UI/UX</div>
+                <div class="flex justify-center gap-2">
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-github"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-primary"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

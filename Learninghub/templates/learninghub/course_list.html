@@ -1,0 +1,364 @@
+{% extends 'learninghub/base_learninghub.html' %}
+{% load static %}
+{% load learninghub_tags %}
+
+{% block learninghub_content %}
+<!-- Page Header with Filter -->
+<div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800" data-i18n="allCourses">All Courses</h1>
+            <p class="text-gray-600" data-i18n="discoverCurriculum">Discover our comprehensive business education curriculum</p>
+        </div>
+        {% if sponsors %}
+        <div>
+            <form method="get" class="flex items-center space-x-2" id="sponsor-filter-form">
+                <label for="sponsor-filter" class="text-sm text-gray-600" data-i18n="filterBySponsor">Filter by Sponsor:</label>
+                <select name="sponsor" id="sponsor-filter" 
+                    class="border rounded-md text-sm px-2 py-1 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+                    onchange="this.form.submit()">
+                    <option value="" data-i18n="allSponsors">All Sponsors</option>
+                    {% for sponsor in sponsors %}
+                    <option value="{{ sponsor.id }}" {% if current_sponsor_id == sponsor.id|stringformat:'i' %}selected{% endif %}>{{ sponsor.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Course Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 p-4">
+    {% for course in courses %}
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+        <!-- Card Header with Gradient Accent -->
+        <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+        
+        <!-- Course Image (if available) or Placeholder -->
+        <div class="h-40 bg-gray-100 relative">
+            {% if course.image %}
+            <img src="{{ course.image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+            {% else %}
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
+                <i class="fas fa-graduation-cap text-4xl text-gray-300"></i>
+            </div>
+            {% endif %}
+            
+            <!-- Status Badge -->
+            <div class="absolute top-3 right-3">
+                <span class="
+                    px-2 py-1 text-xs font-semibold rounded-full 
+                    {% if user_progress|get_item:course.id|get_item:'status' == 'Completed' %}
+                        bg-green-100 text-green-800
+                    {% elif user_progress|get_item:course.id|get_item:'status' == 'In Progress' %}
+                        bg-yellow-100 text-yellow-800
+                    {% else %}
+                        bg-gray-100 text-gray-600
+                    {% endif %}
+                ">
+                    {{ user_progress|get_item:course.id|get_item:'status' }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Card Content -->
+        <div class="p-5 flex-grow flex flex-col">
+            <!-- Course Number Badge -->
+            <div class="mb-2">
+                <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold"><span data-i18n="course">Course</span> {{ forloop.counter }}</span>
+            </div>
+            
+            <!-- Course Title -->
+            <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="{{ course.title }}">{{ course.title }}</h3>
+            
+            <!-- Sponsor Info if available -->
+            {% if course.sponsor %}
+            <div class="flex items-center space-x-1 text-xs text-gray-600 mb-3">
+                <span data-i18n="sponsoredBy">Sponsored by:</span>
+                <a href="{% url 'learninghub:sponsor_detail' course.sponsor.id %}" class="flex items-center hover:text-primary transition-colors">
+                    {% if course.sponsor.logo %}
+                    <img src="{{ course.sponsor.logo.url }}" alt="{{ course.sponsor.name }}" class="h-4 w-4 object-contain mr-1">
+                    {% endif %}
+                    <span>{{ course.sponsor.name }}</span>
+                </a>
+            </div>
+            {% endif %}
+            
+            <!-- Course Description -->
+            <p class="text-gray-600 text-sm mb-4 flex-grow">{{ course.description|truncatechars:120 }}</p>
+            
+            <!-- Progress Bar (if started) -->
+            {% if user_progress|get_item:course.id|get_item:'status' != 'Not Started' %}
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-1 text-xs">
+                    <span class="font-medium text-gray-700" data-i18n="progress">Progress</span>
+                    <span class="text-gray-500">{{ user_progress|get_item:course.id|get_item:'percent' }}%</span>
+                </div>
+                <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                        class="h-full bg-gradient-to-r from-primary to-secondary progress-bar-width" 
+                        role="progressbar" 
+                        data-progress="{{ user_progress|get_item:course.id|get_item:'percent'|floatformat:0 }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100"
+                        aria-label="{{ user_progress|get_item:course.id|get_item:'percent'|floatformat:0 }}% complete">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Action Button -->
+            <a href="{% url 'learninghub:course_detail' course.id %}" 
+                class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200"
+            >
+                {% if user_progress|get_item:course.id|get_item:'status' == 'Not Started' %}
+                    <span class="text-white font-semibold" data-i18n="startLearning">Start Learning</span>
+                {% elif user_progress|get_item:course.id|get_item:'status' == 'In Progress' %}
+                    <span class="text-white font-semibold" data-i18n="continueLearning">Continue Learning</span>
+                {% elif user_progress|get_item:course.id|get_item:'status' == 'Completed' %}
+                    <span class="text-white font-semibold" data-i18n="reviewCourse">Review Course</span>
+                {% else %}
+                    <span class="text-white font-semibold" data-i18n="startLearning">Start Learning</span>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full">
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        <span data-i18n="noCoursesAvailable">No courses are available yet. Please check back soon.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Demo courses for testing the layout without database entries -->
+{% if not courses %}
+<div class="mt-8 px-4">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Preview of Available Courses</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <!-- Course 1 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-lightbulb text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">1</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Entrepreneurship Mindset & Opportunity Discovery"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Discover how to cultivate an entrepreneurial mindset and identify promising business opportunities in your community.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Course 2 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-coins text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">2</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Basic Financial Management"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Master essential financial literacy concepts to help you understand, manage, and grow your business finances effectively.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Course 3 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-chart-line text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">3</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Managing Business Money & Cash Flow"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Learn effective cash flow management techniques to keep your business liquid and financially healthy.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 4 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-file-invoice text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">4</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Access to Finance & How to Be Loan Ready"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Learn how to prepare your business for loan applications, understand financing options, and meet lender requirements.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 5 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-users text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">5</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Digital Skills for Entrepreneurs"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Discover powerful digital tools and technologies that can help streamline operations and accelerate your business growth.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 6 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-handshake text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">6</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Smart Pricing, Profit, and Inventory"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Master strategies for effective pricing, maximizing profits, and managing inventory to optimize your business performance.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 7 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-bullhorn text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">7</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Branding, Packaging & Customer Loyalty"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Learn how to create a distinctive brand, develop attractive packaging, and build strong customer loyalty for your business.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 8 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-laptop text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">8</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Marketing & Digital Promotion"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Discover effective marketing strategies and digital promotion techniques to reach more customers and grow your business.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 9 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-user-tie text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">9</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Business Compliance & Formalization"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Learn about business regulations, licensing requirements, and the benefits of formalizing your business operations.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 10 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-balance-scale text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">10</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Scaling Your Business & Creating Jobs"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Discover strategies for expanding your business, creating employment opportunities, and managing growth effectively.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course 11 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+            <div class="h-2 bg-gradient-to-r from-primary-light to-secondary"></div>
+            <div class="h-40 bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-rocket text-4xl text-gray-300"></i>
+            </div>
+            <div class="p-5 flex-grow flex flex-col">
+                <div class="mb-2">
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-semibold">11</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800 mb-2" data-i18n-course="Using AI in Small Business"></h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">Explore how artificial intelligence can be leveraged by small businesses to improve efficiency, customer service, and decision-making.</p>
+                <a href="#" class="w-full py-2 px-4 text-center text-sm font-medium rounded-md bg-gradient-to-r from-primary to-secondary text-white hover:text-white hover:from-primary-light hover:to-primary transition-all duration-200">
+                    <span class="text-white font-semibold">Start Learning</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all progress bars
+        const progressBars = document.querySelectorAll('.progress-bar-width');
+        progressBars.forEach(function(progressBar) {
+            const progress = progressBar.getAttribute('data-progress');
+            progressBar.style.width = progress + '%';
+        });
+    });
+</script>
+{% endblock %}

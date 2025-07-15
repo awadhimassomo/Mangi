@@ -8,6 +8,8 @@ from .views import delete_user, update_user
 from .views import delete_business, update_business, list_users, get_routes, logout_view
 from .views import get_businessType
 
+# Set the app namespace to match what's used in templates
+app_name = 'Registration'
 
 router = DefaultRouter()
 router.register(r'users', RegisterUserView, basename='users')  # Specify basename 'users'

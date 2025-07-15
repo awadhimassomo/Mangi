@@ -1,4 +1,6 @@
 {% extends 'webapp/base_webapp.html' %}
+{% load static %}
+{% load humanize %}
 
 {% block title %}Mangi POS - Purchase Orders Management{% endblock %}
 
@@ -48,16 +50,17 @@
                 <p class="text-white opacity-80">Track and manage orders to your suppliers</p>
             </div>
             <div class="flex items-center space-x-3">
-                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Create new purchase order">
+                <a href="#" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Create new purchase order" onclick="alert('Create order functionality coming soon!');">
                     <i class="fas fa-plus mr-2"></i> New Order
-                </button>
-                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter orders by status" aria-label="Filter orders by status">
-                    <option value="all" selected>All Orders</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
+                </a>
+                <form method="get" action="" class="flex items-center space-x-2">
+                    <select name="status" class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter orders by status" aria-label="Filter orders by status" onchange="this.form.submit()">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Orders</option>
+                        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Approved</option>
+                        <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </form>
             </div>
         </div>
     </div>
@@ -69,9 +72,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Total Orders</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">124</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 8 <span class="text-gray-400">new this month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ total_orders|default:"0" }}</h3>
+                    <p class="text-{% if new_orders_count > 0 %}green{% else %}gray{% endif %}-500 text-sm font-medium mt-2">
+                        {% if new_orders_count > 0 %}
+                            <i class="fas fa-arrow-up mr-1"></i> {{ new_orders_count }}
+                        {% else %}
+                            <i class="fas fa-minus mr-1"></i> 0
+                        {% endif %}
+                        <span class="text-gray-400">new this month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
@@ -85,7 +93,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Pending Orders</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">18</h3>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ pending_orders|default:"0" }}</h3>
                     <p class="text-yellow-500 text-sm font-medium mt-2">
                         <i class="fas fa-exclamation-circle mr-1"></i> <span class="text-gray-400">Awaiting approval</span>
                     </p>
@@ -101,9 +109,17 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Total Spend (MTD)</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 12.4M</h3>
-                    <p class="text-red-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 14.2% <span class="text-gray-400">vs last month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">
+                        {% if monthly_spend >= 1000000 %}
+                            TZS {{ monthly_spend|floatformat:1|slice:":-6" }}.{{ monthly_spend|floatformat:1|slice:"-6:-5" }}M
+                        {% else %}
+                            TZS {{ monthly_spend|floatformat:0|intcomma }}
+                        {% endif %}
+                    </h3>
+                    <p class="{% if spend_change_percent > 0 %}text-red-500{% elif spend_change_percent < 0 %}text-green-500{% else %}text-gray-500{% endif %} text-sm font-medium mt-2">
+                        <i class="fas {% if spend_change_percent > 0 %}fa-arrow-up{% elif spend_change_percent < 0 %}fa-arrow-down{% else %}fa-minus{% endif %} mr-1"></i>
+                        {{ spend_change_percent_abs|floatformat:1 }}% 
+                        <span class="text-gray-400">vs last month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -117,9 +133,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Active Suppliers</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">28</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 2 <span class="text-gray-400">new this month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ active_suppliers_count|default:"0" }}</h3>
+                    <p class="text-{% if new_suppliers_count > 0 %}green{% else %}gray{% endif %}-500 text-sm font-medium mt-2">
+                        {% if new_suppliers_count > 0 %}
+                            <i class="fas fa-arrow-up mr-1"></i> {{ new_suppliers_count }}
+                        {% else %}
+                            <i class="fas fa-minus mr-1"></i> 0
+                        {% endif %}
+                        <span class="text-gray-400">new this month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -131,11 +152,19 @@
     
     <!-- Orders Table -->
     <div class="bg-white rounded-lg shadow mb-8">
-        <div class="flex justify-between items-center p-6 border-b">
-            <h2 class="text-xl font-semibold">Recent Purchase Orders</h2>
+        <div class="flex flex-wrap justify-between items-center p-6 border-b">
+            <h2 class="text-xl font-semibold mb-2 sm:mb-0">Recent Purchase Orders</h2>
             <div class="relative">
-                <input type="text" placeholder="Search orders..." class="px-4 py-2 border rounded-md pr-10" aria-label="Search orders">
-                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                <form method="get" action="" class="flex items-center">
+                    {% if status_filter and status_filter != 'all' %}
+                        <input type="hidden" name="status" value="{{ status_filter }}">
+                    {% endif %}
+                    <input type="text" name="search" placeholder="Search orders..." value="{{ search_query }}" 
+                           class="px-4 py-2 border rounded-md pr-10" aria-label="Search orders">
+                    <button type="submit" class="absolute right-3 top-3 text-gray-400" title="Search orders" aria-label="Search orders">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
         </div>
         
@@ -148,158 +177,231 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Created</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Delivery</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <!-- Order 1 -->
+                    {% for order in orders %}
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-042</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ order.order_number }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">AS</span>
+                                    <span class="font-medium text-gray-600">{{ order.supplier.supplierName|slice:":1" }}{{ order.supplier.supplierName|slice:"1:2"|default:""|upper }}</span>
                                 </div>
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">Arusha Suppliers Ltd</div>
-                                    <div class="text-sm text-gray-500">Food & Beverages</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ order.supplier.supplierName }}</div>
+                                    <div class="text-sm text-gray-500">{{ order.supplier.category|default:"General" }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 25, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 30, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">24 items</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 2,450,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.order_date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if order.delivery_date %}
+                                {{ order.delivery_date|date:"M d, Y" }}
+                            {% else %}
+                                <span class="text-gray-400">Not specified</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ order.items.count }} item{{ order.items.count|pluralize }}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-pending">Pending</span>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                  {% if order.status == 'Pending' %}tag-pending{% elif order.status == 'Completed' %}tag-approved{% elif order.status == 'Cancelled' %}tag-cancelled{% else %}tag-delivered{% endif %}">
+                                {{ order.status }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit order"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Cancel order"><i class="fas fa-times"></i></button>
+                            <a href="/order/{{ order.token }}/" class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></a>
+                            
+                            {% if order.status == 'Pending' %}
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3" title="Edit order" onclick="alert('Edit order functionality coming soon!');"><i class="fas fa-edit"></i></a>
+                                <button onclick="cancelOrder('{{ order.token }}')" class="text-red-600 hover:text-red-900" title="Cancel order"><i class="fas fa-times"></i></button>
+                            {% elif order.status == 'Completed' %}
+                                <button onclick="markDelivered('{{ order.token }}')" class="text-green-600 hover:text-green-900 mr-3" title="Mark as received"><i class="fas fa-check"></i></button>
+                                <button class="text-gray-400 cursor-not-allowed" title="Cannot cancel approved order" disabled><i class="fas fa-times"></i></button>
+                            {% else %}
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3" title="Duplicate order" onclick="alert('Duplicate order functionality coming soon!');"><i class="fas fa-copy"></i></a>
+                                <button class="text-gray-400 cursor-not-allowed" title="Cannot edit {{ order.status|lower }} order" disabled><i class="fas fa-edit"></i></button>
+                            {% endif %}
                         </td>
                     </tr>
-                    
-                    <!-- Order 2 -->
+                    {% empty %}
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-041</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">DW</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Dar Wholesalers</div>
-                                    <div class="text-sm text-gray-500">Groceries</div>
-                                </div>
+                        <td colspan="7" class="px-6 py-10 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-box-open text-gray-300 text-5xl mb-3"></i>
+                                <p class="text-lg">No orders found</p>
+                                {% if search_query or status_filter != 'all' %}
+                                    <p class="text-sm text-gray-400 mt-1">Try clearing your search filters</p>
+                                    <a href="{% url 'orders' %}" class="mt-2 text-sm text-blue-600 hover:text-blue-800">Clear all filters</a>
+                                {% else %}
+                                    <p class="text-sm text-gray-400 mt-1">Get started by creating your first order</p>
+                                    <a href="#" onclick="alert('Create order functionality coming soon!');" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                        <i class="fas fa-plus mr-2"></i> Create Order
+                                    </a>
+                                {% endif %}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 22, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 26, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">18 items</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 1,850,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-approved">Approved</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit order"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Cancel order"><i class="fas fa-times"></i></button>
-                        </td>
                     </tr>
-                    
-                    <!-- Order 3 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-040</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">KT</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Kilimanjaro Traders</div>
-                                    <div class="text-sm text-gray-500">Packaging Materials</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 18, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 21, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">6 items</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 750,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-delivered">Delivered</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
-                            <button class="text-green-600 hover:text-green-900 mr-3" title="Mark as received"><i class="fas fa-check"></i></button>
-                            <button class="text-gray-400 cursor-not-allowed" title="Cannot cancel delivered order" disabled><i class="fas fa-times"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Order 4 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PO-2025-039</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">MS</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Mwanza Supplies</div>
-                                    <div class="text-sm text-gray-500">Kitchen Equipment</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 15, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 25, 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3 items</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 3,200,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-cancelled">Cancelled</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View order details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Duplicate order"><i class="fas fa-copy"></i></button>
-                            <button class="text-gray-400 cursor-not-allowed" title="Cannot edit cancelled order" disabled><i class="fas fa-edit"></i></button>
-                        </td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
         
-        <!-- Pagination -->
-        <div class="px-6 py-4 flex items-center justify-between border-t">
-            <div class="flex-1 flex justify-between sm:hidden">
-                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Previous page">Previous</a>
-                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Next page">Next</a>
-            </div>
+        {% if orders.paginator.num_pages > 1 %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">124</span> results
+                        Showing <span class="font-medium">{{ orders.start_index }}</span> to <span class="font-medium">{{ orders.end_index }}</span> of <span class="font-medium">{{ orders.paginator.count }}</span> results
                     </p>
                 </div>
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Previous page">
+                        {% if orders.has_previous %}
+                        <a href="?page={{ orders.previous_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <span class="sr-only">Previous</span>
                             <i class="fas fa-chevron-left"></i>
                         </a>
-                        <a href="#" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 1">1</a>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 2">2</a>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 3">3</a>
-                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 13">13</a>
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Next page">
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                        {% endif %}
+                        
+                        {% with ''|center:orders.paginator.num_pages as range %}
+                        {% for _ in range %}
+                            {% with forloop.counter as i %}
+                            {% if orders.paginator.num_pages <= 7 or i == 1 or i == orders.paginator.num_pages or i|add:'-1' <= orders.number|add:'1' and i|add:'-1' >= orders.number|add:'-1' %}
+                                <a href="?page={{ i }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                                   class="{% if orders.number == i %}z-10 bg-primary-light border-primary-light text-white{% else %}bg-white border-gray-300 text-gray-500 hover:bg-gray-50{% endif %} relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                                   {% if orders.number == i %}aria-current="page"{% endif %}>
+                                    {{ i }}
+                                </a>
+                            {% elif i == 2 and orders.number > 3 or i == orders.paginator.num_pages|add:'-1' and orders.number < orders.paginator.num_pages|add:'-2' %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            {% endif %}
+                            {% endwith %}
+                        {% endfor %}
+                        {% endwith %}
+
+                        {% if orders.has_next %}
+                        <a href="?page={{ orders.next_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <span class="sr-only">Next</span>
                             <i class="fas fa-chevron-right"></i>
                         </a>
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                        {% endif %}
                     </nav>
                 </div>
             </div>
         </div>
+        {% endif %}
+
+        <!-- JavaScript for Order Actions -->
+        <script>
+            // Toast notification function
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white ${
+                    type === 'success' ? 'bg-green-500' : 
+                    type === 'error' ? 'bg-red-500' : 
+                    type === 'info' ? 'bg-blue-500' : 'bg-yellow-500'
+                } transition-opacity duration-500 flex items-center`;
+                
+                const icon = document.createElement('i');
+                icon.className = `mr-2 fas ${
+                    type === 'success' ? 'fa-check-circle' : 
+                    type === 'error' ? 'fa-exclamation-circle' : 
+                    type === 'info' ? 'fa-info-circle' : 'fa-exclamation-triangle'
+                }`;
+                
+                toast.appendChild(icon);
+                toast.appendChild(document.createTextNode(message));
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 500);
+                }, 3000);
+            }
+            
+            // Cancel order function
+            function cancelOrder(orderToken) {
+                if (confirm('Are you sure you want to cancel this order?')) {
+                    fetch(`/api/orders/${orderToken}/cancel/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            showToast('Order cancelled successfully');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            response.json().then(data => {
+                                showToast(data.error || 'Failed to cancel order', 'error');
+                            }).catch(() => {
+                                showToast('An error occurred while cancelling the order', 'error');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        showToast('An error occurred while cancelling the order', 'error');
+                        console.error('Error:', error);
+                    });
+                }
+            }
+            
+            // Mark order as delivered function
+            function markDelivered(orderToken) {
+                if (confirm('Mark this order as delivered?')) {
+                    fetch(`/api/orders/${orderToken}/deliver/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            showToast('Order marked as delivered');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            response.json().then(data => {
+                                showToast(data.error || 'Failed to update order status', 'error');
+                            }).catch(() => {
+                                showToast('An error occurred while updating the order', 'error');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        showToast('An error occurred while updating the order', 'error');
+                        console.error('Error:', error);
+                    });
+                }
+            }
+        </script>
     </div>
     
     <!-- Create Order Modal Trigger -->

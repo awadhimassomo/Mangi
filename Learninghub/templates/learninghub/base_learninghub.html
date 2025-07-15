@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Learning Hub{% endblock %}</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <!-- Material Design Icons -->
+    <link href="{% static 'css/materialdesignicons.min.css' %}" rel="stylesheet">
+    <!-- Learning Hub Specific CSS -->
+    <link href="{% static 'learninghub/css/styles.css' %}" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-light': '#EE4540',
+                        primary: '#C72C41',
+                        secondary: '#801336',
+                        dark: '#510A32',
+                        darker: '#20142C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Gradient Background */
+        .brand-gradient {
+            background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        /* Fullscreen Layout */
+        .full-width {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 640px) {
+            .mobile-stack {
+                flex-direction: column !important;
+            }
+            .mobile-full-width {
+                width: 100% !important;
+            }
+            .mobile-p-2 {
+                padding: 0.5rem !important;
+            }
+            .mobile-text-sm {
+                font-size: 0.875rem !important;
+            }
+            .mobile-hidden {
+                display: none !important;
+            }
+        }
+        
+        /* Fix iframe aspect ratio on mobile */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Fix text overflow on small screens */
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Hamburger Menu Styles */
+        .hamburger-btn {
+            transition: all 0.3s ease;
+        }
+        
+        /* Menu icon visibility */
+        .menu-icon {
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            #sidebar-menu.w-0 .menu-icon {
+                opacity: 0;
+                width: 0;
+                visibility: hidden;
+            }
+            
+            #sidebar-menu.w-64 .menu-icon {
+                opacity: 1;
+                width: auto;
+                visibility: visible;
+                margin-right: 0.75rem;
+            }
+            
+            #sidebar-menu.w-0 .menu-text {
+                display: none;
+            }
+            
+            #sidebar-menu.w-64 .menu-text {
+                display: inline;
+            }
+        }
+        
+        .hamburger-line {
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+        
+        .hamburger-active .hamburger-line:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        
+        .hamburger-active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-active .hamburger-line:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        /* Mobile Menu Overlay */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 25;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        {% block additional_styles %}{% endblock %}
+    </style>
+</head>
+<body class="bg-gray-100 flex h-screen overflow-hidden" id="learning-hub-body">
+    <!-- Menu Overlay -->
+    <div class="menu-overlay" id="menu-overlay"></div>
+    <!-- Side Menu -->
+    <!-- Mobile Hamburger Menu Button -->
+    <div class="lg:hidden fixed top-4 left-4 z-40 brand-gradient rounded-lg shadow-lg" id="mobile-menu-toggle">
+        <button class="hamburger-btn p-3 flex flex-col justify-center items-center gap-1 text-white focus:outline-none focus:ring-2 focus:ring-white" aria-label="Open Menu">
+            <span class="hamburger-line w-6 h-0.5 bg-white rounded-full"></span>
+            <span class="hamburger-line w-6 h-0.5 bg-white rounded-full"></span>
+            <span class="hamburger-line w-6 h-0.5 bg-white rounded-full"></span>
+            <span class="sr-only">Menu</span>
+        </button>
+    </div>
+    
+    <aside class="brand-gradient text-white w-0 sm:w-16 lg:w-64 flex flex-col h-screen fixed left-0 top-0 transition-all duration-300 z-30 overflow-hidden" id="sidebar-menu">
+        <!-- Close Button (Mobile Only) -->
+        <div class="lg:hidden absolute top-4 right-4 text-white">
+            <button id="close-sidebar" class="focus:outline-none p-2" aria-label="Close Menu">
+                <i class="fas fa-times" aria-hidden="true"></i>
+                <span class="sr-only">Close Menu</span>
+            </button>
+        </div>
+        <!-- Logo Area -->
+        <div class="p-4 border-b border-opacity-20 border-white">
+            <div class="flex items-center">
+                <span class="text-white font-bold text-xl mr-2 hidden md:inline menu-text">Mangi Learning</span>
+                <span class="bg-white bg-opacity-20 text-white text-xs px-2 py-1 rounded hidden md:inline menu-text">Hub</span>
+                <span class="text-white font-bold text-xl md:hidden">M</span>
+            </div>
+        </div>
+        
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-2 py-4 space-y-2">
+            <a href="{% url 'learninghub:dashboard' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'dashboard' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-home text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="{% url 'learninghub:course_list' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'course_list' or request.resolver_match.url_name == 'course_detail' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-graduation-cap text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="courses">Courses</span>
+            </a>
+            <a href="{% url 'learninghub:sponsor_list' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'sponsor_list' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-handshake text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="sponsors">Sponsors</span>
+            </a>
+            <a href="{% url 'learninghub:resources' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'resources' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-book-open text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="lessons">Lessons</span>
+            </a>
+            <a href="{% url 'learninghub:progress' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'progress' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-chart-line text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="myProgress">My Progress</span>
+            </a>
+            <a href="{% url 'learninghub:tutorials' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'tutorials' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-chalkboard-teacher text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="tutorials">Tutorials</span>
+            </a>
+            <a href="{% url 'learninghub:workshops' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'workshops' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-tools text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text">Workshops</span>
+            </a>
+            <a href="{% url 'learninghub:certifications' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'certifications' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-certificate text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="certifications">Certifications</span>
+            </a>
+            <a href="{% url 'learninghub:community' %}" class="flex items-center p-2 rounded-md {% if request.resolver_match.url_name == 'community' %}bg-white bg-opacity-30{% else %}hover:bg-white hover:bg-opacity-20{% endif %} text-white transition-colors duration-200">
+                <i class="fas fa-users text-xl md:mr-3 opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="community">Community</span>
+            </a>
+        </nav>
+        
+        <!-- User Profile Section -->
+        <div class="p-4 border-t border-white border-opacity-20">
+            <a href="#" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-md transition-colors duration-200">
+                <i class="fas fa-cog text-xl opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="settings">Settings</span>
+            </a>
+        </div>
+        <div class="p-4 border-t border-white border-opacity-20">
+            <a href="#" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-md transition-colors duration-200">
+                <i class="fas fa-headset text-xl opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="helpCenter">Help Center</span>
+            </a>
+        </div>
+        <div class="p-4 border-t border-white border-opacity-20">
+            <a href="#" class="flex items-center space-x-3 text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-md transition-colors duration-200">
+                <i class="fas fa-user-circle text-xl opacity-0 w-0 menu-icon"></i>
+                <span class="hidden md:inline menu-text" data-i18n="userProfile">User Profile</span>
+            </a>
+        </div>
+        
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-1 overflow-auto pl-0 sm:pl-16 lg:pl-64 w-full">
+        <!-- Top Navigation Bar -->
+        <div class="bg-white shadow-md sticky top-0 z-20">
+            <div class="w-full px-0 relative">
+                <!-- Back to Main Site Link -->
+                <a href="/" class="absolute left-0 top-0 py-5 px-3 text-gray-600 hover:text-primary flex items-center z-10">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="text-sm font-medium ml-1 hidden sm:inline" data-i18n="mainSite">Main Site</span>
+                </a>
+                
+                <div class="flex justify-between h-16 px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                    <div class="flex items-center">
+                        <!-- Learning Hub Title -->
+                        <div class="flex items-center ml-0 sm:ml-10">
+                            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Learning Hub</h1>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="flex-1 flex items-center justify-center px-2 lg:ml-6 lg:justify-end">
+                        <div class="max-w-lg w-full lg:max-w-xs">
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input id="search" name="search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm" placeholder="Search courses..." data-i18n-placeholder="search" type="search">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Navigation -->
+                    <div class="flex items-center space-x-1 sm:space-x-3">
+                        <!-- Resources Button -->
+                        <a href="{% url 'learninghub:resources' %}" class="p-2 ml-3 text-gray-600 hover:text-primary focus:outline-none flex items-center" aria-label="Learning Resources">
+                            <i class="fas fa-book-open mr-1"></i>
+                            <span class="hidden sm:inline text-sm" data-i18n="resources">Resources</span>
+                        </a>
+                        
+                        <!-- Notification Bell -->
+                        <button class="p-2 ml-3 text-gray-600 hover:text-primary focus:outline-none" aria-label="Notifications">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        
+                        <!-- Language Switcher -->
+                        <div class="ml-3 relative">
+                            <div>
+                                <button class="flex items-center text-sm text-gray-600 hover:text-primary focus:outline-none" id="language-menu-button" aria-expanded="false" aria-haspopup="true">
+                                    <i class="fas fa-globe mr-1"></i>
+                                    <span class="hidden sm:inline text-sm mr-1" data-i18n="language">Language</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+                            </div>
+                            <!-- Language Dropdown Menu -->
+                            <div id="language-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-20" role="menu" aria-orientation="vertical" aria-labelledby="language-menu">
+                                <div class="py-1" role="none">
+                                    <a href="#" id="flag-en" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem" onclick="setLanguage('en')">
+                                        <span class="inline-block w-5 h-4 mr-2 bg-contain bg-no-repeat" style="background-image: url('https://flagcdn.com/w20/gb.png')"></span>
+                                        English
+                                        <i class="fas fa-check ml-auto text-primary" id="lang-check-en"></i>
+                                    </a>
+                                    <a href="#" id="flag-sw" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem" onclick="setLanguage('sw')">
+                                        <span class="inline-block w-5 h-4 mr-2 bg-contain bg-no-repeat" style="background-image: url('https://flagcdn.com/w20/tz.png')"></span>
+                                        Kiswahili
+                                        <i class="fas fa-check ml-auto text-primary hidden" id="lang-check-sw"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        {% block learninghub_content %}{% endblock %}
+    </main>
+    
+    <!-- Additional Modals and Content -->
+    {% block additional_content %}{% endblock %}
+    
+    <!-- Common JavaScript -->
+    <script>
+        // Common JS functions across webapp
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add your common JavaScript here
+        });
+    </script>
+    
+    <!-- Page Specific JavaScript -->
+    {% block scripts %}{% endblock %}
+    <!-- Language Switcher JavaScript -->
+    <script>
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('language-dropdown');
+                const isClickInside = document.getElementById('language-menu-button').contains(event.target) || 
+                                      dropdown.contains(event.target);
+                
+                if (!isClickInside && !dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('hidden');
+                }
+            }, { once: true });
+        
+
+        // Initialize dropdown toggle
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('language-dropdown');
+            const button = document.getElementById('language-menu-button');
+            
+            const isClickInside = button.contains(e.target) || dropdown.contains(e.target);
+            
+            if (!isClickInside && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+            }
+        }, { once: true });
+
+        // Function to set language preference
+        function setLanguage(lang) {
+            // Store language preference in localStorage
+            localStorage.setItem('userLanguage', lang);
+            
+            // Update UI to reflect selected language
+            updateLanguageUI(lang);
+            
+            // Update text content for elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            
+            // Update placeholder text for inputs with data-i18n-placeholder attribute
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[lang][key]) {
+                    element.placeholder = translations[lang][key];
+                }
+            });
+            
+            // Handle course titles with special translation
+            document.querySelectorAll('[data-i18n-course]').forEach(element => {
+                const courseTitle = element.getAttribute('data-i18n-course');
+                if (translations[lang]['course_titles'] && translations[lang]['course_titles'][courseTitle]) {
+                    element.textContent = translations[lang]['course_titles'][courseTitle];
+                }
+            });
+            
+            // Close the dropdown
+            document.getElementById('language-dropdown').classList.add('hidden');
+        }
+        
+        // Function to update UI to reflect selected language
+        function updateLanguageUI(lang) {
+            // Hide all check marks
+            document.getElementById('lang-check-en').classList.add('hidden');
+            document.getElementById('lang-check-sw').classList.add('hidden');
+            
+            // Show check mark for selected language
+            document.getElementById('lang-check-' + lang).classList.remove('hidden');
+        }
+        
+        // Dictionary of translations for the entire application
+        const translations = {
+                'en': {
+                    'dashboard': 'Dashboard',
+                    'courses': 'Courses',
+                    'lessons': 'Vipidni',
+                    'tutorials': 'Tutorials',
+                    'certifications': 'Certifications',
+                    'community': 'Community',
+                    'sponsors': 'Sponsors',
+                    'profile': 'Profile',
+                    'searchPlaceholder': 'Search...',
+                    'notifications': 'Notifications',
+                    'settings': 'Settings',
+                    'logout': 'Logout',
+                    'backToMainSite': 'Back to Main Site',
+                    'language': 'Language',
+                    'welcomeMessage': 'Welcome to the Learning Hub!',
+                    'helloUser': 'Hello',
+                    'expandKnowledge': 'ready to expand your knowledge?',
+                    'aboutLearningHub': 'About Learning Hub',
+                    'learningHubDescription': 'Learning Hub is a free sponsor-supported training platform designed to help you build essential business skills and knowledge.',
+                    'keyFeatures': 'Key Features',
+                    'learnAtYourPace': 'Learn At Your Own Pace',
+                    'selfPacedLearning': 'Access self-paced learning materials anytime, anywhere that fit your busy schedule.',
+                    'sponsorContent': 'Industry-Sponsored Content',
+                    'relevantContent': 'Learn from industry-relevant content created with support from leading companies and organizations.',
+                    'earnCertifications': 'Earn Certifications',
+                    'completeCourses': 'Complete courses to earn certificates that demonstrate your business knowledge.',
+                    'joinCommunity': 'Join Our Community',
+                    'connectWithFellows': 'Connect with fellow learners and mentors to enhance your educational journey.',
+                    'exploreCourses': 'Explore Courses',
+                    // Course titles
+                    'course_titles': {
+                        'Basic Financial Management': 'Basic Financial Management',
+                        'Marketing for Small Business': 'Marketing for Small Business',
+                        'Digital Skills for Entrepreneurs': 'Digital Skills for Entrepreneurs',
+                        'Managing Business Money & Cash Flow': 'Managing Business Money & Cash Flow',
+                        'Access to Finance & How to Be Loan Ready': 'Access to Finance & How to Be Loan Ready',
+                        'Smart Pricing, Profit, and Inventory': 'Smart Pricing, Profit, and Inventory',
+                        'Branding, Packaging & Customer Loyalty': 'Branding, Packaging & Customer Loyalty',
+                        'Marketing & Digital Promotion': 'Marketing & Digital Promotion',
+                        'Business Compliance & Formalization': 'Business Compliance & Formalization',
+                        'Scaling Your Business & Creating Jobs': 'Scaling Your Business & Creating Jobs'
+                    },
+                    'allCourses': 'All Courses',
+                    'discoverCurriculum': 'Discover our comprehensive business education curriculum',
+                    'filterBySponsor': 'Filter by Sponsor:',
+                    'allSponsors': 'All Sponsors',
+                    'course': 'Course',
+                    'sponsoredBy': 'Sponsored by:',
+                    'progress': 'Progress',
+                    'startLearning': 'Start Learning',
+                    'continueLearning': 'Continue Learning',
+                    'reviewCourse': 'Review Course',
+                    'noCoursesAvailable': 'No courses are available yet. Please check back soon.',
+                    
+                    // Sponsor page translations
+                    'partnerWithLeaders': 'Partner with Industry Leaders',
+                    'sponsorDescription': 'Our sponsors offer exclusive programs, resources, and opportunities designed specifically for entrepreneurs and startups ready to scale. Discover how these partnerships can accelerate your business growth.',
+                    'fundingOpportunities': 'Funding Opportunities',
+                    'mentorshipPrograms': 'Mentorship Programs',
+                    'technicalResources': 'Technical Resources',
+                    'marketAccess': 'Market Access',
+                    'featuredSponsors': 'Featured Sponsors',
+                    'viewAll': 'View All',
+                    'featured': 'Featured',
+                    'entrepreneurPrograms': 'Entrepreneur Programs:',
+                    'startupFunding': 'Startup Funding',
+                    'mentorshipCoaching': 'Mentorship & Coaching',
+                    'exploreOpportunities': 'Explore Opportunities',
+                    'howSponsorsSupport': 'How Our Sponsors Support Entrepreneurs',
+                    'fundingInvestment': 'Funding & Investment',
+                    'fundingDescription': 'Access to capital, investor networks, and funding opportunities to grow your business.',
+                    'mentorship': 'Mentorship',
+                    'mentorshipDescription': 'Connect with industry experts who provide guidance, advice, and valuable feedback.',
+                    'techResourcesTitle': 'Technical Resources',
+                    'techResourcesDescription': 'Cloud credits, software licenses, and tools to build and scale your product.',
+                    'marketAccessTitle': 'Market Access',
+                    'marketAccessDescription': 'Opportunities to showcase your solution and access new markets and customers.',
+                    'sponsorNetwork': 'Our Sponsor Network',
+                    'sponsorProfile': 'Sponsor Profile',
+                    'sponsorInformation': 'Sponsor Information',
+                    'sponsorCourses': 'Courses by this Sponsor',
+                    'viewCourse': 'View Course',
+                    'contactSponsor': 'Contact Sponsor'
+                },
+                'sw': {
+                    'dashboard': 'Dashibodi',
+                    'courses': 'Kozi',
+                    'certifications': 'Vyeti',
+                    'community': 'Jumuiya',
+                    'sponsors': 'Wadhamini',
+                    'profile': 'Wasifu',
+                    'searchPlaceholder': 'Tafuta...',
+                    'notifications': 'Arifa',
+                    'settings': 'Mipangilio',
+                    'logout': 'Ondoka',
+                    'backToMainSite': 'Rudi kwenye Tovuti Kuu',
+                    'language': 'Lugha',
+                    'welcomeMessage': 'Karibu kwenye Kituo cha Kujifunza!',
+                    'helloUser': 'Habari',
+                    'expandKnowledge': 'uko tayari kupanua ujuzi wako?',
+                    'aboutLearningHub': 'Kuhusu Kituo cha Kujifunza',
+                    'learningHubDescription': 'Kituo cha Kujifunza ni jukwaa la mafunzo linalofadhiliwa na wadhamini lenye lengo la kukusaidia kujenga ujuzi na maarifa muhimu ya biashara.',
+                    'keyFeatures': 'Vipengele Muhimu',
+                    'learnAtYourPace': 'Jifunze kwa Kasi Yako Mwenyewe',
+                    'selfPacedLearning': 'Pata nyenzo za kujifunza wakati wowote, mahali popote zinazofaa ratiba yako ya shughuli nyingi.',
+                    'sponsorContent': 'Maudhui Yanayodhaminiwa na Viwanda',
+                    'relevantContent': 'Jifunze kutoka kwa maudhui muhimu ya viwanda yaliyoundwa kwa msaada kutoka kwa kampuni na mashirika makuu.',
+                    'earnCertifications': 'Pata Vyeti',
+                    'completeCourses': 'Kamilisha kozi ili kupata vyeti vinavyoonyesha maarifa yako ya biashara.',
+                    'joinCommunity': 'Jiunge na Jumuiya Yetu',
+                    'connectWithFellows': 'Unganisha na wanafunzi wenzako na washauri ili kuboresha safari yako ya elimu.',
+                    'exploreCourses': 'Tazama Kozi',
+                    // Course titles
+                    'course_titles': {
+                        'Entrepreneurship Mindset & Opportunity Discovery':'Ujashirimiamali na Ugunduzi wa Fursa',
+                        'Basic Financial Management': 'Usimamizi wa Kimsingi wa Fedha',
+                        'Using AI in Small Business': 'Matumizi ya akili bandia kwenye uendeshaji wa biashara',
+                        'Digital Skills for Entrepreneurs': 'Ujuzi wa Kidijitali kwa Wajasiriamali',
+                        'Managing Business Money & Cash Flow': 'Kusimamia Fedha za Biashara na Mtiririko wa Fedha',
+                        'Access to Finance & How to Be Loan Ready': 'Upatikanaji wa Fedha na Jinsi ya Kuwa Tayari kwa Mkopo',
+                        'Smart Pricing, Profit, and Inventory': 'Upangaji Bei wa Busara, Faida, na Hesabu ya Bidhaa',
+                        'Branding, Packaging & Customer Loyalty': 'Utambuzi wa Biashara, Ufungaji na Uaminifu wa Wateja',
+                        'Marketing & Digital Promotion': 'Masoko na Ukuzaji wa Kidijitali',
+                        'Business Compliance & Formalization': 'Uzingatiaji wa Biashara na Urasimishaji',
+                        'Scaling Your Business & Creating Jobs': 'Kupanua Biashara Yako na Kuunda Kazi'
+                    },
+                    'allCourses': 'Kozi Zote',
+                    'discoverCurriculum': 'Gundua mtaala wetu kamili wa elimu ya biashara',
+                    'filterBySponsor': 'Chuja kwa Mdhamini:',
+                    'allSponsors': 'Wadhamini Wote',
+                    'course': 'Kozi',
+                    'sponsoredBy': 'Imedhaminiwa na:',
+                    'progress': 'Maendeleo',
+                    'startLearning': 'Anza Kujifunza',
+                    'continueLearning': 'Endelea Kujifunza',
+                    'reviewCourse': 'Pitia Kozi',
+                    'noCoursesAvailable': 'Hakuna kozi zinazopatikana kwa sasa. Tafadhali angalia tena hivi karibuni.',
+                    
+                    // Sponsor page translations
+                    'partnerWithLeaders': 'Shiriki na Viongozi wa Sekta',
+                    'sponsorDescription': 'Wadhamini wetu wanatoa programu maalum, rasilimali, na fursa zilizoundwa mahususi kwa wajasiriamali na biashara zinazoanza kukua. Gundua jinsi ushirikiano huu unaweza kuharakisha ukuaji wa biashara yako.',
+                    'fundingOpportunities': 'Fursa za Ufadhili',
+                    'mentorshipPrograms': 'Programu za Ushauri',
+                    'technicalResources': 'Rasilimali za Kiufundi',
+                    'marketAccess': 'Upatikanaji wa Soko',
+                    'featuredSponsors': 'Wadhamini Maarufu',
+                    'viewAll': 'Tazama Zote',
+                    'featured': 'Maarufu',
+                    'entrepreneurPrograms': 'Programu za Wajasiriamali:',
+                    'startupFunding': 'Ufadhili wa Biashara Chipukizi',
+                    'mentorshipCoaching': 'Ushauri na Mafunzo',
+                    'exploreOpportunities': 'Chunguza Fursa',
+                    'howSponsorsSupport': 'Jinsi Wadhamini Wetu Wanavyosaidia Wajasiriamali',
+                    'fundingInvestment': 'Ufadhili na Uwekezaji',
+                    'fundingDescription': 'Upatikanaji wa mtaji, mitandao ya wawekezaji, na fursa za ufadhili kukuza biashara yako.',
+                    'mentorship': 'Ushauri',
+                    'mentorshipDescription': 'Unganisha na wataalamu wa sekta wanaotoa mwongozo, ushauri, na maoni muhimu.',
+                    'techResourcesTitle': 'Rasilimali za Kiufundi',
+                    'techResourcesDescription': 'Mikopo ya wingu, leseni za programu, na zana za kujenga na kupanua bidhaa yako.',
+                    'marketAccessTitle': 'Upatikanaji wa Soko',
+                    'marketAccessDescription': 'Fursa za kuonyesha suluhisho lako na kupata masoko na wateja wapya.',
+                    'sponsorNetwork': 'Mtandao wa Wadhamini Wetu',
+                    'sponsorProfile': 'Wasifu wa Mdhamini',
+                    'sponsorInformation': 'Taarifa za Mdhamini',
+                    'sponsorCourses': 'Kozi kutoka kwa Mdhamini huyu',
+                    'viewCourse': 'Tazama Kozi',
+                    'contactSponsor': 'Wasiliana na Mdhamini',
+                    'noSponsorsAvailable': 'Hakuna Wadhamini Wanaopatikana',
+                    'expandingSponsorNetwork': 'Tunapanua mtandao wetu wa wadhamini. Angalia tena hivi karibuni kwa fursa za ushirikiano za kusisimua.',
+                    'becomeASponsor': 'Una nia ya kuwa mdhamini?',
+                    'sponsorNetworkDescription': 'Jiunge na mtandao wetu wa kampuni zinazotanguliya katika sekta kusaidia kizazi kijacho cha wajasiriamali na wabunifu.',
+                    'contactUs': 'Wasiliana Nasi',
+                    'ourSponsors': 'Wadhamini Wetu',
+                    'sponsorShowcaseDesc': 'Unganika na mtandao wetu wa viongozi wa sekta wanaotoa ufadhili, ushauri, na rasilimali kusaidia biashara yako kukua.',
+                    'viewAllSponsors': 'Ona Wadhamini Wote',
+                    'learnMore': 'Jifunze Zaidi',
+                    
+                    // Dashboard translations
+                    'gladYoureHere': 'Tunafurahi kuwa upo hapa!',
+                    'aboutOurLearningHub': 'Kuhusu Kituo Chetu cha Kujifunza',
+                    'hubDescription': 'Hii ni',
+                    'sponsorSupported': 'jukwaa la mafunzo ya bure, linalofadhiliwa na wadhamini',
+                    'designedToHelp': 'lililoundwa kukusaidia kuelewa dhana za biashara kwa kasi yako mwenyewe.',
+                    'ownPace': 'Jifunze kwa Kasi Yako Mwenyewe',
+                    'accessAnytime': 'Fikia kozi wakati wowote, mahali popote na endelea na masomo kwa haraka au taratibu kadri unavyohitaji.',
+                    'industrySponsored': 'Maudhui Yanayofadhiliwa na Sekta',
+                    'contentDeveloped': 'Maudhui yetu yanatengenezwa kwa ushirikiano na washirika wakuu wa sekta kuhakikisha maarifa ya vitendo na yanayofaa.',
+                    'earnCertifications': 'Pata Vyeti',
+                    'completeCourses': 'Kamilisha kozi ili kupata vyeti vinavyoonyesha maarifa yako ya biashara.',
+                    'joinCommunity': 'Jiunge na Jamii Yetu',
+                    'connectWithFellows': 'Unganisha na wanafunzi wenzako na washauri kuboresha safari yako ya elimu.',
+                    'exploreCourses': 'Chunguza Kozi',
+                    'dailySponsor': 'Maonyesho ya Kila Siku ya Bidhaa za Wafadhili',
+                    'mostImportantFeature': 'Kipengele muhimu zaidi:',
+                    'learnAboutSponsors': 'Jifunze kuhusu bidhaa za wafadhili wetu kila siku na gundua jinsi zinavyoweza kuwa zana muhimu kwa ukuaji na mafanikio ya biashara yako'
+                }
+            };
+            
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile hamburger menu toggle
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const mobileMenuButton = mobileMenuToggle ? mobileMenuToggle.querySelector('button') : null;
+            const menuOverlay = document.getElementById('menu-overlay');
+            const sidebarMenu = document.getElementById('sidebar-menu');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const body = document.getElementById('learning-hub-body');
+            
+            // Function to toggle menu state
+            function toggleMenu(show) {
+                if (show) {
+                    // Show menu
+                    sidebarMenu.classList.add('w-64');
+                    sidebarMenu.classList.remove('w-0');
+                    body.classList.add('overflow-hidden');
+                    menuOverlay.classList.add('active');
+                    mobileMenuButton.classList.add('hamburger-active');
+                } else {
+                    // Hide menu
+                    sidebarMenu.classList.remove('w-64');
+                    sidebarMenu.classList.add('w-0');
+                    body.classList.remove('overflow-hidden');
+                    menuOverlay.classList.remove('active');
+                    mobileMenuButton.classList.remove('hamburger-active');
+                }
+            }
+            
+            if (mobileMenuButton && sidebarMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    const isMenuOpen = sidebarMenu.classList.contains('w-64');
+                    toggleMenu(!isMenuOpen);
+                });
+            }
+            
+            if (closeSidebar && sidebarMenu) {
+                closeSidebar.addEventListener('click', function() {
+                    toggleMenu(false);
+                });
+            }
+            
+            // Close menu when clicking on overlay
+            if (menuOverlay) {
+                menuOverlay.addEventListener('click', function() {
+                    toggleMenu(false);
+                });
+            }
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const isSidebar = event.target.closest('#sidebar-menu');
+                const isToggle = event.target.closest('#mobile-menu-toggle');
+                
+                if (!isSidebar && !isToggle && window.innerWidth < 1024 && 
+                    sidebarMenu && sidebarMenu.classList.contains('w-64')) {
+                    sidebarMenu.classList.remove('w-64');
+                    sidebarMenu.classList.add('w-0');
+                    body.classList.remove('overflow-hidden');
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024 && sidebarMenu) {
+                    sidebarMenu.classList.remove('w-0');
+                    sidebarMenu.classList.add('lg:w-64');
+                }
+            });
+        
+        // Initialize language preference on page load
+            // Get user's language preference or default to English
+            const userLang = localStorage.getItem('userLanguage') || 'en';
+            updateLanguageUI(userLang);
+            setLanguage(userLang);
+            
+            // Set up language dropdown toggle
+            const languageButton = document.getElementById('language-menu-button');
+            if (languageButton) {
+                languageButton.addEventListener('click', function() {
+                    const dropdown = document.getElementById('language-dropdown');
+                    if (dropdown) {
+                        dropdown.classList.toggle('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

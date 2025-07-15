@@ -204,6 +204,22 @@
             display: none;
         }
         
+        /* Loading Spinner CSS */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         .form-step.active {
             display: block;
         }
@@ -391,6 +407,57 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Password strength indicator styles */
+        .password-strength {
+            margin-top: -20px;
+            margin-bottom: 20px;
+        }
+        
+        .strength-meter {
+            height: 4px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+            margin-bottom: 10px;
+        }
+        
+        .strength-meter-fill {
+            height: 100%;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        
+        .password-requirements {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            row-gap: 4px;
+            column-gap: 10px;
+        }
+        
+        .requirement {
+            font-size: 12px;
+            color: #777;
+            margin: 0;
+            padding-left: 18px;
+            position: relative;
+        }
+        
+        .requirement:before {
+            content: "×";
+            position: absolute;
+            left: 0;
+            color: #C72C41;
+        }
+        
+        .requirement.valid {
+            color: #4CAF50;
+        }
+        
+        .requirement.valid:before {
+            content: "✓";
+            color: #4CAF50;
+        }
     </style>
 </head>
 <body>
@@ -456,6 +523,7 @@
                         <option value="hardware_store">Hardware Store</option>
                         <option value="liquor_Store">Liquor Store</option>
                         <option value="cosmetics_Store">Cosmetics Store</option>
+                        <option value="restaurant">Restaurant</option>
                     </select>
                 </div>
                 
@@ -524,6 +592,18 @@
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" required>
+                    <div id="passwordStrength" class="password-strength">
+                        <div class="strength-meter">
+                            <div class="strength-meter-fill" id="strengthMeter"></div>
+                        </div>
+                        <div class="password-requirements">
+                            <p id="lengthReq" class="requirement">At least 8 characters</p>
+                            <p id="upperReq" class="requirement">At least one uppercase letter</p>
+                            <p id="lowerReq" class="requirement">At least one lowercase letter</p>
+                            <p id="numberReq" class="requirement">At least one number</p>
+                            <p id="specialReq" class="requirement">At least one special character</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -571,8 +651,9 @@
     <!-- Loading Modal -->
     <div class="modal" id="loadingModal">
         <div class="modal-content">
-            <div style="margin-bottom: 20px;">
-                <img src="/api/placeholder/50/50" alt="Loading" />
+            <div style="margin-bottom: 20px;" class="loading-spinner">
+                <!-- Replace with a CSS spinner instead of an image -->
+                <div class="spinner"></div>
             </div>
             <p id="loadingText">Processing...</p>
         </div>
@@ -650,10 +731,30 @@
         
         // Set up event listeners
         function setupEventListeners() {
-            // Next buttons
+            // Store business details globally
+            let businessData = {};
+            
+            // Next/Back button handlers
             document.getElementById('nextStep1').addEventListener('click', () => {
                 if (validateStep1()) {
-                    currentStep.value = 1;
+                    // Save business details for later
+                    businessData = {
+                        business_name: document.getElementById('businessName').value,
+                        business_address: document.getElementById('businessAddress').value,
+                        business_type: document.getElementById('businessType').value,
+                        business_phone: document.getElementById('businessPhoneCode').value + document.getElementById('businessPhone').value,
+                        phone_network: document.getElementById('phoneNetwork').value
+                    };
+                    
+                    // If Lipa Number is enabled, add it
+                    if (document.getElementById('useLipaNumber').checked) {
+                        businessData.lipa_number = document.getElementById('lipaNumber').value;
+                    }
+                    
+                    // Store data in localStorage
+                    localStorage.setItem('businessData', JSON.stringify(businessData));
+                    
+                    currentStep.value++;
                     updateSteps();
                 }
             });
@@ -677,6 +778,10 @@
                 updateSteps();
                 clearInterval(timerInterval);
             });
+            
+            // Password validation
+            const passwordInput = document.getElementById('password');
+            passwordInput.addEventListener('input', validatePassword);
             
             // Verify OTP button
             document.getElementById('verifyOtpBtn').addEventListener('click', () => {
@@ -729,6 +834,70 @@
             });
         }
 
+        // Password validation function
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            const meter = document.getElementById('strengthMeter');
+            
+            // Check requirements
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[^A-Za-z0-9]/.test(password)
+            };
+            
+            // Update requirement UI
+            document.getElementById('lengthReq').classList.toggle('valid', requirements.length);
+            document.getElementById('upperReq').classList.toggle('valid', requirements.uppercase);
+            document.getElementById('lowerReq').classList.toggle('valid', requirements.lowercase);
+            document.getElementById('numberReq').classList.toggle('valid', requirements.number);
+            document.getElementById('specialReq').classList.toggle('valid', requirements.special);
+            
+            // Calculate strength
+            const meetsRequirements = Object.values(requirements).filter(Boolean).length;
+            let strength = 0;
+            
+            if (meetsRequirements === 0) {
+                strength = 0;
+            } else if (meetsRequirements <= 2) {
+                strength = 20;
+            } else if (meetsRequirements === 3) {
+                strength = 40;
+            } else if (meetsRequirements === 4) {
+                strength = 60;
+            } else {
+                strength = 80;
+            }
+            
+            // Check for common passwords
+            const commonPasswords = ['1234', '12345', '123456', 'password', 'qwerty', 'admin', 'welcome', 'pass123'];
+            if (commonPasswords.includes(password.toLowerCase())) {
+                strength = 10;
+                showMessage('Weak Password', 'This is a very common password and can be easily guessed. Please choose a stronger password.');
+            }
+            
+            // Check for personal info (would typically check against user data)
+            if (password.toLowerCase().includes('mangi') || password.toLowerCase().includes('pos')) {
+                strength = Math.min(strength, 30);
+            }
+            
+            // Update strength meter
+            meter.style.width = strength + '%';
+            
+            // Update color based on strength
+            if (strength < 30) {
+                meter.style.backgroundColor = '#ff3e36'; // Red
+            } else if (strength < 60) {
+                meter.style.backgroundColor = '#ffad36'; // Orange
+            } else {
+                meter.style.backgroundColor = '#5db85c'; // Green
+            }
+            
+            return meetsRequirements >= 3 && !commonPasswords.includes(password.toLowerCase());
+        }
+
         // Validate step 1
         function validateStep1() {
             const businessName = document.getElementById('businessName').value;
@@ -758,6 +927,13 @@
                 return false;
             }
             
+            // Password validation
+            const isPasswordValid = validatePassword();
+            if (!isPasswordValid) {
+                showMessage('Error', 'Your password does not meet the security requirements. Please create a stronger password.');
+                return false;
+            }
+            
             if (password !== confirmPassword) {
                 showMessage('Error', 'Passwords do not match');
                 return false;
@@ -773,79 +949,410 @@
         
         // Register function
         function register() {
-            showLoading('Registering...');
-            
-            // Simulate API call with setTimeout
-            setTimeout(() => {
-                hideLoading();
-                currentStep.value = 2;
-                updateSteps();
-                startOtpTimer();
-            }, 2000);
-        }
-        
-        // Verify OTP function
-        function verifyOtp() {
-            const otp = document.querySelectorAll('.otp-input').map(input => input.value).join('');
-            
-            if (otp.length !== 5) {
-                showMessage('Error', 'Please enter the complete OTP');
-                return;
-            }
-            
-            showLoading('Verifying...');
-            
-            // Simulate API call with setTimeout
-            setTimeout(() => {
-                hideLoading();
-                showMessage('Success', 'Phone number verified successfully');
-                
-                // Simulate redirection
-                setTimeout(() => {
-                    showMessage('Success', 'Registration completed successfully. Redirecting to dashboard...');
-                }, 2000);
-            }, 2000);
-        }
-        
-        // Resend OTP function
-        function resendOtpCode() {
-            document.querySelectorAll('.otp-input').forEach(input => {
-                input.value = '';
+    showLoading('Registering user...');
+    
+    // Get form values
+    const fullName = document.getElementById('fullName').value;
+    // Split full name into first name and last name
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+    
+    const phoneCode = document.getElementById('personalPhoneCode').value;
+    const phone = document.getElementById('personalPhone').value;
+    const phoneNumber = phoneCode + phone;
+    const password = document.getElementById('password').value;
+    
+    // Prepare data for API call
+    const userData = {
+        first_name: firstName,
+        last_name: lastName,
+        phoneNumber: phoneNumber,
+        password: password
+    };
+    
+    // Make actual API call to register endpoint
+    fetch('/Registration/users/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify(userData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Registration failed');
             });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('User registration response:', data);
+        
+        // Store user ID for later use - check actual response structure
+        const userId = data.id || data.user_id;
+        
+        if (userId) {
+            localStorage.setItem('registeredUserId', userId);
+            localStorage.setItem('registeredPhoneNumber', phoneNumber);
             
-            showLoading('Sending new OTP...');
-            
-            // Simulate API call with setTimeout
-            setTimeout(() => {
-                hideLoading();
-                showMessage('Information', 'OTP has been resent successfully');
-                startOtpTimer();
-            }, 2000);
+            // Register the business immediately after user registration
+            registerBusiness(userId);
+        } else {
+            hideLoading();
+            showMessage('Error', 'User registration failed. Please try again.');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Registration error:', error);
+        showMessage('Error', 'Failed to register: ' + error.message);
+    });
+}
+
+// Function to get CSRF token from cookies
+function getCsrfToken() {
+    const name = 'csrftoken=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const cookieArray = decodedCookie.split(';');
+    
+    for (let i = 0; i < cookieArray.length; i++) {
+        let cookie = cookieArray[i].trim();
+        if (cookie.indexOf(name) === 0) {
+            return cookie.substring(name.length, cookie.length);
+        }
+    }
+    return '';
+}
+
+// Register business function
+function registerBusiness(userId) {
+    showLoading('Registering business...');
+    
+    // Get stored business data
+    const businessDataStr = localStorage.getItem('businessData');
+    
+    if (!businessDataStr || !userId) {
+        hideLoading();
+        showMessage('Error', 'Business information or user data is missing');
+        return;
+    }
+    
+    const businessData = JSON.parse(businessDataStr);
+    
+    // Prepare data for API call
+    const apiData = {
+        businessName: businessData.business_name,
+        businessAddress: businessData.business_address,
+        businessType: businessData.business_type,
+        businessPhone: businessData.business_phone,
+        owner: userId
+    };
+    
+    // Add lipa number if present
+    if (businessData.lipa_number) {
+        apiData.lipaNumber = businessData.lipa_number;
+    }
+    
+    // Make API call to register business
+    fetch('/Registration/businesse/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify(apiData)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.message || data.errors ? JSON.stringify(data.errors) : 'Business registration failed');
+            });
+        }
+    })
+    .then(data => {
+        hideLoading();
+        console.log('Business registration response:', data);
+        
+        // After business registration succeeds, send OTP
+        if (data && data.id) {
+            const userId = localStorage.getItem('registeredUserId');
+            localStorage.setItem('registeredBusinessId', data.id);
+            sendOTP(userId, data.id);
+        } else {
+            showMessage('Error', 'Business registration successful but no business ID returned');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Business registration error:', error);
+        showMessage('Error', 'Business registration failed: ' + error.message);
+    });
+}
+
+// Function to send OTP after business registration
+function sendOTP(userId, businessId) {
+    showLoading('Sending verification code...');
+    
+    // If parameters are not provided, try to get from localStorage
+    if (!userId) {
+        userId = localStorage.getItem('registeredUserId');
+    }
+    
+    if (!businessId) {
+        businessId = localStorage.getItem('registeredBusinessId');
+    }
+    
+    // Get stored phone number
+    const phoneNumber = localStorage.getItem('registeredPhoneNumber');
+    
+    if (!userId || !businessId || !phoneNumber) {
+        hideLoading();
+        showMessage('Error', 'User and business data not found');
+        console.error('Missing data for OTP:', { userId, businessId, phoneNumber });
+        return;
+    }
+    
+    console.log('Sending OTP with data:', { phoneNumber, businessId });
+    
+    // Make API call to send OTP
+    fetch('/sms/send-otp/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            personal_number: phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber,
+            business_id: businessId
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Failed to send OTP');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        hideLoading();
+        // Move to OTP verification step
+        currentStep.value = 2;
+        updateSteps();
+        startOtpTimer();
+        
+        showMessage('Success', 'Verification code sent to your phone. Please verify to complete registration.');
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('OTP sending error:', error);
+        showMessage('Error', 'Failed to send verification code: ' + error.message);
+    });
+}
+
+function verifyOtp() {
+    showLoading('Verifying...');
+    
+    // Get OTP digits from separate inputs
+    const otp1 = document.getElementById('otp1').value;
+    const otp2 = document.getElementById('otp2').value;
+    const otp3 = document.getElementById('otp3').value;
+    const otp4 = document.getElementById('otp4').value;
+    const otp5 = document.getElementById('otp5').value;
+    
+    // Combine OTP digits
+    const otpCode = otp1 + otp2 + otp3 + otp4 + otp5;
+    
+    // Validate OTP
+    if (!otpCode || otpCode.length !== 5) {
+        hideLoading();
+        showMessage('Error', 'Please enter the complete 5-digit OTP code');
+        return;
+    }
+    
+    // Get stored user ID and phone number
+    const userId = localStorage.getItem('registeredUserId');
+    const phoneNumber = localStorage.getItem('registeredPhoneNumber');
+    
+    if (!userId || !phoneNumber) {
+        hideLoading();
+        showMessage('Error', 'User information is missing. Please try registering again.');
+        return;
+    }
+    
+    // Format phone number to ensure it has a + prefix
+    const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+    
+    // Get business ID as well
+    const businessId = localStorage.getItem('registeredBusinessId');
+    
+    console.log('Verifying OTP with data:', { 
+        phone: formattedPhone, 
+        otp: otpCode, 
+        userId: userId,
+        businessId: businessId
+    });
+    
+    // Make actual API call to verify OTP endpoint
+    // Log the exact data being sent to the server with more detailed information
+    console.log('PHONE RAW:', phoneNumber);
+    console.log('PHONE FORMATTED:', formattedPhone);
+    console.log('OTP CODE:', otpCode);
+    console.log('USER ID:', userId);
+    console.log('BUSINESS ID:', businessId);
+    
+    // Fix the parameter name to match what the backend expects
+    const reqData = {
+        phoneNumber: formattedPhone,  // Changed from personal_number to phoneNumber
+        otp: otpCode,
+        user_id: userId,
+        business_id: businessId
+    };
+    
+    console.log('SENDING OTP VERIFICATION REQUEST:', JSON.stringify(reqData));
+    
+    fetch('/sms/verify-otp/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify(reqData)
+    })
+    .then(async response => {
+        console.log('OTP verification response status:', response.status);
+        
+        if (!response.ok) {
+            // Try to get the response text to see what's being returned
+            const text = await response.text();
+            console.log('Error response from server:', text.substring(0, 500)); // Log first 500 chars
+            throw new Error('OTP verification failed: ' + response.status);
         }
         
-        // OTP Timer functions
-        function startOtpTimer() {
+        // Try to parse as JSON
+        const text = await response.text();
+        console.log('Success response from server:', text);
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Error parsing JSON:', e);
+            throw new Error('Invalid JSON response from server');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('OTP verification error:', error);
+        showMessage('Error', 'Failed to verify OTP. Please try again. See console for details.');
+        return Promise.reject(error); // Stop the promise chain
+    })
+    .then(data => {
+        hideLoading();
+        showMessage('Success', 'Phone number verified successfully! Registration complete.');
+        
+        // Redirect to dashboard after successful verification
+        setTimeout(() => {
+            window.location.href = '/webapp/dashboard/'; // Adjust the redirect URL as needed
+        }, 2000);
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('OTP verification error:', error);
+        showMessage('Error', 'OTP verification failed: ' + error.message);
+    });
+}
+
+// Resend OTP function
+function resendOtpCode() {
+    if (timerSeconds > 0) {
+        showMessage('Information', `Please wait ${timerSeconds} seconds before requesting a new OTP`);
+        return;
+    }
+    
+    showLoading('Resending OTP...');
+    
+    // Get stored user ID and phone number
+    const userId = localStorage.getItem('registeredUserId');
+    const phoneNumber = localStorage.getItem('registeredPhoneNumber');
+    
+    if (!userId || !phoneNumber) {
+        hideLoading();
+        showMessage('Error', 'User information is missing. Please try registering again.');
+        return;
+    }
+    
+    // Format phone number to ensure it has a + prefix
+    const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+    
+    // Get business ID as well
+    const businessId = localStorage.getItem('registeredBusinessId');
+    
+    console.log('Resending OTP with data:', { 
+        phone: formattedPhone, 
+        userId: userId,
+        businessId: businessId
+    });
+    
+    // Make actual API call to resend OTP endpoint
+    fetch('/sms/resend-otp/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            phoneNumber: formattedPhone, // Changed from personal_number to phoneNumber to match backend
+            user_id: userId,
+            business_id: businessId
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Failed to resend OTP');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        hideLoading();
+        showMessage('Information', 'OTP has been resent successfully');
+        startOtpTimer();
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Resend OTP error:', error);
+        showMessage('Error', 'Failed to resend OTP: ' + error.message);
+    });
+}
+
+// OTP Timer functions
+function startOtpTimer() {
+    clearInterval(timerInterval);
+    timerSeconds = 60;
+    document.getElementById('resendOtpBtn').disabled = true;
+    updateTimerDisplay();
+    
+    timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+        
+        if (timerSeconds <= 0) {
             clearInterval(timerInterval);
-            timerSeconds = 60;
-            document.getElementById('resendOtpBtn').disabled = true;
-            updateTimerDisplay();
-            
-            timerInterval = setInterval(() => {
-                timerSeconds--;
-                updateTimerDisplay();
-                
-                if (timerSeconds <= 0) {
-                    clearInterval(timerInterval);
-                    document.getElementById('resendOtpBtn').disabled = false;
-                }
-            }, 1000);
+            document.getElementById('resendOtpBtn').disabled = false;
         }
-        
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timerSeconds / 60);
-            const seconds = timerSeconds % 60;
-            document.getElementById('otpTimer').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timerSeconds / 60);
+    const seconds = timerSeconds % 60;
+    document.getElementById('otpTimer').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
         
         // Modal functions
         function showLoading(message) {

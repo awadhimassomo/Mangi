@@ -3,25 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Order</title>
+    <title>Order #{{ order.order_number }} - Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Order #{{ order.order_number }}</h1>
-
-    <div>
-        <!-- Display PDF link or inline the PDF if the URL is available -->
-        <iframe src="{% url 'generate_order_pdf' order.token %}" width="100%" height="600px"></iframe>
-    </div>
-
-    <div style="margin-top: 20px;">
-        <button id="processOrderBtn" onclick="processOrder()">Process</button>
-        <button id="cancelOrderBtn" onclick="cancelOrder()">Cancel</button>
-        <button id="sendOrderBtn" onclick="sendOrder()">Send</button>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container max-w-5xl mx-auto my-8 px-4">
+        <!-- Order Header Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-wrap items-center justify-between mb-4">
+                <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-shopping-cart mr-3 text-blue-600"></i>
+                    Order #{{ order.order_number }}
+                </h1>
+                <div>
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold {% if order.status == 'Completed' %}bg-green-100 text-green-800{% elif order.status == 'Cancelled' %}bg-red-100 text-red-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="bg-gray-50 p-3 rounded">
+                    <h3 class="text-sm font-semibold text-gray-500">ORDER DETAILS</h3>
+                    <div class="mt-1">
+                        <p class="text-gray-800"><span class="font-medium">Date:</span> {{ order.order_date|date:"F j, Y" }}</p>
+                        {% if order.delivery_date %}
+                            <p class="text-gray-800"><span class="font-medium">Expected Delivery:</span> {{ order.delivery_date|date:"F j, Y" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded">
+                    <h3 class="text-sm font-semibold text-gray-500">SUPPLIER</h3>
+                    <div class="mt-1">
+                        <p class="text-gray-800 font-medium">{{ order.supplier.supplierName }}</p>
+                        <p class="text-gray-600 text-sm">{{ order.supplier.contactPerson }}</p>
+                        <p class="text-gray-600 text-sm">{{ order.supplier.contactPhone }}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded">
+                    <h3 class="text-sm font-semibold text-gray-500">BUSINESS</h3>
+                    <div class="mt-1">
+                        <p class="text-gray-800 font-medium">{{ order.business.business_name }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if order.notes %}
+            <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                <p class="text-blue-800"><span class="font-medium">Notes:</span> {{ order.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Order Items Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 overflow-hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Order Items</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full mb-4">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-4 text-left">Product</th>
+                            <th class="py-3 px-4 text-center">Quantity</th>
+                            <th class="py-3 px-4 text-right">Unit Price</th>
+                            <th class="py-3 px-4 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        {% for item in order.items.all %}
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-3 px-4 text-left">
+                                <div class="font-medium">{{ item.product_id.product_name }}</div>
+                                {% if item.product_id.barcode %}
+                                <div class="text-xs text-gray-500">SKU: {{ item.product_id.barcode }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-center">{{ item.quantity }}</td>
+                            <td class="py-3 px-4 text-right">TZS {{ item.unit_price|floatformat:2 }}</td>
+                            <td class="py-3 px-4 text-right font-medium">TZS {{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-4 text-center text-gray-500">No items in this order</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="border-t-2 border-gray-200">
+                            <td colspan="3" class="py-3 px-4 text-right font-bold">Total Order Amount:</td>
+                            <td class="py-3 px-4 text-right font-bold text-blue-600">
+                                TZS {{ order.items.all|dictsortreversed:"total_price"|slice:":1"|sum:"total_price"|floatformat:2 }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        
+        <!-- PDF Preview Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Order Document</h2>
+                <a href="{% url 'generate_order_pdf' order.token %}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-external-link-alt mr-1"></i> Open in New Tab
+                </a>
+            </div>
+            <div class="border border-gray-300 rounded">
+                <iframe src="{% url 'generate_order_pdf' order.token %}" width="100%" height="500px" class="rounded"></iframe>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Actions</h2>
+            
+            <div class="flex flex-wrap gap-4">
+                {% if order.status == 'Pending' %}
+                    <button id="processOrderBtn" onclick="processOrder()" class="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                        <i class="fas fa-check-circle mr-2"></i> Process Order
+                    </button>
+                    <button id="cancelOrderBtn" onclick="cancelOrder()" class="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                        <i class="fas fa-times-circle mr-2"></i> Cancel Order
+                    </button>
+                {% endif %}
+                <button id="sendOrderBtn" onclick="sendOrder()" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i> Send Order to Supplier
+                </button>
+                <a href="#" class="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                    <i class="fas fa-print mr-2"></i> Print Order
+                </a>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Set up toasts for notifications instead of alerts
+        function showNotification(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded shadow-lg flex items-center ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+            toast.innerHTML = `<i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 1s';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 1000);
+            }, 3000);
+        }
+        
         function processOrder() {
-            // Send AJAX request to process the order
             fetch(`/process_order/{{ order.token }}/`, {
                 method: 'POST',
                 headers: {
@@ -29,27 +164,39 @@
                 }
             }).then(response => {
                 if (response.ok) {
-                    alert('Order is being processed!');
+                    showNotification('Order is being processed!');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    throw new Error('Failed to process order');
                 }
-            }).catch(error => console.error('Error:', error));
+            }).catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to process order', 'error');
+            });
         }
 
         function cancelOrder() {
-            // Send AJAX request to cancel the order
-            fetch(`/cancel_order/{{ order.token }}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                }
-            }).then(response => {
-                if (response.ok) {
-                    alert('Order has been canceled!');
-                }
-            }).catch(error => console.error('Error:', error));
+            if (confirm('Are you sure you want to cancel this order?')) {
+                fetch(`/cancel_order/{{ order.token }}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        showNotification('Order has been canceled!');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        throw new Error('Failed to cancel order');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to cancel order', 'error');
+                });
+            }
         }
 
         function sendOrder() {
-            // Send AJAX request to send the order
             fetch(`/send_order/{{ order.token }}/`, {
                 method: 'POST',
                 headers: {
@@ -57,9 +204,14 @@
                 }
             }).then(response => {
                 if (response.ok) {
-                    alert('Order has been sent!');
+                    showNotification('Order has been sent to the supplier!');
+                } else {
+                    throw new Error('Failed to send order');
                 }
-            }).catch(error => console.error('Error:', error));
+            }).catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to send order', 'error');
+            });
         }
     </script>
 </body>

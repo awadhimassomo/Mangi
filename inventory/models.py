@@ -10,6 +10,87 @@ from django.utils.crypto import get_random_string
 import requests
 
 
+# Loan model for tracking loans to customers, employees and suppliers
+class Loan(models.Model):
+    # Loan status choices
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('overdue', 'Overdue'),
+    ]
+
+    # Borrower type choices
+    BORROWER_TYPE_CHOICES = [
+        ('customer', 'Customer'),
+        ('employee', 'Employee'),
+        ('supplier', 'Supplier'),
+    ]
+
+    # Loan type choices
+    LOAN_TYPE_CHOICES = [
+        ('product_purchase', 'Product Purchase'),
+        ('salary_advance', 'Salary Advance'),
+        ('inventory_credit', 'Inventory Credit'),
+        ('equipment_purchase', 'Equipment Purchase'),
+        ('catering_services', 'Catering Services'),
+        ('other', 'Other'),
+    ]
+
+    # Fields
+    loan_id = models.CharField(max_length=20, unique=True)
+    borrower_name = models.CharField(max_length=255)
+    borrower_type = models.CharField(max_length=50, choices=BORROWER_TYPE_CHOICES)
+    loan_type = models.CharField(max_length=50, choices=LOAN_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    date_issued = models.DateField(default=timezone.now)
+    due_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    business = models.ForeignKey('registration.Business', on_delete=models.CASCADE)
+    
+    # Extra fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True, null=True)
+    paid_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-date_issued']
+
+    def __str__(self):
+        return f"{self.loan_id} - {self.borrower_name} ({self.get_borrower_type_display()})"
+
+    def save(self, *args, **kwargs):
+        # Generate loan ID if not provided
+        if not self.loan_id:
+            year = timezone.now().year
+            month = timezone.now().month
+            count = Loan.objects.filter(date_issued__year=year, date_issued__month=month).count() + 1
+            self.loan_id = f"LN-{year}-{month:02d}-{count:03d}"
+            
+        # Automatically set status to overdue if past due date
+        if self.due_date < timezone.now().date() and self.status not in ['paid', 'overdue']:
+            self.status = 'overdue'
+            
+        super().save(*args, **kwargs)
+
+    @property
+    def remaining_amount(self):
+        return self.amount - self.paid_amount
+
+    @property
+    def days_remaining(self):
+        if self.due_date < timezone.now().date():
+            return 0
+        return (self.due_date - timezone.now().date()).days
+
+    @property
+    def is_fully_paid(self):
+        return self.paid_amount >= self.amount
+
+
 # Category model
 class Category(models.Model):
     categoryName = models.CharField(max_length=255)

@@ -1,0 +1,78 @@
+{% extends 'learninghub/base_learninghub.html' %}
+
+{% block title %}Resources | Learning Hub{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Learning Resources</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Resource Cards -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-32 brand-gradient flex items-center justify-center">
+                <i class="fas fa-book text-white text-4xl"></i>
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-2">E-Books</h3>
+                <p class="text-gray-600 mb-4">Access our collection of educational e-books and PDF resources.</p>
+                <a href="#" class="text-primary hover:underline font-medium">Browse E-Books →</a>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-32 brand-gradient flex items-center justify-center">
+                <i class="fas fa-video text-white text-4xl"></i>
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-2">Video Library</h3>
+                <p class="text-gray-600 mb-4">Watch instructional videos and recorded lectures on various topics.</p>
+                <a href="#" class="text-primary hover:underline font-medium">Browse Videos →</a>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-32 brand-gradient flex items-center justify-center">
+                <i class="fas fa-file-alt text-white text-4xl"></i>
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-2">Practice Materials</h3>
+                <p class="text-gray-600 mb-4">Access worksheets, quizzes, and practice exercises to test your knowledge.</p>
+                <a href="#" class="text-primary hover:underline font-medium">Browse Materials →</a>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-32 brand-gradient flex items-center justify-center">
+                <i class="fas fa-code text-white text-4xl"></i>
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-2">Code Samples</h3>
+                <p class="text-gray-600 mb-4">Example code snippets and sample projects to help you learn.</p>
+                <a href="#" class="text-primary hover:underline font-medium">Browse Code →</a>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-32 brand-gradient flex items-center justify-center">
+                <i class="fas fa-link text-white text-4xl"></i>
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-2">External Links</h3>
+                <p class="text-gray-600 mb-4">Curated links to valuable external resources and reference materials.</p>
+                <a href="#" class="text-primary hover:underline font-medium">Browse Links →</a>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-32 brand-gradient flex items-center justify-center">
+                <i class="fas fa-question-circle text-white text-4xl"></i>
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-2">FAQs</h3>
+                <p class="text-gray-600 mb-4">Answers to frequently asked questions about our courses and content.</p>
+                <a href="#" class="text-primary hover:underline font-medium">View FAQs →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+/* Learning Hub Login Page Styles */
+
+/* Brand Colors */
+:root {
+    --brand-primary: #C72C41;
+    --brand-secondary: #801336;
+    --brand-accent: #EE4540;
+}
+
+/* Logo styles */
+.logo-image {
+    max-height: 80px;
+}
+
+/* Logo fallback */
+#fallback-logo {
+    width: 80px;
+    height: 80px;
+}
+
+/* Gradient background for the left panel */
+.login-left-panel {
+    background: linear-gradient(145deg, var(--brand-secondary), var(--brand-primary), var(--brand-accent)) !important;
+    background-color: var(--brand-primary) !important;
+}
+
+/* Override Bootstrap primary color with brand color */
+.text-danger, .btn-danger, .bg-danger {
+    color: var(--brand-primary) !important;
+}
+
+.btn-danger {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-secondary) !important;
+}
+
+.btn-danger:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+}
+
+/* Icon circles */
+.icon-circle {
+    width: 40px;
+    height: 40px;
+}
+
+.icon-circle i {
+    color: var(--brand-primary);
+}
+
+/* Testimonial section */
+.testimonial-box {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Sponsor logos */
+.sponsor-logo {
+    max-height: 30px;
+    max-width: 70px;
+    filter: brightness(0) invert(1);
+}

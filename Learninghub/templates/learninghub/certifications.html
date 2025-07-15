@@ -1,0 +1,140 @@
+{% extends 'learninghub/base_learninghub.html' %}
+
+{% block title %}Certifications | Learning Hub{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Certifications</h1>
+    
+    <!-- Introduction -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">Earn Industry-Recognized Certifications</h2>
+        <p class="text-gray-600 mb-4">Enhance your resume and demonstrate your expertise with our professional certifications. Each certification requires completing a series of courses and passing a final assessment.</p>
+        <div class="flex flex-wrap gap-3">
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-md">
+                <i class="fas fa-check-circle mr-1"></i> Self-paced learning
+            </span>
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-md">
+                <i class="fas fa-check-circle mr-1"></i> Shareable credentials
+            </span>
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-md">
+                <i class="fas fa-check-circle mr-1"></i> Industry recognition
+            </span>
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-md">
+                <i class="fas fa-check-circle mr-1"></i> Lifetime access
+            </span>
+        </div>
+    </div>
+    
+    <!-- Available Certifications -->
+    <h2 class="text-xl font-bold mb-4">Available Certifications</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Certification Card -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-3 brand-gradient"></div>
+            <div class="p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-bold text-lg">Web Development Professional</h3>
+                    <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md">Popular</span>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Master the essential skills of modern web development including HTML, CSS, JavaScript, and responsive design frameworks.</p>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Completion Requirements</span>
+                        <span class="font-medium">4 courses</span>
+                    </div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Estimated Duration</span>
+                        <span class="font-medium">3 months</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Difficulty Level</span>
+                        <span class="font-medium">Intermediate</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-5">
+                    <span class="font-medium text-primary">$199.99</span>
+                    <a href="#" class="inline-block px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">Enroll Now</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Certification Card -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-3 brand-gradient"></div>
+            <div class="p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-bold text-lg">Data Science & Analytics</h3>
+                    <span class="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-md">New</span>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Develop expertise in data analysis, visualization, machine learning fundamentals, and statistical modeling.</p>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Completion Requirements</span>
+                        <span class="font-medium">5 courses</span>
+                    </div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Estimated Duration</span>
+                        <span class="font-medium">4 months</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Difficulty Level</span>
+                        <span class="font-medium">Advanced</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-5">
+                    <span class="font-medium text-primary">$249.99</span>
+                    <a href="#" class="inline-block px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">Enroll Now</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Certification Card -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="h-3 brand-gradient"></div>
+            <div class="p-5">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-bold text-lg">Mobile App Development</h3>
+                    <span class="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-md">Featured</span>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Learn to build native and cross-platform mobile applications using industry-standard frameworks and tools.</p>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Completion Requirements</span>
+                        <span class="font-medium">4 courses</span>
+                    </div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Estimated Duration</span>
+                        <span class="font-medium">3 months</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Difficulty Level</span>
+                        <span class="font-medium">Intermediate</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-5">
+                    <span class="font-medium text-primary">$199.99</span>
+                    <a href="#" class="inline-block px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">Enroll Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Your Certifications Section -->
+    <h2 class="text-xl font-bold mb-4">Your Certifications</h2>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-center py-8">
+            <i class="fas fa-certificate text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-600 mb-2">No certifications yet</h3>
+            <p class="text-gray-500 mb-4">Enroll in a certification program to get started on your learning journey.</p>
+            <a href="#" class="inline-block px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">Browse Certifications</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

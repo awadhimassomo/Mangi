@@ -1,45 +1,187 @@
-{% extends 'Registration/base.html' %}
-{% block title %}Login{% endblock %}
 {% load static %}
-
-{% block content %}
-    <div class="form-body">
-        <div class="website-logo">
-            <a href="{% url 'Registration:login' %}">
-                <div class="logo">
-                    <img class="logo-size" src="{% static 'Registration/img/logo-light.svg' %}" alt="">
-                </div>
-            </a>
-        </div>
-        <div class="row">
-            <div class="img-holder">
-                <div class="bg"></div>
-                <div class="info-holder">
-
-                </div>
-            </div>
-            <div class="form-holder">
-                <div class="form-content">
-                    <div class="form-items">
-                        <h3>Get stock done .</h3>
-                        <p>Mali bila daftri hupotea.</p>
-                        <div class="page-links">
-                            <a href="login2.html" class="active">Login</a><a href="{% url 'Registration:register' %}">Register</a>
-                        </div>
-                        <form>
-                            <input class="form-control" type="text" name="username" placeholder="Phone-Number" required>
-                            <input class="form-control" type="password" name="password" placeholder="Password" required>
-                            <input type="checkbox" id="chk1"><label for="chk1">Remmeber me</label>
-                            <div class="form-button">
-                                <button id="submit" type="submit" class="ibtn">Login</button> <a href="{%  url 'Registration:forget' %}">Forget password?</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Hub Login</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-light': '#EE4540',
+                        primary: '#C72C41',
+                        secondary: '#801336',
+                        dark: '#510A32',
+                        darker: '#20142C',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <!-- Lottie Player -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+        .brand-gradient {
+            background: linear-gradient(135deg, #EE4540, #C72C41, #801336, #510A32);
+        }
+        .lottie-container {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="flex flex-col md:flex-row">
+                    <!-- LEFT SIDE: Login form -->
+                    <div class="w-full md:w-1/2 p-8 md:p-12">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h2>
+                        <p class="text-gray-600 mb-8">
+                            Simplify your workflow and boost your productivity<br>
+                            with Mangi's App. Get started for free.
+                        </p>
+                        
+                        <!-- Login Form -->
+                        <form method="post" action="/accounts/login/" class="space-y-6">
+                            {% csrf_token %}
+                            
+                            {% if form.errors %}
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                                <strong class="font-bold">Error!</strong>
+                                <span class="block sm:inline">Your username and password didn't match. Please try again.</span>
                             </div>
+                            {% endif %}
+                            
+                            <!-- Username Field -->
+                            <div>
+                                <input type="text" id="username" name="username" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                                    placeholder="Username" required>
+                            </div>
+                            
+                            <!-- Password Field -->
+                            <div class="relative">
+                                <input type="password" id="password" name="password" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                                    placeholder="Password" required>
+                                <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" title="Toggle password visibility" aria-label="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Remember Me Checkbox -->
+                            <div class="flex items-center">
+                                <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                            </div>
+                            
+                            <!-- Forgot Password Link -->
+                            <div class="text-right">
+                                <a href="{% url 'password_reset' %}" class="text-primary hover:text-secondary text-sm">
+                                    Forgot Password?
+                                </a>
+                            </div>
+                            
+                            <!-- Login Button -->
+                            <button type="submit" 
+                                class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-md transition duration-200">
+                                Login
+                            </button>
+
+                            {% if next %}
+                                <input type="hidden" name="next" value="{{ next }}">
+                            {% else %}
+                                <input type="hidden" name="next" value="/learninghub/dashboard/">
+                            {% endif %}
                         </form>
-                        <div class="other-links">
-                            <span>Or login with</span><a href="#">Facebook</a><a href="#">Google</a><a href="#">Linkedin</a>
+                        
+                        <!-- Divider -->
+                        <div class="my-6 flex items-center">
+                            <div class="grow border-t border-gray-200"></div>
+                            <span class="mx-4 text-sm text-gray-500">or continue with</span>
+                            <div class="grow border-t border-gray-200"></div>
+                        </div>
+                        
+                        <!-- Social Login Buttons -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <button class="flex justify-center items-center p-3 border border-gray-300 rounded-full" title="Continue with Google" aria-label="Continue with Google">
+                                <i class="fab fa-google"></i>
+                            </button>
+                            <button class="flex justify-center items-center p-3 border border-gray-300 rounded-full" title="Continue with Apple" aria-label="Continue with Apple">
+                                <i class="fab fa-apple"></i>
+                            </button>
+                            <button class="flex justify-center items-center p-3 border border-gray-300 rounded-full" title="Continue with Facebook" aria-label="Continue with Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Register Link -->
+                        <p class="mt-8 text-center text-sm text-gray-600">
+                            Not a member? <a href="/webapp/register/" class="text-primary hover:text-secondary">Register now</a>
+                        </p>
+                    </div>
+
+                    <!-- RIGHT SIDE: Illustration with Lottie Animation -->
+                    <div class="hidden md:block md:w-1/2 brand-gradient">
+                        <div class="h-full flex flex-col items-center justify-center p-12 relative">
+                            <!-- Main Lottie Animation -->
+                            <div class="relative w-full max-w-md">
+                                <!-- Lottie Animation -->
+                                <div class="flex justify-center">
+                                    <!-- Meditation/productivity Lottie animation -->
+                                    <lottie-player
+                                        src="{% static 'lottie/book.json' %}"
+                                        background="transparent"
+                                        speed="1"
+                                        class="lottie-container"
+                                        loop
+                                        autoplay>
+                                    </lottie-player>
+                                </div>
+                                
+                               
+                                <!-- Bottom text -->
+                                <div class="text-center mt-8 text-white">
+                                    <h3 class="font-bold text-xl">Make your work easier and organized</h3>
+                                    <p class="text-white text-opacity-90">with <span class="font-medium">Mangi's App</span></p>
+                                </div>
+                            </div>
+
+                            <!-- Image pagination dots -->
+                            <div class="flex space-x-2 mt-6">
+                                <div class="h-2 w-2 rounded-full bg-white bg-opacity-30"></div>
+                                <div class="h-2 w-2 rounded-full bg-white bg-opacity-30"></div>
+                                <div class="h-2 w-8 rounded-full bg-white"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-{% endblock %}
+
+    <!-- Password toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordField = document.getElementById('password');
+            const toggleBtn = document.getElementById('togglePassword');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+                    this.querySelector('i').className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -531,4 +531,3 @@ def get_routes(request):
     ]
     return Response(routes)
 
-

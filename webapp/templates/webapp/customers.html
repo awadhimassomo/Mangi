@@ -43,15 +43,19 @@
                 <p class="text-white opacity-80">Manage your customer relationships and track customer data</p>
             </div>
             <div class="flex items-center space-x-3">
-                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Add new customer">
+                <button id="addCustomerBtn" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Add new customer">
                     <i class="fas fa-plus mr-2"></i> Add Customer
                 </button>
-                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter by customer type" aria-label="Filter customers by type">
-                    <option value="all" selected>All Customers</option>
-                    <option value="regular">Regular</option>
-                    <option value="vip">VIP</option>
-                    <option value="corporate">Corporate</option>
-                </select>
+                <form method="GET" action="{% url 'webapp:customers' %}">
+                    {% if search_query %}
+                    <input type="hidden" name="search" value="{{ search_query }}">
+                    {% endif %}
+                    <select name="customer_type" class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter by customer type" aria-label="Filter customers by type" onchange="this.form.submit()">
+                        {% for value, label in customer_type_choices.items %}
+                        <option value="{{ value }}" {% if customer_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
             </div>
         </div>
     </div>
@@ -63,9 +67,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Total Customers</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">348</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 12 <span class="text-gray-400">new this month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ total_customers }}</h3>
+                    <p class="text-{% if new_customers_this_month > 0 %}green{% else %}red{% endif %}-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-{% if new_customers_this_month > 0 %}up{% else %}down{% endif %} mr-1"></i> {{ new_customers_this_month }} <span class="text-gray-400">new this month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
@@ -79,9 +83,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">VIP Customers</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">42</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 3 <span class="text-gray-400">new this month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ vip_customers }}</h3>
+                    <p class="text-{% if new_vip_this_month > 0 %}green{% else %}gray{% endif %}-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-{% if new_vip_this_month > 0 %}up{% elif new_vip_this_month < 0 %}down{% else %}right{% endif %} mr-1"></i> {{ new_vip_this_month }} <span class="text-gray-400">new this month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-yellow-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -95,9 +99,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Avg. Lifetime Value</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 325K</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 8.1% <span class="text-gray-400">vs last period</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ avg_lifetime_value }}</h3>
+                    <p class="text-{% if avg_change_percent > 0 %}green{% elif avg_change_percent < 0 %}red{% else %}gray{% endif %}-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-{% if avg_change_percent > 0 %}up{% elif avg_change_percent < 0 %}down{% else %}right{% endif %} mr-1"></i> {{ avg_change_percent_abs }}% <span class="text-gray-400">vs last period</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -111,9 +115,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Revenue (MTD)</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 4.2M</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 14.3% <span class="text-gray-400">vs last month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ revenue_this_month }}</h3>
+                    <p class="text-{% if revenue_change_percent > 0 %}green{% elif revenue_change_percent < 0 %}red{% else %}gray{% endif %}-500 text-sm font-medium mt-2">
+                        <i class="fas fa-arrow-{% if revenue_change_percent > 0 %}up{% elif revenue_change_percent < 0 %}down{% else %}right{% endif %} mr-1"></i> {{ revenue_change_percent_abs }}% <span class="text-gray-400">vs last month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -127,10 +131,16 @@
     <div class="bg-white rounded-lg shadow mb-8">
         <div class="flex justify-between items-center p-6 border-b">
             <h2 class="text-xl font-semibold">Customer Directory</h2>
-            <div class="relative">
-                <input type="text" placeholder="Search customers..." class="px-4 py-2 border rounded-md pr-10" aria-label="Search customers">
-                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-            </div>
+            <form method="GET" action="{% url 'webapp:customers' %}" class="relative">
+                {% if customer_type != 'all' %}
+                <input type="hidden" name="customer_type" value="{{ customer_type }}">
+                {% endif %}
+                <input type="text" name="search" placeholder="Search customers..." value="{{ search_query }}" class="px-4 py-2 border rounded-md pr-10" aria-label="Search customers">
+                <button type="submit" class="absolute right-3 top-3 text-gray-400 bg-transparent border-0 p-0">
+                    <i class="fas fa-search"></i>
+                    <span class="sr-only">Search</span>
+                </button>
+            </form>
         </div>
         
         <div class="overflow-x-auto">
@@ -148,173 +158,162 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <!-- Customer 1 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">JD</span>
+                    {% if customers %}
+                        {% for customer in customers %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                        {% with initials=customer.name|slice:":2"|upper %}
+                                        <span class="font-medium text-gray-600">{{ initials }}</span>
+                                        {% endwith %}
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
+                                        <div class="text-sm text-gray-500">Since {{ customer.date_added|date:"M Y" }}</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">John Doe</div>
-                                    <div class="text-sm text-gray-500">Since Jan 2023</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">+255 754 123 456</div>
-                            <div class="text-sm text-gray-500">johndoe@example.com</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Arusha, Tanzania</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">24</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 625,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yesterday</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-vip">VIP</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View customer details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit customer"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete customer"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Customer 2 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">MK</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Mary Kimaro</div>
-                                    <div class="text-sm text-gray-500">Since Apr 2023</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">+255 765 987 654</div>
-                            <div class="text-sm text-gray-500">marykimaro@example.com</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dar es Salaam, Tanzania</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">18</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 435,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Last week</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-active">Regular</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View customer details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit customer"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete customer"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Customer 3 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">AI</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Arusha Inn Hotel</div>
-                                    <div class="text-sm text-gray-500">Since Feb 2022</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">+255 732 456 789</div>
-                            <div class="text-sm text-gray-500">bookings@arushainn.co.tz</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Arusha, Tanzania</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">52</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 2,450,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Today</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-vip">Corporate</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View customer details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit customer"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete customer"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Customer 4 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">SM</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Sarah Mohammed</div>
-                                    <div class="text-sm text-gray-500">Since Nov 2022</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">+255 789 234 567</div>
-                            <div class="text-sm text-gray-500">sarahm@example.com</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mwanza, Tanzania</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">8</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 180,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3 weeks ago</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-inactive">Inactive</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View customer details"><i class="fas fa-eye"></i></button>
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Edit customer"><i class="fas fa-edit"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete customer"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ customer.phoneNumber }}</div>
+                                <div class="text-sm text-gray-500">{% if customer.tinNumber %}TIN: {{ customer.tinNumber }}{% else %}&nbsp;{% endif %}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ business.businessLocation|default:"-" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ customer.frequency }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">-</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if customer.frequency >= 5 %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full tag-vip">VIP</span>
+                                {% elif customer.frequency > 1 %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full tag-active">Regular</span>
+                                {% else %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full tag-inactive">New</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <button onclick="viewCustomer('{{ customer.id }}')" class="text-blue-600 hover:text-blue-900 mr-3" title="View customer details">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="sr-only">View details for {{ customer.name }}</span>
+                                </button>
+                                <button onclick="editCustomer('{{ customer.id }}')" class="text-blue-600 hover:text-blue-900 mr-3" title="Edit customer">
+                                    <i class="fas fa-edit"></i>
+                                    <span class="sr-only">Edit {{ customer.name }}</span>
+                                </button>
+                                <button onclick="confirmDelete('{{ customer.id }}', '{{ customer.name }}')" class="text-red-600 hover:text-red-900" title="Delete customer">
+                                    <i class="fas fa-trash"></i>
+                                    <span class="sr-only">Delete {{ customer.name }}</span>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                                No customers found matching your criteria.
+                            </td>
+                        </tr>
+                     {% endif %}
                 </tbody>
             </table>
         </div>
         
         <!-- Pagination -->
+        {% if customers.paginator.num_pages > 1 %}
         <div class="px-6 py-4 flex items-center justify-between border-t">
             <div class="flex-1 flex justify-between sm:hidden">
-                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Previous page">Previous</a>
-                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Next page">Next</a>
+                {% if customers.has_previous %}
+                <a href="?page={{ customers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if customer_type != 'all' %}&customer_type={{ customer_type }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Previous page">Previous</a>
+                {% else %}
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white" title="Previous page (disabled)">Previous</span>
+                {% endif %}
+                {% if customers.has_next %}
+                <a href="?page={{ customers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if customer_type != 'all' %}&customer_type={{ customer_type }}{% endif %}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Next page">Next</a>
+                {% else %}
+                <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white" title="Next page (disabled)">Next</span>
+                {% endif %}
             </div>
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">348</span> results
+                        Showing <span class="font-medium">{{ customers.start_index }}</span> to <span class="font-medium">{{ customers.end_index }}</span> of <span class="font-medium">{{ customers.paginator.count }}</span> results
                     </p>
                 </div>
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Previous page">
+                        <!-- Previous Page -->
+                        {% if customers.has_previous %}
+                        <a href="?page={{ customers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if customer_type != 'all' %}&customer_type={{ customer_type }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Previous page">
                             <span class="sr-only">Previous</span>
                             <i class="fas fa-chevron-left"></i>
                         </a>
-                        <a href="#" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 1">1</a>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 2">2</a>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 3">3</a>
-                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 35">35</a>
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Next page">
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-300" title="Previous page (disabled)">
+                            <span class="sr-only">Previous (disabled)</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                        {% endif %}
+                        
+                        <!-- Page Numbers -->
+                        {% for page_num in customers.paginator.page_range %}
+                            {% if page_num == customers.number %}
+                            <a href="?page={{ page_num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if customer_type != 'all' %}&customer_type={{ customer_type }}{% endif %}" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page {{ page_num }} (current)">
+                                {{ page_num }}
+                            </a>
+                            {% elif page_num > customers.number|add:'-3' and page_num < customers.number|add:'3' %}
+                            <a href="?page={{ page_num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if customer_type != 'all' %}&customer_type={{ customer_type }}{% endif %}" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page {{ page_num }}">
+                                {{ page_num }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Next Page -->
+                        {% if customers.has_next %}
+                        <a href="?page={{ customers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if customer_type != 'all' %}&customer_type={{ customer_type }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Next page">
                             <span class="sr-only">Next</span>
                             <i class="fas fa-chevron-right"></i>
                         </a>
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-300" title="Next page (disabled)">
+                            <span class="sr-only">Next (disabled)</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                        {% endif %}
                     </nav>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Customers management JavaScript can be added here
+    // Handle view customer details
+    function viewCustomer(customerId) {
+        window.location.href = "{% url 'webapp:customers' %}?action=view&id=" + customerId;
+    }
+    
+    // Handle edit customer
+    function editCustomer(customerId) {
+        window.location.href = "{% url 'webapp:customers' %}?action=edit&id=" + customerId;
+    }
+    
+    // Handle customer deletion confirmation
+    function confirmDelete(customerId, customerName) {
+        if (confirm("Are you sure you want to delete customer '" + customerName + "'? This action cannot be undone.")) {
+            window.location.href = "{% url 'webapp:customers' %}?action=delete&id=" + customerId;
+        }
+    }
+    
+    // Initialize page functionality
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize customers management functionality
+        // Setup add customer button
+        document.getElementById('addCustomerBtn').addEventListener('click', function() {
+            window.location.href = "{% url 'webapp:customers' %}?action=add";
+        });
+        
         console.log("Customers management page loaded");
     });
 </script>

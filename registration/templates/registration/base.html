@@ -1,26 +1,70 @@
-{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mangi POS{% endblock %}</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-light': '#EE4540',
+                        primary: '#C72C41',
+                        secondary: '#801336',
+                        dark: '#510A32',
+                        darker: '#20142C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Gradient Background */
+        .brand-gradient {
+            background: linear-gradient(to bottom, #EE4540, #C72C41, #801336, #510A32, #20142C);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        /* Fullscreen Layout */
+        .full-width {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        {% block additional_styles %}{% endblock %}
+    </style>
 
-
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="{% static 'website/css/bootstrap.min.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'website/css/style.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'website/css/css/materialdesignicons.min.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'website/css/swiper-bundle.min.css' %}">
-        <title>{% block title %} {% endblock %}</title>
-    </head>
-
-<body>
+    <!-- Fixed script tag attribute from scr to src -->
+   
     
-    {% block content %}
-
-    {% endblock %}
-
-    <script scr="{% static 'website/js/bootstrap.bundle.min.js' %}"></script>
-    <script scr="{% static 'website/js/counter.init.js' %}"></script>
-    <script scr="{% static 'website/js/swiper-bundle.min.js' %}"></script>
-    <script scr="{% static 'website/js/swiper.js' %}"></script>
-    <script scr="{% static 'website/js/app.js' %}"></script>
-    </body>
-    </html>
+</body>
+</html>

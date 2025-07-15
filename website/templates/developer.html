@@ -51,7 +51,7 @@
 <body>
     <div class="container">
         <h1>API Launch Countdown</h1>
-        <p>Our API will be available on <strong>5th October</strong>. Stay tuned!</p>
+        <p>Our API will be available in <strong>30 days</strong>. Stay tuned!</p>
         <div id="countdown" class="countdown">
             <div>
                 <span id="days">0</span>
@@ -73,8 +73,9 @@
     </div>
 
     <script>
-        // Set the target date
-        const targetDate = new Date('December 1, 2024 00:00:00').getTime();
+        // Set the target date (30 days from now)
+        const today = new Date();
+        const targetDate = new Date(today.setDate(today.getDate() + 30)).getTime();
 
         const countdownTimer = setInterval(() => {
             const now = new Date().getTime();

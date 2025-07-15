@@ -14,12 +14,14 @@ from pathlib import Path
 import os
 import dj_database_url
 from datetime import timedelta
-
 from django.conf import settings
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'inventory',
     'rest_framework',
     'rest_framework.authtoken',
@@ -56,6 +59,7 @@ INSTALLED_APPS = [
     'registration.apps.RegistrationConfig',
     'webapp',
     'paywall',
+    'Learninghub'
 ]
 
 REST_FRAMEWORK = {
@@ -118,25 +122,35 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Managi.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mangi',
-        'USER': 'myappuser',
-        'PASSWORD': 'Massomosophia65',
-        'HOST': 'awadhi-3948.postgres.pythonanywhere-services.com',
-        'PORT': '13948',
-    }
-}
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR,'db.db.sqlite3'),
+# Check if we're in local development mode
+IS_LOCAL = env.bool('IS_LOCAL', default=True)
+
+# Check if we should use SQLite (easier for quick local development)
+USE_SQLITE = env.bool('USE_SQLITE', default=False)
+
+# Database configuration
+if USE_SQLITE:
+    # SQLite configuration for easy local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
+        }
     }
-}
+else:
+    # PostgreSQL configuration for local or production
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            # Use different database settings based on environment
+            'NAME': env('DB_NAME_LOCAL', default='mangi_local') if IS_LOCAL else env('DB_NAME', default='mangi'),
+            'USER': env('DB_USER_LOCAL', default='postgres') if IS_LOCAL else env('DB_USER', default='myappuser'),
+            'PASSWORD': env('DB_PASSWORD_LOCAL', default='1234') if IS_LOCAL else env('DB_PASSWORD'),
+            'HOST': env('DB_HOST_LOCAL', default='localhost') if IS_LOCAL else env('DB_HOST', default='awadhi-3948.postgres.pythonanywhere-services.com'),
+            'PORT': env('DB_PORT_LOCAL', default='5432') if IS_LOCAL else env('DB_PORT', default='13948'),
+        }
+    }
 
 
 SIMPLE_JWT = {
@@ -194,8 +208,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
@@ -206,14 +218,10 @@ STATIC_URL = '/static/'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
 
 
 

@@ -1,23 +1,10 @@
 {% extends 'webapp/base_webapp.html' %}
+{% load static %}
+{% load humanize %}
 
 {% block title %}Mangi Business Manager - Expenses{% endblock %}
 
 {% block additional_styles %}
-/* Chart styles */
-.chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
-}
-
-.sales-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sales-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
 
 :root {
     --color-primary: #C72C41;
@@ -715,90 +702,251 @@ body {
 
 {% block content %}
 <!-- Main Content Container -->
-<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <!-- Sales Header -->
-    <div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-white">Business Expenses</h1>
-                <p class="text-white opacity-80">Track your business performance</p>
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">Business Expenses</h1>
+        <div class="page-actions">
+            <a href="javascript:void(0);" onclick="alert('Add expense feature coming soon!')" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Expense
+            </a>
+        </div>
+    </div>
+    
+    <!-- Summary cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="summary-card-header">
+                <div class="summary-card-icon icon-primary">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <div>
+                    <div class="summary-card-title">Total Expenses</div>
+                    <div class="summary-card-value">{{ total_expenses|default:"0" }}</div>
+                </div>
             </div>
-            <div>
-                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2">
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="year">This Year</option>
-                </select>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-card-header">
+                <div class="summary-card-icon icon-green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <div class="summary-card-title">Approved</div>
+                    <div class="summary-card-value">{{ approved_expenses|default:"0" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-card-header">
+                <div class="summary-card-icon icon-blue">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div>
+                    <div class="summary-card-title">Total Spend</div>
+                    <div class="summary-card-value">
+                        {% if total_spend >= 1000000 %}
+                            TZS {{ total_spend|floatformat:1|slice:"-6" }}.{{ total_spend|floatformat:1|slice:"-6:-5" }}M
+                        {% else %}
+                            TZS {{ total_spend|floatformat:0|intcomma }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-card-header">
+                <div class="summary-card-icon icon-orange">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <div class="summary-card-title">Pending</div>
+                    <div class="summary-card-value">{{ pending_expenses|default:"0" }}</div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total Sales Card -->
-        <div class="bg-white rounded-lg shadow p-6 sales-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Total Expenses</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">$24,780</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 12.5% <span class="text-gray-400">vs last period</span>
-                    </p>
+    <!-- Category expenses -->
+    <h2 class="section-title">Expenses by Category</h2>
+    <div class="category-tiles">
+        {% for category in category_expenses %}
+        <div class="category-tile">
+            <div class="category-header">
+                <div class="category-icon">
+                    {% if category.name == 'Travel' %}
+                        <i class="fas fa-plane"></i>
+                    {% elif category.name == 'Supplies' %}
+                        <i class="fas fa-briefcase"></i>
+                    {% elif category.name == 'Meals' %}
+                        <i class="fas fa-utensils"></i>
+                    {% else %}
+                        <i class="fas fa-file-invoice"></i>
+                    {% endif %}
                 </div>
-                <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-dollar-sign text-primary-light text-2xl"></i>
+                <div class="trend {% if category.is_increase %}trend-up{% else %}trend-down{% endif %}">
+                    <i class="fas fa-arrow-{% if category.is_increase %}up{% else %}down{% endif %}"></i>
+                    <span>{{ category.change_percent|floatformat:1 }}%</span>
                 </div>
+            </div>
+            <div class="category-name">{{ category.name }}</div>
+            <div class="category-value">TZS {{ category.total|floatformat:0|intcomma }}</div>
+        </div>
+        {% empty %}
+        <div class="category-tile">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+            </div>
+            <div class="category-name">No Categories</div>
+            <div class="category-value">TZS 0</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Filters section -->
+    <div class="filters-section">
+        <form method="get" action="{% url 'webapp:expenses' %}" class="w-full flex flex-wrap gap-4">
+            <div class="filter-group">
+                <label for="category" class="filter-label">Category:</label>
+                <select name="category" id="category" class="filter-field">
+                    <option value="">All Categories</option>
+                    {% for category in expense_categories %}
+                        <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="status" class="filter-label">Status:</label>
+                <select name="status" id="status" class="filter-field">
+                    <option value="">All Status</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Date Range:</label>
+                <div class="date-picker">
+                    <label for="date_from" class="sr-only">From Date</label>
+                    <input type="date" name="date_from" id="date_from" class="filter-field" value="{{ date_from }}" aria-label="From date" title="From date">
+                    <span>to</span>
+                    <label for="date_to" class="sr-only">To Date</label>
+                    <input type="date" name="date_to" id="date_to" class="filter-field" value="{{ date_to }}" aria-label="To date" title="To date">
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label for="search" class="filter-label">Search:</label>
+                <input type="text" name="search" id="search" class="filter-field" placeholder="Search expenses..." value="{{ search_query }}">
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <a href="{% url 'webapp:expenses' %}" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Expenses table -->
+    <div class="expenses-section">
+        <div class="section-header">
+            <h3>Recent Expenses</h3>
+            <div>
+                <button class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Export
+                </button>
             </div>
         </div>
         
-        <!-- Orders Card -->
-        <div class="bg-white rounded-lg shadow p-6 sales-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Total Orders</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">486</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 8.2% <span class="text-gray-400">vs last period</span>
-                    </p>
-                </div>
-                <div class="h-14 w-14 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-shopping-cart text-blue-500 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <table class="expenses-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Vendor</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td class="expense-id">{{ expense.id|truncatechars:8 }}</td>
+                    <td>{{ expense.date|date:"M d, Y" }}</td>
+                    <td>{{ expense.vendor|default:"N/A" }}</td>
+                    <td>{{ expense.category }}</td>
+                    <td class="expense-amount">TZS {{ expense.total|floatformat:0|intcomma }}</td>
+                    <td>
+                        <span class="status-badge {% if expense.approval_status %}status-approved{% else %}status-pending{% endif %}">
+                            {% if expense.approval_status %}Approved{% else %}Pending{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon btn-view" title="View Expense">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon btn-edit" title="Edit Expense">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" title="Delete Expense">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="fas fa-info-circle text-gray-400 mr-2"></i>
+                        No expenses found. Try adjusting your filters or add new expenses.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         
-        <!-- Average Sale Card -->
-        <div class="bg-white rounded-lg shadow p-6 sales-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Average Sale</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">$51.00</h3>
-                    <p class="text-red-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-down mr-1"></i> 3.1% <span class="text-gray-400">vs last period</span>
-                    </p>
-                </div>
-                <div class="h-14 w-14 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-chart-line text-purple-500 text-2xl"></i>
-                </div>
-            </div>
+        <!-- Pagination -->
+        {% if expenses.has_other_pages %}
+        <div class="pagination">
+            {% if expenses.has_previous %}
+                <a href="?page=1{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ expenses.previous_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            {% endif %}
+            
+            {% for num in expenses.paginator.page_range %}
+                {% if expenses.number == num %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% elif num > expenses.number|add:'-3' and num < expenses.number|add:'3' %}
+                    <a href="?page={{ num }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if expenses.has_next %}
+                <a href="?page={{ expenses.next_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ expenses.paginator.num_pages }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
         </div>
-        
-        <!-- Customers Card -->
-        <div class="bg-white rounded-lg shadow p-6 sales-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">New Customers</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">124</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 18.7% <span class="text-gray-400">vs last period</span>
-                    </p>
-                </div>
-                <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-users text-green-500 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

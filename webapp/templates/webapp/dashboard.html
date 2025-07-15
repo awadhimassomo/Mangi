@@ -66,7 +66,7 @@
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 class="text-2xl font-bold text-white">Sales Dashboard</h1>
+                    <h1 class="text-2xl font-bold text-white">{{ business.businessName|default:"Your Business" }} Dashboard</h1>
                     <p class="text-white opacity-80">Manage your sales and orders</p>
                 </div>
             </div>
@@ -86,86 +86,54 @@
             <!-- Categories Tabs -->
             <div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
                 <div class="flex overflow-x-auto gap-2 p-2">
-                    <button class="py-3 px-6 text-center font-medium rounded-md border-b-2 border-primary bg-gray-100" aria-label="Appetizers">Appetizer</button>
-                    <button class="py-3 px-6 text-center font-medium rounded-md border-b-2 border-transparent hover:border-gray-300" aria-label="Main Course">Main Course</button>
-                    <button class="py-3 px-6 text-center font-medium rounded-md border-b-2 border-transparent hover:border-gray-300" aria-label="Desserts">Desserts</button>
-                    <button class="py-3 px-6 text-center font-medium rounded-md border-b-2 border-transparent hover:border-gray-300" aria-label="Beverages">Beverages</button>
+                    {% if categories %}
+                        {% for category in categories %}
+                            <button class="py-3 px-6 text-center font-medium rounded-md border-b-2 {% if forloop.first %}border-primary bg-gray-100{% else %}border-transparent hover:border-gray-300{% endif %}" aria-label="{{ category.categoryName }}">
+                                {{ category.categoryName }}
+                            </button>
+                        {% endfor %}
+                    {% else %}
+                        <div class="py-3 px-6 text-center font-medium text-gray-500">
+                            No categories available
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="flex-grow p-4 overflow-y-auto bg-gray-50">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- First Row -->
-                    <!-- Product Card 1 -->
-                    <div class="bg-white rounded-lg shadow hover:shadow-md">
-                        <div class="p-4 flex justify-center">
-                            <div class="h-28 w-28 bg-gray-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-utensils text-primary text-2xl"></i>
+                    {% if products %}
+                        {% for product in products %}
+                            <!-- Product Card {{ forloop.counter }} -->
+                            <div class="bg-white rounded-lg shadow hover:shadow-md">
+                                <div class="p-4 flex justify-center">
+                                    <div class="h-28 w-28 bg-gray-100 rounded-full flex items-center justify-center">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.product_name }}" class="h-24 w-24 object-contain">
+                                    {% else %}
+                                        <i class="fas fa-utensils text-primary text-2xl"></i>
+                                    {% endif %}
+                                    </div>
+                                </div>
+                                <div class="p-4 text-center">
+                                    <h3 class="font-medium">{{ product.product_name }}</h3>
+                                    <p class="text-gray-500 text-sm mt-1">
+                                        {% if product.category %}
+                                            {{ product.category.categoryName }}
+                                        {% else %}
+                                            Uncategorized
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-primary font-bold mt-2">TZS {{ product.price|floatformat:0|default:"0" }}</p>
+                                </div>
                             </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-span-full text-center py-10">
+                            <i class="fas fa-box-open text-gray-300 text-5xl mb-3"></i>
+                            <p class="text-gray-500">No products available</p>
                         </div>
-                        <div class="p-4 text-center">
-                            <h3 class="font-medium">Spicy Buffalo Wings</h3>
-                            <p class="text-gray-500 text-sm mt-1">Appetizer</p>
-                            <p class="text-primary font-bold mt-2">TZS 12,000</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Product Card 2 -->
-                    <div class="bg-white rounded-lg shadow hover:shadow-md">
-                        <div class="p-4 flex justify-center">
-                            <div class="h-28 w-28 bg-gray-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-utensils text-primary text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="p-4 text-center">
-                            <h3 class="font-medium">Cheesy Mozzarella Sticks</h3>
-                            <p class="text-gray-500 text-sm mt-1">Appetizer</p>
-                            <p class="text-primary font-bold mt-2">TZS 10,000</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Product Card 3 -->
-                    <div class="bg-white rounded-lg shadow hover:shadow-md">
-                        <div class="p-4 flex justify-center">
-                            <div class="h-28 w-28 bg-gray-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-utensils text-primary text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="p-4 text-center">
-                            <h3 class="font-medium">Crispy Onion Rings</h3>
-                            <p class="text-gray-500 text-sm mt-1">Appetizer</p>
-                            <p class="text-primary font-bold mt-2">TZS 8,000</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Product Card 4 -->
-                    <div class="bg-white rounded-lg shadow hover:shadow-md">
-                        <div class="p-4 flex justify-center">
-                            <div class="h-28 w-28 bg-gray-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-utensils text-primary text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="p-4 text-center">
-                            <h3 class="font-medium">Garlic Bread</h3>
-                            <p class="text-gray-500 text-sm mt-1">Appetizer</p>
-                            <p class="text-primary font-bold mt-2">TZS 5,000</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Second Row -->
-                    <!-- Product Card 5 -->
-                    <div class="bg-white rounded-lg shadow hover:shadow-md">
-                        <div class="p-4 flex justify-center">
-                            <div class="h-28 w-28 bg-gray-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-utensils text-primary text-2xl"></i>
-                            </div>
-                        </div>
-                        <div class="p-4 text-center">
-                            <h3 class="font-medium">Loaded Potato Skins</h3>
-                            <p class="text-gray-500 text-sm mt-1">Appetizer</p>
-                            <p class="text-primary font-bold mt-2">TZS 15,000</p>
-                        </div>
-                    </div>
+                    {% endif %}
                     
                     <!-- More product cards can be added here -->
                 </div>
@@ -190,43 +158,33 @@
                 <div class="p-4">
                     <!-- Order Items -->
                     <div class="space-y-4">
-                        <!-- Order Item 1 -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-utensils text-primary"></i>
+                        {% if products %}
+                            {% for product in products|slice:":2" %}
+                                <!-- Order Item {{ forloop.counter }} -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-utensils text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-medium">{{ product.product_name }}</h3>
+                                            <p class="text-xs text-gray-500">1 x TZS {{ product.price|floatformat:0 }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-medium">TZS {{ product.price|floatformat:0 }}</p>
+                                        <button class="text-gray-400 hover:text-red-500 text-sm" aria-label="Remove item">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-medium">Buffalo Wings</h3>
-                                    <p class="text-xs text-gray-500">2 x TZS 12,000</p>
-                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-shopping-cart text-gray-300 text-3xl mb-2"></i>
+                                <p class="text-gray-500">No items in cart</p>
                             </div>
-                            <div class="text-right">
-                                <p class="font-medium">TZS 24,000</p>
-                                <button class="text-gray-400 hover:text-red-500 text-sm" aria-label="Remove item">
-                                    <i class="fas fa-times"></i> Remove
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Order Item 2 -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-utensils text-primary"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-medium">Garlic Bread</h3>
-                                    <p class="text-xs text-gray-500">1 x TZS 5,000</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-medium">TZS 5,000</p>
-                                <button class="text-gray-400 hover:text-red-500 text-sm" aria-label="Remove item">
-                                    <i class="fas fa-times"></i> Remove
-                                </button>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                     
                     <!-- Border line -->
@@ -234,18 +192,37 @@
                     
                     <!-- Order Summary -->
                     <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Subtotal</span>
-                            <span class="font-medium">TZS 29,000</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Tax (18%)</span>
-                            <span class="font-medium">TZS 5,220</span>
-                        </div>
-                        <div class="flex justify-between text-lg font-bold mt-2">
-                            <span>Total</span>
-                            <span class="text-primary">TZS 34,220</span>
-                        </div>
+                        {% if products %}
+                        {% with first_product=products|first %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span class="font-medium">TZS {{ first_product.price|floatformat:0 }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Tax (18%)</span>
+                                <!-- For demo purpose we'll show fixed tax percentage -->
+                                <span class="font-medium">TZS {{ first_product.price|floatformat:0 }}</span>
+                            </div>
+                            <div class="flex justify-between text-lg font-bold mt-2">
+                                <span>Total</span>
+                                <!-- For demo purpose we're showing full amount + estimated tax -->
+                                <span class="text-primary">TZS {{ first_product.price|floatformat:0 }}</span>
+                            </div>
+                        {% endwith %}
+                        {% else %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span class="font-medium">TZS 0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Tax (18%)</span>
+                                <span class="font-medium">TZS 0</span>
+                            </div>
+                            <div class="flex justify-between text-lg font-bold mt-2">
+                                <span>Total</span>
+                                <span class="text-primary">TZS 0</span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -420,20 +397,24 @@
                     
                     <!-- Order Summary -->
                     <div class="bg-white p-4 rounded-md shadow mt-4">
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Subtotal</span>
-                                <span class="font-medium">TZS 29,000</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Tax (18%)</span>
-                                <span class="font-medium">TZS 5,220</span>
-                            </div>
-                            <div class="flex justify-between text-lg font-bold mt-2">
-                                <span>Total</span>
-                                <span class="text-primary">TZS 34,220</span>
-                            </div>
-                        </div>
+                        {% if products %}
+                            {% with firstproduct=products|first %}
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Subtotal</span>
+                                        <span class="font-medium">TZS {{ firstproduct.price|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Tax (18%)</span>
+                                        <span class="font-medium">TZS {{ firstproduct.price|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-lg font-bold mt-2">
+                                        <span>Total</span>
+                                        <span class="text-primary">TZS {{ firstproduct.price|floatformat:0 }}</span>
+                                    </div>
+                                </div>
+                            {% endwith %}
+                        {% endif %}
                         
                         <div class="mt-4 pt-4 border-t">
                             <button class="w-full bg-primary hover:bg-secondary text-white py-2 px-4 rounded-md shadow">

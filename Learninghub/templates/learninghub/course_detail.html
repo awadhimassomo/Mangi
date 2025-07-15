@@ -1,0 +1,164 @@
+{% extends 'learninghub/base_learninghub.html' %}
+{% load static %}
+
+{% block learninghub_content %}
+<!-- Course Header with Gradient -->
+<div class="brand-gradient rounded-lg shadow px-5 py-4 mb-6">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center">
+            <a href="{% url 'learninghub:course_list' %}" class="text-white mr-3" aria-label="Go back">
+                <i class="mdi mdi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-white">{{ course.title }}</h1>
+                <p class="text-white opacity-80">{% if course.sponsor %}Sponsored by {{ course.sponsor }}{% else %}Learning Hub Course{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Course Content Area -->
+<div class="flex flex-col md:flex-row gap-6 mb-6">
+    <!-- Left Side: Main Content Area -->
+    <div class="w-full md:w-8/12">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% with first_lesson=lessons|first %}
+            {% if first_lesson and first_lesson.video_url %}
+            <!-- Video Player Area -->
+            <div class="aspect-w-16 aspect-h-9 bg-gray-900">
+                <div class="bg-gray-800 h-full flex items-center justify-center">
+                    <iframe src="{{ first_lesson.video_url }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="{{ first_lesson.title }} - Course video"></iframe>
+                </div>
+            </div>
+            {% else %}
+            <!-- Course Banner Image if no video -->
+            <div class="aspect-w-16 aspect-h-9 bg-gray-100 flex items-center justify-center p-6">
+                <div class="text-center">
+                    <i class="mdi mdi-book-open-page-variant text-primary text-5xl mb-2"></i>
+                    <h3 class="text-xl font-medium">{{ course.title }}</h3>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+            
+            <!-- Course Tabs -->
+            <div class="border-b border-gray-200">
+                <nav class="flex overflow-x-auto">
+                    <button class="py-4 px-6 border-b-2 border-primary text-primary font-medium">Lessons</button>
+                    <button class="py-4 px-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Resources</button>
+                    <button class="py-4 px-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">About</button>
+                </nav>
+            </div>
+            
+            <!-- Course Description -->
+            <div class="p-6">
+                <h2 class="text-2xl font-bold mb-4">About This Course</h2>
+                <p class="text-gray-700">{{ course.description }}</p>
+            </div>
+        
+        </div>
+    </div>
+    
+    <!-- Right Side: Course Progress Card -->
+    <div class="w-full md:w-4/12">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden sticky top-4">
+            <div class="bg-gray-50 p-4 border-b border-gray-100">
+                <h3 class="font-semibold text-lg text-gray-800">Your Progress</h3>
+            </div>
+            
+            <div class="p-6">
+                <!-- Progress Stats -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-medium">Course Completion</span>
+                    <span class="bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        {{ progress.completed_lessons.count }}/{{ lessons|length }} lessons
+                    </span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4" title="Course Progress">
+                    {% with progress_percent=progress.completed_lessons.count|floatformat:0|default:0 %}
+                    {% with percent_rounded=progress_percent|divisibleby:5|yesno:progress_percent,progress_percent|add:"2.5"|floatformat:0|cut:"." %}
+                    <div class="h-2.5 rounded-full progress-width-{{ percent_rounded }} {% if progress.completed %}bg-green-500{% else %}bg-primary{% endif %}" 
+                        role="progressbar" 
+                        aria-label="{{ progress_percent }}% of lessons completed"></div>
+                    {% endwith %}
+                    {% endwith %}
+                </div>
+        
+                {% if progress.completed %}
+                <div class="bg-green-100 text-green-800 p-4 rounded-md flex items-start">
+                    <i class="mdi mdi-check-circle mr-2 mt-0.5"></i>
+                    <div>
+                        <h5 class="font-semibold mb-1">Course Completed!</h5>
+                        <p>You completed this course on {{ progress.completion_date|date:"F j, Y" }}.</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex items-center justify-center p-2 mb-2">
+                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <i class="mdi mdi-school text-primary"></i>
+                    </div>
+                </div>
+                <p class="text-center text-sm text-gray-600 mb-4">Complete all lessons to earn your certificate</p>
+                {% endif %}
+            </div>
+        </div>
+
+<!-- Lessons List Section -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+    <div class="bg-gray-50 border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+        <h4 class="font-semibold text-lg text-gray-800">Course Lessons</h4>
+        <span class="bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">{{ lessons|length }} Lessons</span>
+    </div>
+    
+    <div class="divide-y divide-gray-100">
+        {% for lesson in lessons %}
+        <a href="{% url 'learninghub:lesson_detail' lesson.id %}" 
+           class="px-6 py-4 hover:bg-gray-50 flex justify-between items-center transition-colors duration-150">
+            <div class="flex items-center">
+                <div class="mr-4 flex-shrink-0">
+                    {% if completion_status|get_item:lesson.id %}
+                    <span class="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full">
+                        <i class="mdi mdi-check text-sm"></i>
+                    </span>
+                    {% else %}
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full border-2 border-gray-200 text-gray-400">
+                        <span class="text-sm font-medium">{{ forloop.counter }}</span>
+                    </span>
+                    {% endif %}
+                </div>
+                <div>
+                    <h6 class="font-medium text-gray-900">{{ lesson.title }}</h6>
+                    <div class="flex items-center mt-1">
+                        {% if lesson.video_url %}
+                        <span class="inline-flex items-center mr-3 text-xs text-gray-500">
+                            <i class="mdi mdi-video-outline mr-1"></i>
+                            <span>Video</span>
+                        </span>
+                        {% endif %}
+                        {% if lesson.duration %}
+                        <span class="inline-flex items-center text-xs text-gray-500">
+                            <i class="mdi mdi-clock-outline mr-1"></i>
+                            <span>{{ lesson.duration }}</span>
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center text-xs text-gray-500">
+                            <i class="mdi mdi-clock-outline mr-1"></i>
+                            <span>5:00</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <i class="mdi mdi-chevron-right text-gray-400"></i>
+        </a>
+        {% empty %}
+        <div class="py-8 text-center">
+            <p class="text-gray-500">No lessons available for this course yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</div>
+{% endblock %}

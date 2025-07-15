@@ -113,6 +113,7 @@
                 <i class="fas fa-chart-bar text-xl md:mr-3"></i>
                 <span class="hidden md:inline">Reports</span>
             </a>
+    
             <a href="#" class="flex items-center p-2 rounded-md text-white text-opacity-80 hover:bg-white hover:bg-opacity-20 hover:text-white transition-colors duration-200">
                 <i class="fas fa-cog text-xl md:mr-3"></i>
                 <span class="hidden md:inline">Settings</span>
@@ -139,7 +140,7 @@
                         <div class="ml-6 flex items-center">
                             <button class="bg-gray-100 text-gray-700 px-3 py-1 rounded-md flex items-center text-sm">
                                 <i class="fas fa-building mr-2"></i>
-                                Unknown Business
+                                {{ business.businessName|default:"Your Business" }}
                             </button>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 {% extends 'webapp/base_webapp.html' %}
+{% load humanize %}
 
 {% block title %}Mangi POS - Loans Management{% endblock %}
 
@@ -43,15 +44,22 @@
                 <p class="text-white opacity-80">Track loans, repayments, and interest</p>
             </div>
             <div class="flex items-center space-x-3">
-                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Record new loan">
+                <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md flex items-center" title="Record new loan" id="recordLoanBtn">
                     <i class="fas fa-plus mr-2"></i> Record New Loan
                 </button>
-                <select class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter by loan type" aria-label="Filter loans by type">
-                    <option value="all" selected>All Loan Types</option>
-                    <option value="customer">Customer Loans</option>
-                    <option value="supplier">Supplier Loans</option>
-                    <option value="employee">Employee Loans</option>
-                </select>
+                <form method="get" action="" id="borrower-type-form" class="inline">
+                    {% if search_query %}<input type="hidden" name="search" value="{{ search_query }}">{% endif %}
+                    {% if loan_type_filter and loan_type_filter != 'all' %}<input type="hidden" name="loan_type" value="{{ loan_type_filter }}">{% endif %}
+                    {% if status_filter and status_filter != 'all' %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                    {% if date_from %}<input type="hidden" name="date_from" value="{{ date_from }}">{% endif %}
+                    {% if date_to %}<input type="hidden" name="date_to" value="{{ date_to }}">{% endif %}
+                    <select name="borrower_type" class="bg-white bg-opacity-20 text-white border-0 rounded p-2" title="Filter by borrower type" aria-label="Filter loans by borrower type" onchange="this.form.submit()">
+                        <option value="all" {% if borrower_type_filter == 'all' or not borrower_type_filter %}selected{% endif %}>All Borrowers</option>
+                        {% for value, label in borrower_type_choices.items %}
+                            <option value="{{ value }}" {% if borrower_type_filter == value %}selected{% endif %}>{{ label }} Loans</option>
+                        {% endfor %}
+                    </select>
+                </form>
             </div>
         </div>
     </div>
@@ -63,9 +71,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Total Outstanding</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 12.5M</h3>
-                    <p class="text-red-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 4.2% <span class="text-gray-400">vs last month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS {{ total_outstanding|intcomma }}</h3>
+                    <p class="{% if outstanding_change_percent > 0 %}text-red-500{% elif outstanding_change_percent < 0 %}text-green-500{% else %}text-gray-500{% endif %} text-sm font-medium mt-2">
+                        <i class="fas {% if outstanding_change_percent > 0 %}fa-arrow-up{% elif outstanding_change_percent < 0 %}fa-arrow-down{% else %}fa-equals{% endif %} mr-1"></i> 
+                        {{ outstanding_change_percent_abs|floatformat:1 }}% <span class="text-gray-400">vs last month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-primary-light bg-opacity-20 rounded-full flex items-center justify-center">
@@ -79,9 +88,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Total Repaid</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS 8.2M</h3>
-                    <p class="text-green-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 12.8% <span class="text-gray-400">vs last month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">TZS {{ total_repaid|intcomma }}</h3>
+                    <p class="{% if repaid_change_percent > 0 %}text-green-500{% elif repaid_change_percent < 0 %}text-red-500{% else %}text-gray-500{% endif %} text-sm font-medium mt-2">
+                        <i class="fas {% if repaid_change_percent > 0 %}fa-arrow-up{% elif repaid_change_percent < 0 %}fa-arrow-down{% else %}fa-equals{% endif %} mr-1"></i> 
+                        {{ repaid_change_percent_abs|floatformat:1 }}% <span class="text-gray-400">vs last month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -95,9 +105,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Active Loans</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">32</h3>
-                    <p class="text-gray-500 text-sm font-medium mt-2">
-                        <i class="fas fa-equals mr-1"></i> 0% <span class="text-gray-400">vs last month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ active_loans }}</h3>
+                    <p class="{% if active_change_percent > 0 %}text-blue-500{% elif active_change_percent < 0 %}text-orange-500{% else %}text-gray-500{% endif %} text-sm font-medium mt-2">
+                        <i class="fas {% if active_change_percent > 0 %}fa-arrow-up{% elif active_change_percent < 0 %}fa-arrow-down{% else %}fa-equals{% endif %} mr-1"></i> 
+                        {{ active_change_percent_abs|floatformat:1 }}% <span class="text-gray-400">vs last month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -111,9 +122,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm font-medium">Overdue Loans</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-1">8</h3>
-                    <p class="text-red-500 text-sm font-medium mt-2">
-                        <i class="fas fa-arrow-up mr-1"></i> 2 <span class="text-gray-400">new this month</span>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ overdue_loans }}</h3>
+                    <p class="{% if new_overdue_this_month > 0 %}text-red-500{% else %}text-green-500{% endif %} text-sm font-medium mt-2">
+                        <i class="fas {% if new_overdue_this_month > 0 %}fa-arrow-up{% else %}fa-check-circle{% endif %} mr-1"></i> 
+                        {{ new_overdue_this_month }} <span class="text-gray-400">new this month</span>
                     </p>
                 </div>
                 <div class="h-14 w-14 bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center">
@@ -123,14 +135,55 @@
         </div>
     </div>
     
-    <!-- Loans Table -->
+    <!-- Loans Table with Filters -->
     <div class="bg-white rounded-lg shadow mb-8">
-        <div class="flex justify-between items-center p-6 border-b">
-            <h2 class="text-xl font-semibold">Active Loans</h2>
-            <div class="relative">
-                <input type="text" placeholder="Search loans..." class="px-4 py-2 border rounded-md pr-10">
-                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-            </div>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 border-b">
+            <h2 class="text-xl font-semibold mb-4 md:mb-0">Manage Loans</h2>
+            
+            <!-- Filters Form -->
+            <form method="get" action="" class="w-full md:w-auto">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <!-- Filter by loan type -->
+                    <select name="loan_type" class="border rounded-md px-4 py-2 text-sm" title="Filter by loan type">
+                        <option value="all" {% if loan_type_filter == 'all' or not loan_type_filter %}selected{% endif %}>All Loan Types</option>
+                        {% for value, label in loan_type_choices.items %}
+                            <option value="{{ value }}" {% if loan_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <!-- Filter by status -->
+                    <select name="status" class="border rounded-md px-4 py-2 text-sm" title="Filter by status">
+                        <option value="all" {% if status_filter == 'all' or not status_filter %}selected{% endif %}>All Statuses</option>
+                        {% for value, label in status_choices.items %}
+                            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <!-- Borrower type is already in the header dropdown -->
+                    {% if borrower_type_filter and borrower_type_filter != 'all' %}
+                        <input type="hidden" name="borrower_type" value="{{ borrower_type_filter }}">
+                    {% endif %}
+                    
+                    <!-- Date range picker -->
+                    <div class="flex items-center gap-2">
+                        <label for="date_from" class="sr-only">From Date</label>
+                        <input type="date" name="date_from" id="date_from" class="border rounded-md px-4 py-2 text-sm" value="{{ date_from }}" title="Filter from date" placeholder="From date" aria-label="Filter from date">
+                        <span class="text-gray-500">-</span>
+                        <label for="date_to" class="sr-only">To Date</label>
+                        <input type="date" name="date_to" id="date_to" class="border rounded-md px-4 py-2 text-sm" value="{{ date_to }}" title="Filter to date" placeholder="To date" aria-label="Filter to date">
+                    </div>
+                    
+                    <!-- Search input -->
+                    <div class="relative">
+                        <input type="text" name="search" placeholder="Search loans..." class="px-4 py-2 border rounded-md pr-10" value="{{ search_query }}" aria-label="Search loans">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                    
+                    <!-- Apply and reset buttons -->
+                    <button type="submit" class="bg-primary-light text-white px-4 py-2 rounded-md text-sm">Apply Filters</button>
+                    <a href="{% url 'webapp:loans' %}" class="border border-gray-300 px-4 py-2 rounded-md text-sm text-center">Reset</a>
+                </div>
+            </form>
         </div>
         
         <div class="overflow-x-auto">
@@ -149,156 +202,154 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <!-- Loan 1 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">LN-2025-001</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">JD</span>
+                    {% if loans.object_list %}
+                        {% for loan in loans %}                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ loan.loan_id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                            {% with borrower_initials=loan.borrower_name|make_list|slice:":2"|join:"" %}
+                                                <span class="font-medium text-gray-600">{{ borrower_initials|upper }}</span>
+                                            {% endwith %}
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ loan.borrower_name }}</div>
+                                            <div class="text-sm text-gray-500">{{ loan.get_borrower_type_display }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ loan.get_loan_type_display }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS {{ loan.amount|intcomma }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ loan.interest_rate }}%</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ loan.date_issued|date:"d M Y" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ loan.due_date|date:"d M Y" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                        {% if loan.status == 'active' %}tag-approved
+                                        {% elif loan.status == 'pending' %}tag-pending
+                                        {% elif loan.status == 'paid' %}tag-paid
+                                        {% elif loan.status == 'overdue' %}bg-red-100 text-red-800{% endif %}">
+                                        {{ loan.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3" title="View loan details" onclick="viewLoanDetails('{{ loan.loan_id }}')"><i class="fas fa-eye"></i></button>
+                                    {% if loan.status != 'paid' %}
+                                        <button class="text-green-600 hover:text-green-900 mr-3" title="Record payment" onclick="recordPayment('{{ loan.loan_id }}')"><i class="fas fa-money-bill-wave"></i></button>
+                                    {% else %}
+                                        <button class="text-gray-400 cursor-not-allowed mr-3" title="Fully paid" disabled><i class="fas fa-money-bill-wave"></i></button>
+                                    {% endif %}
+                                    <button class="text-red-600 hover:text-red-900" title="Delete loan" onclick="confirmDelete('{{ loan.loan_id }}')"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="px-6 py-10 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-file-invoice-dollar text-gray-400 text-4xl mb-4"></i>
+                                    <p class="text-lg">No loans found</p>
+                                    <p class="text-sm">Try adjusting your filters or create a new loan</p>
                                 </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">John Doe</div>
-                                    <div class="text-sm text-gray-500">Customer</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Product Purchase</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 2,500,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5%</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15 Feb 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15 May 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-approved">Active</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View loan details"><i class="fas fa-eye"></i></button>
-                            <button class="text-green-600 hover:text-green-900 mr-3" title="Record payment"><i class="fas fa-money-bill-wave"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete loan"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Loan 2 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">LN-2025-002</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">MK</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Musa Kimaro</div>
-                                    <div class="text-sm text-gray-500">Employee</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Salary Advance</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 450,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0%</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">01 Mar 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">31 Mar 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-pending">Pending</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View loan details"><i class="fas fa-eye"></i></button>
-                            <button class="text-green-600 hover:text-green-900 mr-3" title="Record payment"><i class="fas fa-money-bill-wave"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete loan"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Loan 3 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">LN-2025-003</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">AS</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Arusha Suppliers Ltd</div>
-                                    <div class="text-sm text-gray-500">Supplier</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Inventory Credit</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 5,000,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3%</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10 Jan 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10 Apr 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full tag-approved">Active</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View loan details"><i class="fas fa-eye"></i></button>
-                            <button class="text-green-600 hover:text-green-900 mr-3" title="Record payment"><i class="fas fa-money-bill-wave"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete loan"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                    
-                    <!-- Loan 4 -->
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">LN-2025-004</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                    <span class="font-medium text-gray-600">SM</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">Sara Mohammed</div>
-                                    <div class="text-sm text-gray-500">Customer</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Catering Services</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS 1,200,000</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">4%</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">20 Dec 2024</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">20 Feb 2025</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Overdue</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="View loan details"><i class="fas fa-eye"></i></button>
-                            <button class="text-green-600 hover:text-green-900 mr-3" title="Record payment"><i class="fas fa-money-bill-wave"></i></button>
-                            <button class="text-red-600 hover:text-red-900" title="Delete loan"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
         
         <!-- Pagination -->
+        {% if loans.paginator.num_pages > 1 %}
         <div class="px-6 py-4 flex items-center justify-between border-t">
+            <!-- Mobile pagination -->
             <div class="flex-1 flex justify-between sm:hidden">
-                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Previous page">Previous</a>
-                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" title="Next page">Next</a>
+                {% if loans.has_previous %}
+                    <a href="{% url 'webapp:loans' %}?page={{ loans.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if loan_type_filter and loan_type_filter != 'all' %}&loan_type={{ loan_type_filter }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if borrower_type_filter and borrower_type_filter != 'all' %}&borrower_type={{ borrower_type_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" 
+                        title="Previous page">
+                        Previous
+                    </a>
+                {% else %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Previous
+                    </span>
+                {% endif %}
+                
+                {% if loans.has_next %}
+                    <a href="{% url 'webapp:loans' %}?page={{ loans.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if loan_type_filter and loan_type_filter != 'all' %}&loan_type={{ loan_type_filter }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if borrower_type_filter and borrower_type_filter != 'all' %}&borrower_type={{ borrower_type_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" 
+                        title="Next page">
+                        Next
+                    </a>
+                {% else %}
+                    <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Next
+                    </span>
+                {% endif %}
             </div>
+            
+            <!-- Desktop pagination -->
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">32</span> results
+                        Showing <span class="font-medium">{{ loans.start_index }}</span> to <span class="font-medium">{{ loans.end_index }}</span> of
+                        <span class="font-medium">{{ loans.paginator.count }}</span> results
                     </p>
                 </div>
                 <div>
+                    {% if loans.paginator.num_pages > 1 %}
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Previous page">
-                            <span class="sr-only">Previous</span>
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                        <a href="#" aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 1">1</a>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 2">2</a>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 3">3</a>
-                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" title="Page 8">8</a>
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" title="Next page">
-                            <span class="sr-only">Next</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
+                        <!-- Previous page -->
+                        {% if loans.has_previous %}
+                            <a href="{% url 'webapp:loans' %}?page={{ loans.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if loan_type_filter and loan_type_filter != 'all' %}&loan_type={{ loan_type_filter }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if borrower_type_filter and borrower_type_filter != 'all' %}&borrower_type={{ borrower_type_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" 
+                                title="Previous page">
+                                <span class="sr-only">Previous</span>
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% else %}
+                            <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
+                                <span class="sr-only">Previous</span>
+                                <i class="fas fa-chevron-left"></i>
+                            </span>
+                        {% endif %}
+                        
+                        <!-- Page numbers -->
+                        {% for i in loans.paginator.page_range %}
+                            {% if loans.number == i %}
+                                <span aria-current="page" class="z-10 bg-primary-light border-primary-light text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">{{ i }}</span>
+                            {% elif i > loans.number|add:'-3' and i < loans.number|add:'3' %}
+                                <a href="{% url 'webapp:loans' %}?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if loan_type_filter and loan_type_filter != 'all' %}&loan_type={{ loan_type_filter }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if borrower_type_filter and borrower_type_filter != 'all' %}&borrower_type={{ borrower_type_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                                    class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium" 
+                                    title="Page {{ i }}">
+                                    {{ i }}
+                                </a>
+                            {% elif i == loans.number|add:'-3' or i == loans.number|add:'3' %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Next page -->
+                        {% if loans.has_next %}
+                            <a href="{% url 'webapp:loans' %}?page={{ loans.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if loan_type_filter and loan_type_filter != 'all' %}&loan_type={{ loan_type_filter }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if borrower_type_filter and borrower_type_filter != 'all' %}&borrower_type={{ borrower_type_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" 
+                                title="Next page">
+                                <span class="sr-only">Next</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% else %}
+                            <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
+                                <span class="sr-only">Next</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </span>
+                        {% endif %}
                     </nav>
+                    {% endif %}
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -309,6 +360,40 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize loans management functionality
         console.log("Loans management page loaded");
+        
+        // Add click handler for Record New Loan button
+        document.getElementById('recordLoanBtn').addEventListener('click', function() {
+            // In a real application, this would navigate to the new loan form
+            // For now, we'll just redirect back to the loans page
+            window.location.href = "{% url 'webapp:loans' %}";
+            // Future implementation could be:
+            // window.location.href = "{% url 'webapp:loans' %}/new/";
+        });
     });
+
+    // Function to handle viewing loan details
+    function viewLoanDetails(loanId) {
+        // For now, we'll just alert - in a real implementation this would open a modal or navigate to a detail page
+        alert('View details for loan: ' + loanId);
+        // Future implementation could be:
+        // window.location.href = "{% url 'webapp:loans' %}/" + loanId + "/";
+    }
+
+    // Function to handle recording a payment
+    function recordPayment(loanId) {
+        // For now, we'll just alert - in a real implementation this would open a modal
+        alert('Record payment for loan: ' + loanId);
+        // Future implementation could open a modal form
+    }
+
+    // Function to confirm loan deletion
+    function confirmDelete(loanId) {
+        if (confirm('Are you sure you want to delete this loan? This action cannot be undone.')) {
+            // For now, we'll just alert - in a real implementation this would send an AJAX request
+            alert('Loan deleted: ' + loanId);
+            // Future implementation could be:
+            // window.location.href = "{% url 'webapp:loans' %}/delete/" + loanId + "/";
+        }
+    }
 </script>
 {% endblock %}

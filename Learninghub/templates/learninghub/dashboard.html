@@ -1,0 +1,208 @@
+{% extends 'learninghub/base_learninghub.html' %}
+{% load static %}
+
+{% block learninghub_content %}
+    {% comment "Assuming 'first_lesson_in_next_course' is available in context if 'next_course' is. It could be next_course.lessons.all.0 or similar." %}{% endcomment %}
+    {% if next_course and first_lesson_in_next_course %}
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Left Column: Video, Course Info, Instructor -->
+            <div class="lg:w-2/3 space-y-6">
+                <!-- Breadcrumb-like navigation -->
+                <div class="text-sm text-gray-500 mb-2">
+                    <a href="{% url 'learninghub:course_list' %}" class="hover:text-primary">Courses</a> &gt;
+                    <span class="font-semibold text-gray-700">{{ next_course.title }}</span>
+                </div>
+
+                <!-- Video Player Area -->
+                <div class="aspect-w-16 aspect-h-9 bg-black rounded-lg shadow-lg overflow-hidden">
+                    <iframe src="{{ first_lesson_in_next_course.video_url }}" title="{{ first_lesson_in_next_course.title }} - Course video"
+                            class="w-full h-full" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+
+                <!-- Course Details & Actions -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="px-2 py-1 text-xs font-semibold text-primary bg-primary/10 rounded-full">Featured Dashboard Course</span>
+                        {% if next_course.category %}
+                        <span class="px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 rounded-full">{{ next_course.category.name }}</span>
+                        {% endif %}
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-3">{{ next_course.title }}</h1>
+                    <div class="flex items-center space-x-4 mb-6">
+                        <a href="{% url 'learninghub:course_detail' next_course.id %}" class="btn btn-primary inline-flex items-center">
+                            <i class="mdi mdi-play-circle-outline mr-2"></i>Go to Course
+                        </a>
+                        <button class="btn btn-outline-secondary inline-flex items-center">
+                            <i class="mdi mdi-heart-outline mr-2"></i>Add to Favourite
+                        </button>
+                    </div>
+                    <div class="prose max-w-none text-gray-700">
+                        {{ next_course.description|safe|linebreaksbr }}
+                    </div>
+
+                    {% if next_course.instructor %}
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Instructor</h3>
+                        <div class="flex items-center space-x-4">
+                            {% if next_course.instructor.profile_picture %}
+                            <img src="{{ next_course.instructor.profile_picture.url }}" alt="{{ next_course.instructor.name }}" class="w-16 h-16 rounded-full object-cover">
+                            {% else %}
+                            <span class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 text-2xl">
+                                <i class="mdi mdi-account"></i>
+                            </span>
+                            {% endif %}
+                            <div>
+                                <h4 class="font-semibold text-gray-800">{{ next_course.instructor.name }}</h4>
+                                <p class="text-sm text-gray-600">{{ next_course.instructor.bio|truncatewords:30|default:'Experienced instructor dedicated to helping you learn.' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Column: Lesson Playlist & Tabs -->
+            <div class="lg:w-1/3 space-y-6">
+                <div class="bg-white rounded-lg shadow sticky top-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-1 px-4" aria-label="Tabs">
+                            <a href="#" class="border-primary text-primary whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                                All Videos {% if next_course.lessons.all.count > 0 %}({{ next_course.lessons.all.count }}){% endif %}
+                            </a>
+                            <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                                Resources
+                            </a>
+                            <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                                Support
+                            </a>
+                        </nav>
+                    </div>
+
+                    <div class="max-h-[calc(100vh-10rem)] overflow-y-auto p-4 space-y-2">
+                        {% for lesson in next_course.lessons.all %}
+                            <a href="{% url 'learninghub:lesson_detail' lesson.id %}" class="block p-3 rounded-md hover:bg-gray-100 transition-colors duration-150">
+                                <div class="flex items-center space-x-3">
+                                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
+                                        <i class="mdi mdi-play-circle-outline"></i>
+                                    </span>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 truncate">{{ lesson.title }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {% if lesson.duration %}
+                                                {{ lesson.duration }} min
+                                            {% else %}
+                                                Video
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    {% if lesson.is_completed_by_user %}
+                                    <i class="mdi mdi-check-circle text-green-500 text-lg"></i>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        {% empty %}
+                            <p class="text-sm text-gray-500 p-3">No lessons available for this course yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="bg-white p-8 rounded-lg shadow">
+            <div class="text-center mb-10">
+                <i class="mdi mdi-school-outline text-6xl text-primary mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800 mb-3" data-i18n="welcome">Welcome to the Learning Hub!</h1>
+                {% if request.user.first_name %}
+                    <p class="text-xl text-gray-600 mb-2"><span data-i18n="hello">Hello</span> {{ request.user.first_name }}, <span data-i18n="gladYoureHere">we're glad you're here!</span></p>
+                {% else %}
+                    <p class="text-xl text-gray-600 mb-2" data-i18n="gladYoureHere">We're glad you're here!</p>
+                {% endif %}
+            </div>
+            
+            <!-- About the Learning Hub Section -->
+            <div class="max-w-3xl mx-auto bg-gray-50 p-6 rounded-xl shadow-sm mb-8 border-l-4 border-primary">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4" data-i18n="aboutOurLearningHub">About Our Learning Hub</h2>
+                <p class="text-gray-700 mb-4"><span data-i18n="hubDescription">This is a</span> <span class="font-semibold text-primary" data-i18n="sponsorSupported">free, sponsor-supported training platform</span> <span data-i18n="designedToHelp">designed to help you understand business concepts better at your own pace.</span></p>
+                
+                <!-- Featured Benefit - Daily Sponsor Products Showcase -->
+                <div class="bg-gradient-to-r from-primary/10 to-secondary/5 p-4 rounded-lg mb-6 border border-primary/20">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 p-2 bg-white rounded-full shadow-sm">
+                            <i class="fas fa-star text-primary text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-bold text-gray-800" data-i18n="dailySponsor">Daily Sponsor Product Showcases</h3>
+                            <p class="text-gray-700"><span class="font-medium" data-i18n="mostImportantFeature">The most important feature:</span> <span data-i18n="learnAboutSponsors">Learn about our sponsors' products every day and discover how they can be valuable tools for your business growth and success.</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 p-2 bg-primary/10 rounded-full">
+                            <i class="fas fa-clock text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-800" data-i18n="ownPace">Learn at Your Own Pace</h3>
+                            <p class="text-sm text-gray-600" data-i18n="accessAnytime">Access courses anytime, anywhere and progress through material as quickly or slowly as you need.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 p-2 bg-primary/10 rounded-full">
+                            <i class="fas fa-industry text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-800" data-i18n="industrySponsored">Industry-Sponsored Content</h3>
+                            <p class="text-sm text-gray-600" data-i18n="contentDeveloped">Our content is developed with leading industry partners to ensure practical, relevant knowledge.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 p-2 bg-primary/10 rounded-full">
+                            <i class="fas fa-certificate text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-800" data-i18n="earnCertifications">Earn Certifications</h3>
+                            <p class="text-sm text-gray-600" data-i18n="completeCourses">Complete courses to earn certificates that demonstrate your business knowledge.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 p-2 bg-primary/10 rounded-full">
+                            <i class="fas fa-users text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-800" data-i18n="joinCommunity">Join Our Community</h3>
+                            <p class="text-sm text-gray-600" data-i18n="connectWithFellows">Connect with fellow learners and mentors to enhance your educational journey.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Courses Available Section -->
+            <div class="text-center">
+                {% if total_courses > 0 %}
+                    <p class="text-gray-700 mb-6">
+                        We have <span class="font-semibold">{{ total_courses }}</span> great course{{ total_courses|pluralize }} available for you to start your journey!
+                    </p>
+                    <div class="text-center mt-6">
+                        <a href="{% url 'learninghub:course_list' %}" class="inline-block bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-book-open mr-2"></i><span data-i18n="exploreCourses">Explore Courses</span>
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-gray-700 mb-6">
+                        Our team is currently developing courses. Please check back soon for exciting new content!
+                    </p>
+                {% endif %}
+            </div>
+
+            {% if next_course and not first_lesson_in_next_course %}
+                <p class="mt-6 text-sm text-gray-500 text-center">
+                    The next course, '{{ next_course.title }}', doesn't have any lessons yet. Please check back soon!
+                </p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
